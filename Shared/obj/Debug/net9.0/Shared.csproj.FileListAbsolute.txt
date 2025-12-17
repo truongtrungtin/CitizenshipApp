@@ -9,3 +9,4 @@ G:\Work\CitizenshipTutor\CitizenshipApp\Shared\obj\Debug\net9.0\Shared.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Shared\obj\Debug\net9.0\refint\Shared.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Shared\obj\Debug\net9.0\Shared.pdb
 G:\Work\CitizenshipTutor\CitizenshipApp\Shared\obj\Debug\net9.0\ref\Shared.dll
+G:\Work\CitizenshipTutor\CitizenshipApp\Shared\obj\Debug\net9.0\Shared.sourcelink.json

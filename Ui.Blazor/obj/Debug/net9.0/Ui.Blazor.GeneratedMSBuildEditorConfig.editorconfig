@@ -59,11 +59,3 @@ build_metadata.AdditionalFiles.CssScope =
 [G:/Work/CitizenshipTutor/CitizenshipApp/Ui.Blazor/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
-
-[G:/Work/CitizenshipTutor/CitizenshipApp/Ui.Blazor/Layout/MainLayout.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-pkt3wmuzkg
-
-[G:/Work/CitizenshipTutor/CitizenshipApp/Ui.Blazor/Layout/NavMenu.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE5hdk1lbnUucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-kkek5fopc2

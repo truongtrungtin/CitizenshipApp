@@ -9,3 +9,4 @@ G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\refint\Domain.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.pdb
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\ref\Domain.dll
+G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.sourcelink.json

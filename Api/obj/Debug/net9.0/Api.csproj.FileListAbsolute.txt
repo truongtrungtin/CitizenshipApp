@@ -38,3 +38,4 @@ G:\Work\CitizenshipTutor\CitizenshipApp\Api\obj\Debug\net9.0\refint\Api.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Api\obj\Debug\net9.0\Api.pdb
 G:\Work\CitizenshipTutor\CitizenshipApp\Api\obj\Debug\net9.0\Api.genruntimeconfig.cache
 G:\Work\CitizenshipTutor\CitizenshipApp\Api\obj\Debug\net9.0\ref\Api.dll
+G:\Work\CitizenshipTutor\CitizenshipApp\Api\obj\Debug\net9.0\Api.sourcelink.json
