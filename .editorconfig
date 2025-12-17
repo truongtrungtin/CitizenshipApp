@@ -1,0 +1,55 @@
+# .editorconfig
+# Mục tiêu:
+# - Đồng bộ format giữa VS/Rider/VS Code
+# - Giảm diff rác
+# - Giữ code dễ đọc cho dự án Clean Architecture
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# -----------------------------
+# C# files
+# -----------------------------
+[*.cs]
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Prefer file-scoped namespace (C# 10+) để giảm thụt lề
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# var: chỉ dùng khi type rõ ràng
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Luôn dùng braces để tránh bug khi sửa code sau này
+csharp_prefer_braces = true:suggestion
+
+# Newline cho dễ đọc
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# Razor / Blazor
+[*.razor]
+indent_size = 2
+
+[*.razor.cs]
+indent_size = 4
+
+# JSON/YAML
+[*.json]
+indent_size = 2
+
+[*.yml]
+indent_size = 2
+[*.yaml]
+indent_size = 2
