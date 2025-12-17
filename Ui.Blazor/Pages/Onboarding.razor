@@ -1,0 +1,19 @@
+@page "/onboarding"
+@inject Ui.Blazor.Services.AppState State
+@inject NavigationManager Nav
+
+<h1>Onboarding</h1>
+<p>Chọn settings (placeholder)</p>
+
+<button style="min-height:56px;padding:0 18px;"
+        @onclick="Done">
+    Hoàn tất onboarding
+</button>
+
+@code{
+    private void Done()
+    {
+        State.CompleteOnboarding();
+        Nav.NavigateTo("/home", replace: true);
+    }
+}

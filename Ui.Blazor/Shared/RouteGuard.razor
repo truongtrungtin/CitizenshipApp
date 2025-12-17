@@ -1,0 +1,48 @@
+@implements IDisposable
+@inject NavigationManager Nav
+@inject Ui.Blazor.Services.AppState State
+
+@ChildContent
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += HandleChange;
+        EnforceRules();
+    }
+
+    private void HandleChange()
+    {
+        EnforceRules();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void EnforceRules()
+    {
+        var path = new Uri(Nav.Uri).AbsolutePath.ToLowerInvariant();
+
+        var isAuthPage = path is "/login" or "/register";
+        var isOnboarding = path == "/onboarding";
+
+        if (!State.IsLoggedIn && !isAuthPage)
+        {
+            Nav.NavigateTo("/login", replace: true);
+            return;
+        }
+
+        if (State.IsLoggedIn && !State.HasCompletedOnboarding && !isOnboarding)
+        {
+            Nav.NavigateTo("/onboarding", replace: true);
+            return;
+        }
+
+        if (State.IsLoggedIn && State.HasCompletedOnboarding && isAuthPage)
+        {
+            Nav.NavigateTo("/home", replace: true);
+        }
+    }
+
+    public void Dispose() => State.OnChange -= HandleChange;
+}

@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "9VzlcOOKQ4Y=",
+  "success": true,
+  "projectFilePath": "G:\\Work\\CitizenshipTutor\\CitizenshipApp\\Api\\Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\trung\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.8\\microsoft.aspnetcore.openapi.9.0.8.nupkg.sha512",
+    "C:\\Users\\trung\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}

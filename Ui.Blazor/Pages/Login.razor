@@ -1,0 +1,18 @@
+@page "/login"
+@inject Ui.Blazor.Services.AppState State
+@inject NavigationManager Nav
+
+<h1>Đăng nhập</h1>
+
+<button style="min-height:56px;padding:0 18px;"
+        @onclick="login">
+    Login (placeholder)
+</button>
+
+@code{
+    private void login()
+    {
+        State.SignIn(onboardingDone: false);
+        Nav.NavigateTo("/onboarding", replace: true);
+    }
+}
