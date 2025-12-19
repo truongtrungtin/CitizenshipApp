@@ -5,8 +5,8 @@ G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.Generated
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.AssemblyInfoInputs.cache
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.AssemblyInfo.cs
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.csproj.CoreCompileInputs.cache
+G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.sourcelink.json
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\refint\Domain.dll
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.pdb
 G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\ref\Domain.dll
-G:\Work\CitizenshipTutor\CitizenshipApp\Domain\obj\Debug\net9.0\Domain.sourcelink.json

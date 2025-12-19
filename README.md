@@ -21,6 +21,6 @@
 
 ## Local development
 
-### 1) Trust HTTPS dev cert (one-time)
+### 1 Trust HTTPS dev cert (one-time)
 ```bash
 dotnet dev-certs https --trust
