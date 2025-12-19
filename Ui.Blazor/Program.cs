@@ -10,11 +10,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped(sp =>
 {
-    var http = new HttpClient
-    {
-        BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!)
-    };
-    return http;
+    string apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "https://localhost:7070";
+    return new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
 });
 
 builder.Services.AddScoped<ApiClient>();

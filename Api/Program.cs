@@ -83,7 +83,8 @@ string? adminKey = builder.Configuration["AdminApiKey"];
 // Middleware check X-Admin-Key for /api
 app.Use(async (ctx, next) =>
 {
-    if (ctx.Request.Path.StartsWithSegments("/api"))
+    if (ctx.Request.Path.StartsWithSegments("/api")
+        && !ctx.Request.Path.StartsWithSegments("/api/ping"))
     {
         if (string.IsNullOrWhiteSpace(adminKey))
         {
@@ -102,6 +103,13 @@ app.Use(async (ctx, next) =>
 
     await next();
 });
+
+
+app.MapGet("/api/ping", () =>
+{
+    return Results.Ok(new { ok = true, utc = DateTimeOffset.UtcNow });
+});
+
 
 app.UseHttpsRedirection();
 app.UseCors(corsPolicyName);
