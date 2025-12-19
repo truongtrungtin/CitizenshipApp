@@ -1,0 +1,68 @@
+Work Item ID,Issue Type,Summary,Description,Parent ID,Priority,Labels,Status
+1001,Epic,EPIC 1 — Bootstrap project + Clean Architecture skeleton,Set up the solution structure; establish conventions; scaffold API; prepare for MVP.,"",P1,"mvp;blazor",DONE
+1002,Epic,EPIC 2 — Database & EF Core,"Implement SQL Server schema, EF Core models/config, migrations, and seed minimal data.",,Medium,"mvp,blazor",TODO
+1003,Epic,EPIC 3 — Auth + Profile/Settings + UI,"Identity + JWT, user profile/settings APIs, Blazor login/onboarding/settings screens.",,Medium,"mvp,blazor",TODO
+1004,Epic,EPIC 4 — Question Bank Read + Decks + UI,Read-only APIs for decks/questions + Blazor home/start session + preview.,,Medium,"mvp,blazor",TODO
+1005,Epic,EPIC 5 — Admin via Swagger (No UI),"Admin role, Swagger bearer auth, import endpoints (CSV/JSON), content edit endpoints.",,Medium,"mvp,blazor",TODO
+1006,Epic,EPIC 6 — Study Sessions Learn + SRS + UI,Learn session flow + SRS scheduling + Blazor learn screen.,,Medium,"mvp,blazor",TODO
+1007,Epic,EPIC 7 — Quiz MCQ + Silent Lock MCQ-only + UI,MCQ generator + frozen choices + silent lock flow + Blazor quiz UI.,,Medium,"mvp,blazor",TODO
+1008,Epic,EPIC 8 — Audio Cache (File) + UI Playback,TTS on-demand/cache by hash to disk; serve audio; Blazor playback controls.,,Medium,"mvp,blazor",TODO
+1009,Epic,EPIC 9 — Admin AI Generate (Swagger) One-time,AI generation jobs/items + worker runner + approve/edit generated texts.,,Medium,"mvp,blazor",TODO
+1010,Epic,EPIC 10 — Dynamic Facts (Optional MVP+),DynamicFact tables + refresher job + state-based governor binding.,,Medium,"mvp,blazor",TODO
+1011,Epic,"EPIC 11 — QA, Hardening, Deploy Self-host","Integration tests, validation, logging, deploy + backups (DB + audio folder).",,Medium,"mvp,blazor",TODO
+1012,Epic,EPIC 12 — Mobile Readiness (MAUI Blazor Hybrid Path),Shared DTO/client library and MAUI stub to enable future mobile move.,,Medium,"mvp,blazor",TODO
+2001,Task,Create solution & projects (Clean Architecture),Create .sln and projects: Domain/Application/Infrastructure/Api/Worker/Ui.Blazor/Shared. Add references and build settings.,1001.0,Medium,"mvp,blazor",DONE
+2002,Task,Setup Blazor UI project shell,"Create Blazor Server UI shell (layout, routing, auth placeholder). Add HttpClient to call Api.",1001.0,Medium,"mvp,blazor",DONE
+2003,Task,Define UX rules + wireframes (elderly),"Write 1-page UX rules (large font, minimal buttons, Learn/Quiz). Create wireframes for: Register/Login, Onboarding (required settings), Home, Study Session.",1001.0,Medium,"mvp,blazor",DONE
+2004,Task,Repo hygiene & conventions,"Add .editorconfig, conventions, and README skeleton (run, migrate, dev admin, onboarding).",1001.0,Medium,"mvp,blazor",DONE
+2005,Task,Implement EF Core DbContext (IdentityDbContext),Create AppDbContext : IdentityDbContext<AppUser>. Add DbSets for all MVP tables.,1002.0,Medium,"mvp,blazor",DONE
+2006,Task,Fluent configurations + indexes,"Add EF configurations for constraints, unique indexes, relationships, cascade rules.",1002.0,Medium,"mvp,blazor",DONE
+2007,Task,Create initial migrations and update local DB,Add EF Core migrations and apply to local SQL Server instance; verify app can run with migrations.,1002,P1,mvp,DONE
+2008,Task,Add onboarding flag to UserProfile (IsOnboarded),Add UserProfile.IsOnboarded bit default 0 + migration. Ensure created users start with IsOnboarded=0.,1002.0,Medium,"mvp,blazor",TODO
+2009,Task,Seed minimal system data,"Seed TestVersion, ExamRule, Topic (basic), Deck ALL (system).",1002.0,Medium,"mvp,blazor",TODO
+2010,Task,Configure JWT auth + Swagger bearer,Setup JWT auth in Api and Swagger 'Authorize' with Bearer. Add auth middleware.,1003.0,Medium,"mvp,blazor",TODO
+2011,Task,Implement Auth endpoints (register/login),"Create /auth/register and /auth/login returning JWT. On register, create UserProfile with IsOnboarded=0 and default UserSettings.",1003.0,Medium,"mvp,blazor",TODO
+2012,Task,Implement UserProfile/UserSettings endpoints,"GET/PUT /me/profile and /me/settings. Include StateCode, shuffle flags, difficulty, SRS toggle.",1003.0,Medium,"mvp,blazor",TODO
+2013,Task,Implement onboarding endpoint,"PUT /me/onboarding (or reuse profile+settings) to set required fields (StateCode, FontScale, PreferredLanguage, toggles) and set IsOnboarded=1.",1003.0,Medium,"mvp,blazor",TODO
+2014,Task,Blazor: Register + auto-login,"Register screen. After register success, auto-login (store token) and redirect to onboarding if not onboarded.",1003.0,Medium,"mvp,blazor",TODO
+2015,Task,Blazor: Required Onboarding screen,"Onboarding page that forces user to pick required settings: StateCode, FontScale, PreferredLanguage. Save via /me/onboarding. Button 'Bắt đầu học'.",1003.0,Medium,"mvp,blazor",TODO
+2016,Task,Blazor: Route guard (force onboarding),"Implement navigation guard: if IsOnboarded=false, redirect all pages except /onboarding and /auth to onboarding.",1003.0,Medium,"mvp,blazor",TODO
+2017,Task,Blazor: Settings UI,"Settings page to edit StateCode, Shuffle, Difficulty, ShowPhonetic/Explain, FontScale, SRS toggle.",1003.0,Medium,"mvp,blazor",TODO
+2018,Task,API: Deck & Question read endpoints,"Implement GET /decks, GET /decks/{id}/questions, GET /questions/{id} incl texts+answers.",1004.0,Medium,"mvp,blazor",TODO
+2019,Task,API: DTOs for question payload,"Create DTOs for question, answers, texts (en/vi phonetic/explain).",1004.0,Medium,"mvp,blazor",TODO
+2020,Task,Blazor: Home (pick deck/mode) + start session,"Home screen: choose Deck (ALL/65-20 when available), Mode (Learn/Quiz), Start.",1004.0,Medium,"mvp,blazor",TODO
+2021,Task,Blazor: Question preview page (optional),Simple browse/preview question bank page for QA (not admin editing).,1004.0,Medium,"mvp,blazor",TODO
+2022,Task,Create Admin role + seed dev admin user,"On startup (Dev only), create role 'Admin', seed admin user from config, assign role.",1005.0,Medium,"mvp,blazor",TODO
+2023,Task,Protect /admin/* endpoints with Admin role,Add policy AdminOnly and apply to all admin endpoints.,1005.0,Medium,"mvp,blazor",TODO
+2024,Task,Admin import endpoints (CSV/JSON),POST /admin/import/questions. Upsert by TestVersion+QuestionNo; create answers; return summary.,1005.0,Medium,"mvp,blazor",TODO
+2025,Task,Admin content edit endpoints,PUT /admin/questions/{id}/texts and /admin/answers/{id}/texts to fix generated content manually.,1005.0,Medium,"mvp,blazor",TODO
+2026,Task,StudySession: StartSession (Learn),"POST /study/sessions/start with mode=learn, deckId, ruleId. Initialize flags SilentMode=0 ForceMcqOnly=0.",1006.0,Medium,"mvp,blazor",TODO
+2027,Task,StudySession: NextQuestion selection (SRS + shuffle),GET /study/sessions/{id}/next. If SRS enabled: prioritize DueAt <= now then mix new. Shuffle within batch if enabled.,1006.0,Medium,"mvp,blazor",TODO
+2028,Task,Learn grading (self-grade) + SRS update,POST /study/sessions/items/{itemId}/grade with again/good. Update StudySessionItem + UserQuestionState via SrsScheduler.,1006.0,Medium,"mvp,blazor",TODO
+2029,Task,Blazor: Learn session screen,Show question EN (+ optional phonetic/explain). Show Answer button + self-grade buttons (Chưa thuộc/Thuộc). Next.,1006.0,Medium,"mvp,blazor",TODO
+2030,Task,Progress summary (basic),API/UI: show due count and basic progress in header (optional).,1006.0,Medium,"mvp,blazor",TODO
+2031,Task,MCQ ChoiceGenerator + SessionChoice freeze,Generate 4 choices: 1 correct + 3 distractors (prefer same topic). Save to SessionChoice per StudySessionItem.,1007.0,Medium,"mvp,blazor",TODO
+2032,Task,Quiz flow: NextQuestion returns MCQ payload,"When session mode=quiz OR ForceMcqOnly=1, NextQuestion returns choices. Ensure stable choices per item.",1007.0,Medium,"mvp,blazor",TODO
+2033,Task,SubmitChoice grading + SRS mapping,POST /study/sessions/items/{itemId}/choose. Mark correct/incorrect; map to SRS grade; store SelectedSessionChoiceId.,1007.0,Medium,"mvp,blazor",TODO
+2034,Task,Silent mode line: lock MCQ-only for session,Endpoint POST /study/sessions/{id}/silent-on sets SilentMode=1 ForceMcqOnly=1. UI switches to MCQ-only.,1007.0,Medium,"mvp,blazor",TODO
+2035,Task,Blazor: Quiz MCQ screen + result UI,Render A/B/C/D. On select show correct/incorrect + correct answer; Next.,1007.0,Medium,"mvp,blazor",TODO
+2036,Task,Blazor: clickable 'Tạm thời tôi không thể nói hoặc nghe' line,Show on each question. Tap triggers silent-on and switches UI to MCQ-only.,1007.0,Medium,"mvp,blazor",TODO
+2037,Task,AudioAsset hashing + metadata,Compute SHA-256 hash of (text+voice+rate+lang). Upsert AudioAsset by ContentHash.,1008.0,Medium,"mvp,blazor",TODO
+2038,Task,File storage for audio cache,Implement IAudioStorage saving to data/audio/{hash}.mp3. Add cleanup strategy (optional).,1008.0,Medium,"mvp,blazor",TODO
+2039,Task,Serve audio with caching headers,Serve audio as static files or via endpoint. Add Cache-Control immutable for hash URLs. Support Range if endpoint.,1008.0,Medium,"mvp,blazor",TODO
+2040,Task,On-demand TTS generation service,"If missing audio for QuestionText/AnswerText, generate via provider and cache to disk + DB metadata.",1008.0,Medium,"mvp,blazor",TODO
+2041,Task,Blazor: audio playback controls,"In Learn mode (when not silent), add 🔊 buttons to play question/answer audio using URLs.",1008.0,Medium,"mvp,blazor",TODO
+2042,Task,AI generation tables + EF models,Add AiGenerationJob/AiGenerationItem tables and EF mappings.,1009.0,Medium,"mvp,blazor",TODO
+2043,Task,Admin endpoints: create AI job + status,POST /admin/ai/jobs create; GET /admin/ai/jobs list/status.,1009.0,Medium,"mvp,blazor",TODO
+2044,Task,Worker: run AI job items batch + retry,"Worker processes queued items, calls IAiContentGenerator, updates status, handles retries.",1009.0,Medium,"mvp,blazor",TODO
+2045,Task,Upsert generated phonetic/explain texts,"Save into QuestionText/AnswerText (vi phonetic_vi, explain_vi). Mark AiGenerated=1.",1009.0,Medium,"mvp,blazor",TODO
+2046,Task,Admin endpoints: approve/edit generated texts,Approve sets ReviewedBy/ReviewedAt; edit allows manual override (Swagger only).,1009.0,Medium,"mvp,blazor",TODO
+2047,Task,DynamicFact + binding schema,"Add DynamicFact + QuestionDynamicBinding tables. Bind questions to FactKey (US_PRESIDENT, AZ_GOVERNOR...).",1010.0,Medium,"optional,mvp+",TODO
+2048,Task,Worker: refresh dynamic facts (scheduled),Implement refresher job that updates DynamicFact from official sources; safe fallback on failure.,1010.0,Medium,"optional,mvp+",TODO
+2049,Task,Resolve dynamic answers in API payload,"When question has binding, resolve answer token from DynamicFact using user's StateCode.",1010.0,Medium,"optional,mvp+",TODO
+2050,Task,Integration tests for core flows,"Tests: Learn session end-to-end, Quiz MCQ end-to-end, Silent lock behavior, MCQ freeze stability, SRS due update.",1011.0,Medium,"mvp,blazor",TODO
+2051,Task,Validation + error middleware,Add global exception middleware; FluentValidation for requests; return friendly error DTOs.,1011.0,Medium,"mvp,blazor",TODO
+2052,Task,Logging + diagnostics,"Add structured logging (Serilog optional), request logging, correlation id (optional).",1011.0,Medium,"mvp,blazor",TODO
+2053,Task,Self-host deployment checklist,"Document: run migrations, start API/UI/worker, configure HTTPS reverse proxy, backup DB+audio folder.",1011.0,Medium,"mvp,blazor",TODO
+2054,Task,Create Shared project for DTOs + ApiClient,Move request/response DTOs + typed ApiClient into Shared project used by UI and future MAUI.,1012.0,Medium,"mvp,blazor,mobile-ready",TODO
+2055,Task,MAUI Blazor Hybrid stub (optional),Create MAUI project skeleton loading shared Blazor components (no full UI needed).,1012.0,Medium,"optional,mobile-ready",TODO
