@@ -1,4 +1,6 @@
 using Infrastructure.Persistence;
+using Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +36,26 @@ public static class DependencyInjection
                 // sql.CommandTimeout(60);   // optional
             });
         });
+
+        // ---------------------------
+        // ASP.NET Core Identity
+        // ---------------------------
+        // Identity được đặt ở Infrastructure (theo DECISIONS.md)
+        // để Domain không phụ thuộc ASP.NET Identity.
+        services
+            .AddIdentityCore<AppUser>(options =>
+            {
+                // MVP: đặt rule đơn giản, có thể siết chặt sau.
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireDigit = false;
+            })
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddSignInManager()
+            .AddDefaultTokenProviders();
 
         return services;
     }

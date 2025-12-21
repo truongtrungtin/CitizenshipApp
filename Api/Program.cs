@@ -1,7 +1,13 @@
+using System.Text;
+
+using Api.Auth;
+
 using Infrastructure;
 using Infrastructure.Persistence;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 
@@ -10,6 +16,10 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 const string corsPolicyName = "DevCors";
 
 builder.Services.AddControllers();
+
+// Bind JWT options (strongly typed)
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.AddSingleton<JwtTokenService>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -22,26 +32,24 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
-    // Add header auth: X-Admin-Key
-    c.AddSecurityDefinition("AdminKey", new OpenApiSecurityScheme
+    // Bearer auth (JWT)
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Name = "X-Admin-Key",
-        Type = SecuritySchemeType.ApiKey,
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter Admin API Key"
+        Description = "Paste JWT token: Bearer {token}"
     });
 
-    // v10+ requires Func<OpenApiDocument, OpenApiSecurityRequirement>
     c.AddSecurityRequirement(doc =>
     {
         var requirement = new OpenApiSecurityRequirement();
-
-        // OpenApiSecurityRequirement : Dictionary<OpenApiSecuritySchemeReference, List<string>>
         requirement.Add(
-            new OpenApiSecuritySchemeReference("AdminKey", doc),
+            new OpenApiSecuritySchemeReference("Bearer", doc),
             new List<string>()
         );
-
         return requirement;
     });
 });
@@ -60,6 +68,38 @@ builder.Services.AddCors(options =>
 // DI Infrastructure (DbContext, repositories, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// ---------------------------
+// Authentication / Authorization (JWT)
+// ---------------------------
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+var jwtKey = jwtSection["Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    // Fail fast: JWT key là bắt buộc để Auth hoạt động.
+    throw new InvalidOperationException("Missing Jwt:Key in configuration.");
+}
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSection["Issuer"],
+            ValidAudience = jwtSection["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+            // Dùng claim "sub" làm định danh chính (Guid userId).
+            NameClaimType = "sub"
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -71,49 +111,19 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = "swagger";
     });
 
-
     // Auto migrate on startup (dev)
     using IServiceScope scope = app.Services.CreateScope();
     AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // Migrate + seed (dev)
     db.Database.Migrate();
+    await SeedData.SeedAsync(db);
 }
-
-string? adminKey = builder.Configuration["AdminApiKey"];
-
-// Middleware check X-Admin-Key for /api
-app.Use(async (ctx, next) =>
-{
-    if (ctx.Request.Path.StartsWithSegments("/api")
-        && !ctx.Request.Path.StartsWithSegments("/api/ping"))
-    {
-        if (string.IsNullOrWhiteSpace(adminKey))
-        {
-            ctx.Response.StatusCode = 500;
-            await ctx.Response.WriteAsync("AdminApiKey is not configured.");
-            return;
-        }
-
-        if (!ctx.Request.Headers.TryGetValue("X-Admin-Key", out var key) || key != adminKey)
-        {
-            ctx.Response.StatusCode = 401;
-            await ctx.Response.WriteAsync("Missing/invalid X-Admin-Key");
-            return;
-        }
-    }
-
-    await next();
-});
-
-
-app.MapGet("/api/ping", () =>
-{
-    return Results.Ok(new { ok = true, utc = DateTimeOffset.UtcNow });
-});
-
 
 app.UseHttpsRedirection();
 app.UseCors(corsPolicyName);
 
+
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
