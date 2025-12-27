@@ -9,16 +9,24 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Microsoft.Extensions.Options;
 
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-const string corsPolicyName = "DevCors";
+const string corsPolicyName = "UiCors";
 
 builder.Services.AddControllers();
 
-// Bind JWT options (strongly typed)
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+// Bind + validate JWT options (strongly typed)
+// - Issuer/Audience có default trong JwtOptions
+// - Key là bắt buộc
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Key), "Missing Jwt:Key in configuration.")
+    .Validate(o => o.Key.Length >= 32, "Jwt:Key must be at least 32 characters.")
+    .ValidateOnStart();
 builder.Services.AddSingleton<JwtTokenService>();
 
 // Swagger
@@ -40,7 +48,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Paste JWT token: Bearer {token}"
+        Description = "Enter JWT token"
     });
 
     c.AddSecurityRequirement(doc =>
@@ -54,14 +62,29 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// =====================
 // CORS
+// =====================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicyName, policy =>
     {
-        policy.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+        else
+        {
+            var allowedOrigins = builder.Configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>() ?? Array.Empty<string>();
+
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
     });
 });
 
@@ -71,13 +94,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // ---------------------------
 // Authentication / Authorization (JWT)
 // ---------------------------
-var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
-var jwtKey = jwtSection["Key"];
-if (string.IsNullOrWhiteSpace(jwtKey))
-{
-    // Fail fast: JWT key là bắt buộc để Auth hoạt động.
-    throw new InvalidOperationException("Missing Jwt:Key in configuration.");
-}
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
+var jwtAudience = builder.Configuration["Jwt:Audience"]!;
+var jwtKey = builder.Configuration["Jwt:Key"]!;
+
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+var signingKey = new SymmetricSecurityKey(keyBytes);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -86,15 +109,13 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
             ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidAudience = jwtAudience,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
-            // Dùng claim "sub" làm định danh chính (Guid userId).
-            NameClaimType = "sub"
+            IssuerSigningKey = signingKey,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
         };
     });
 

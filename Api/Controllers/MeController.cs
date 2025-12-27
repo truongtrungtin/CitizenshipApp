@@ -19,7 +19,7 @@ namespace Api.Controllers;
 /// NOTE: Mọi endpoint trong controller này đều require JWT.
 /// </summary>
 [ApiController]
-[Route("me")]
+[Route("api/[controller]")]
 [Authorize]
 public sealed class MeController : ControllerBase
 {
@@ -31,7 +31,7 @@ public sealed class MeController : ControllerBase
     }
 
     /// <summary>
-    /// GET /me/profile
+    /// GET /api/me/profile
     /// </summary>
     [HttpGet("profile")]
     public async Task<ActionResult<UserProfileDto>> GetProfile()
@@ -47,7 +47,7 @@ public sealed class MeController : ControllerBase
     }
 
     /// <summary>
-    /// GET /me/settings
+    /// GET /api/me/settings
     /// </summary>
     [HttpGet("settings")]
     public async Task<ActionResult<UserSettingsDto>> GetSettings()
@@ -69,7 +69,7 @@ public sealed class MeController : ControllerBase
     }
 
     /// <summary>
-    /// PUT /me/settings
+    /// PUT /api/me/settings
     ///
     /// Dùng cho onboarding + settings page.
     /// </summary>
@@ -96,7 +96,7 @@ public sealed class MeController : ControllerBase
     }
 
     /// <summary>
-    /// PUT /me/onboarding/complete
+    /// PUT /api/me/onboarding/complete
     ///
     /// Chỉ đánh dấu hoàn tất onboarding.
     /// (Settings đã được cập nhật qua /me/settings.)

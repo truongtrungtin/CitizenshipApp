@@ -1,0 +1,116 @@
+@page "/settings"
+
+@using global::Shared.Dtos.Me
+@using global::Domain.Enums
+
+@inject Ui.Blazor.Services.ApiClient Api
+@inject Ui.Blazor.Services.AppState State
+@inject NavigationManager Nav
+
+<h1>Settings</h1>
+
+@if (!State.IsAuthenticated)
+{
+    <div class="alert alert-warning">Please login to access settings.</div>
+    <button class="btn btn-primary" @onclick="GoLogin">Go to login</button>
+}
+else if (_loading)
+{
+    <p>Loading settings...</p>
+}
+else
+{
+    <div class="mb-3">
+        <label class="form-label">Language</label>
+        <select class="form-select" @bind="_language">
+            <option value="@LanguageCode.Vi">Vietnamese</option>
+            <option value="@LanguageCode.En">English</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Daily study goal</label>
+        <input class="form-control" type="number" @bind="_dailyGoalMinutes" min="1" max="200" />
+    </div>
+
+    <button class="btn btn-primary" @onclick="Save" disabled="@_saving">Save</button>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="alert alert-info mt-3">@_message</div>
+    }
+}
+
+@code {
+    private bool _loading = true;
+    private bool _saving;
+    private string? _message;
+
+    private UserSettingsDto? _current;
+
+    private LanguageCode _language = LanguageCode.Vi;
+    private int _dailyGoalMinutes = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!State.IsAuthenticated)
+        {
+            _loading = false;
+            return;
+        }
+
+        try
+        {
+            var dto = await Api.GetMeSettingsAsync();
+            _current = dto;
+            _language = dto.Language;
+            _dailyGoalMinutes = dto.DailyGoalMinutes;
+        }
+        catch (Exception ex)
+        {
+            _message = $"Failed to load settings: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        _saving = true;
+        _message = null;
+
+        try
+        {
+            if (_current is null)
+            {
+                _message = "Settings not loaded.";
+                return;
+            }
+
+            var updated = new UserSettingsDto(
+                Language: _language,
+                FontScale: _current.FontScale,
+                AudioSpeed: _current.AudioSpeed,
+                DailyGoalMinutes: _dailyGoalMinutes,
+                Focus: _current.Focus,
+                SilentMode: _current.SilentMode);
+
+            await Api.UpdateMeSettingsAsync(updated);
+            _current = updated;
+
+            _message = "Saved!";
+        }
+        catch (Exception ex)
+        {
+            _message = $"Save failed: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void GoLogin() => Nav.NavigateTo("/login");
+}

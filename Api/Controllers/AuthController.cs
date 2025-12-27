@@ -1,4 +1,5 @@
 using Api.Auth;
+using Api.Infrastructure;
 using Domain.Entities.Users;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -19,7 +20,7 @@ namespace Api.Controllers;
 /// 4) Trả về JWT + IsOnboarded
 /// </summary>
 [ApiController]
-[Route("auth")]
+[Route("api/[controller]")]
 public sealed class AuthController : ControllerBase
 {
     private readonly UserManager<AppUser> _userManager;
@@ -40,7 +41,7 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// POST /auth/register
+    /// POST /api/auth/register
     /// </summary>
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequestDto req)
@@ -60,6 +61,10 @@ public sealed class AuthController : ControllerBase
             return Conflict("Tài khoản đã tồn tại.");
         }
 
+        // Transaction (reusable helper):
+        // - Tránh trạng thái "mồ côi": có AppUser nhưng thiếu Profile/Settings.
+        // - Nếu Identity không enlist cùng transaction (trường hợp hiếm), vẫn có cleanup best-effort ở catch.
+
         // MVP: dùng Username cho cả email/phone
         var user = new AppUser
         {
@@ -69,47 +74,77 @@ public sealed class AuthController : ControllerBase
             PhoneNumber = normalized.Contains('@') ? null : normalized
         };
 
-        var create = await _userManager.CreateAsync(user, req.Password);
-        if (!create.Succeeded)
+        try
         {
-            // Trả về message đơn giản, dễ hiểu cho user.
-            var msg = string.Join(" ", create.Errors.Select(e => e.Description));
-            return BadRequest(msg);
+            return await _db.RunInTransactionAsync<ActionResult<AuthResponseDto>>(async () =>
+            {
+                // 1) Create identity user
+                var create = await _userManager.CreateAsync(user, req.Password);
+                if (!create.Succeeded)
+                {
+                    // Không commit transaction.
+                    var msg = string.Join(" ", create.Errors.Select(e => e.Description));
+                    return (commit: false, result: (ActionResult<AuthResponseDto>)BadRequest(msg));
+                }
+
+                // 2) Tạo Profile + Settings (default)
+                var now = DateTime.UtcNow;
+                var profile = new UserProfile
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    IsOnboarded = false,
+                    CreatedUtc = now,
+                    UpdatedUtc = now
+                };
+
+                var settings = new UserSettings
+                {
+                    // Shared PK pattern: Settings.Id = Profile.Id
+                    Id = profile.Id,
+                    UserId = user.Id,
+                    // Các default đã set trong entity
+                    CreatedUtc = now,
+                    UpdatedUtc = now
+                };
+
+                _db.UserProfiles.Add(profile);
+                _db.UserSettings.Add(settings);
+                await _db.SaveChangesAsync();
+
+                // 3) Auto-login: trả về JWT
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = _jwt.CreateAccessToken(user, roles);
+
+                // Commit khi toàn bộ bước thành công.
+                return (commit: true, result: (ActionResult<AuthResponseDto>)Ok(new AuthResponseDto(token, IsOnboarded: false)));
+            });
         }
-
-        // Tạo Profile + Settings (default)
-        var profile = new UserProfile
+        catch
         {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            IsOnboarded = false,
-            CreatedUtc = DateTime.UtcNow,
-            UpdatedUtc = DateTime.UtcNow
-        };
+            // Compensating action:
+            // Nếu vì lý do nào đó user đã được lưu ở ngoài transaction, ta cố gắng xóa user để tránh orphan.
+            try
+            {
+                var existingUser = await _userManager.FindByNameAsync(normalized);
+                if (existingUser is not null)
+                {
+                    await _userManager.DeleteAsync(existingUser);
+                }
+            }
+            catch
+            {
+                // Nếu xóa fail, không nên che lỗi gốc ở đây.
+                // (Có thể log sau nếu bạn thêm logging/telemetry.)
+            }
 
-        var settings = new UserSettings
-        {
-            // Shared PK pattern: Settings.Id = Profile.Id
-            Id = profile.Id,
-            UserId = user.Id,
-            // Các default đã set trong entity
-            CreatedUtc = DateTime.UtcNow,
-            UpdatedUtc = DateTime.UtcNow
-        };
-
-        _db.UserProfiles.Add(profile);
-        _db.UserSettings.Add(settings);
-        await _db.SaveChangesAsync();
-
-        // Auto-login: trả về JWT
-        var roles = await _userManager.GetRolesAsync(user);
-        var token = _jwt.CreateAccessToken(user, roles);
-
-        return Ok(new AuthResponseDto(token, IsOnboarded: false));
+            // Trả message trung lập (không lộ chi tiết nội bộ).
+            return Problem("Register failed. Please try again.");
+        }
     }
 
     /// <summary>
-    /// POST /auth/login
+    /// POST /api/auth/login
     /// </summary>
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto req)
@@ -143,5 +178,7 @@ public sealed class AuthController : ControllerBase
         var token = _jwt.CreateAccessToken(user, roles);
 
         return Ok(new AuthResponseDto(token, isOnboarded));
+
+
     }
 }

@@ -1,19 +1,56 @@
 @page "/onboarding"
-@inject Ui.Blazor.Services.AppState State
+
+@inject ApiClient Api
+@inject AppState State
 @inject NavigationManager Nav
 
 <h1>Onboarding</h1>
-<p>Chọn settings (placeholder)</p>
 
-<button style="min-height:56px;padding:0 18px;"
-        @onclick="Done">
-    Hoàn tất onboarding
-</button>
+<p>Complete onboarding to unlock the app.</p>
 
-@code{
-    private void Done()
+@if (!State.IsAuthenticated)
+{
+  <div class="alert alert-warning">
+    You must login first.
+  </div>
+  <button class="btn btn-primary" @onclick="GoLogin">Go to login</button>
+}
+else
+{
+  <button class="btn btn-success" @onclick="Complete" disabled="@Busy">Complete onboarding</button>
+
+  @if (!string.IsNullOrWhiteSpace(Message))
+  {
+    <div class="alert alert-info mt-3">@Message</div>
+  }
+}
+
+@code {
+  private bool Busy { get; set; }
+  private string? Message { get; set; }
+
+  private async Task Complete()
+  {
+    Busy = true;
+    Message = null;
+
+    try
     {
-        State.CompleteOnboarding();
-        Nav.NavigateTo("/home", replace: true);
+      await Api.CompleteOnboardingAsync();
+      await State.SetOnboardedAsync(true);
+
+      Message = "Done! Redirecting...";
+      Nav.NavigateTo("/", replace: true);
     }
+    catch (Exception ex)
+    {
+      Message = $"Error: {ex.Message}";
+    }
+    finally
+    {
+      Busy = false;
+    }
+  }
+
+  private void GoLogin() => Nav.NavigateTo("/login");
 }

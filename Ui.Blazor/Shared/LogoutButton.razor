@@ -1,0 +1,18 @@
+@inject ITokenStore TokenStore
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+
+<button @onclick="LogoutAsync" style="font-size:20px; height:48px; border-radius:12px;">
+  Đăng xuất
+</button>
+
+@code {
+  private async Task LogoutAsync()
+  {
+    await TokenStore.ClearAsync();
+    if (AuthProvider is Ui.Blazor.Auth.JwtAuthStateProvider jwt)
+      jwt.NotifyUserLogout();
+
+    Nav.NavigateTo("/login", forceLoad: false);
+  }
+}

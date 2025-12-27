@@ -1,18 +1,59 @@
 @page "/login"
+
+@using global::Shared.Dtos.Auth
+
+@inject Ui.Blazor.Services.ApiClient Api
 @inject Ui.Blazor.Services.AppState State
 @inject NavigationManager Nav
 
-<h1>Đăng nhập</h1>
+<h1>Login</h1>
 
-<button style="min-height:56px;padding:0 18px;"
-        @onclick="login">
-    Login (placeholder)
-</button>
+<div class="mb-3">
+  <label class="form-label">Username (email)</label>
+  <input class="form-control" @bind="Username" />
+</div>
 
-@code{
-    private void login()
+<div class="mb-3">
+  <label class="form-label">Password</label>
+  <input class="form-control" type="password" @bind="Password" />
+</div>
+
+<button class="btn btn-primary" @onclick="OnLogin" disabled="@Busy">Login</button>
+<button class="btn btn-link" @onclick="GoRegister" disabled="@Busy">Register</button>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+  <div class="alert alert-danger mt-3">@Error</div>
+}
+
+@code {
+  private string Username { get; set; } = "";
+  private string Password { get; set; } = "";
+  private string? Error { get; set; }
+  private bool Busy { get; set; }
+
+  private async Task OnLogin()
+  {
+    Error = null;
+    Busy = true;
+
+    try
     {
-        State.SignIn(onboardingDone: false);
-        Nav.NavigateTo("/onboarding", replace: true);
+      var auth = await Api.LoginAsync(new LoginRequestDto(Username, Password));
+
+      // API trả về IsOnboarded, không cần gọi thêm endpoint khác.
+      await State.SetAuthAsync(auth.AccessToken, userId: null, isOnboarded: auth.IsOnboarded);
+      Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
     }
+    catch (Exception ex)
+    {
+      Error = ex.Message;
+    }
+    finally
+    {
+      Busy = false;
+    }
+  }
+
+  private void GoRegister() => Nav.NavigateTo("/register");
 }

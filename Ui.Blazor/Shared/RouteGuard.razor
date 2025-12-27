@@ -1,48 +1,77 @@
 @implements IDisposable
-@inject NavigationManager Nav
-@inject Ui.Blazor.Services.AppState State
 
-@ChildContent
+@inject NavigationManager Nav
+@inject AppState State
+
+@if (!_isReady)
+{
+  <div class="p-4">Loading...</div>
+}
+else
+{
+  @ChildContent
+}
 
 @code {
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+  [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    protected override void OnInitialized()
+  private bool _isReady;
+
+  protected override async Task OnInitializedAsync()
+  {
+    // Ensure state is loaded exactly once when app starts
+    await State.InitializeAsync();
+
+    // Re-check guard when navigation occurs
+    Nav.LocationChanged += OnLocationChanged;
+
+    _isReady = true;
+
+    // First guard pass
+    GuardCurrentRoute();
+  }
+
+  private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+  {
+    GuardCurrentRoute();
+    StateHasChanged();
+  }
+
+  private void GuardCurrentRoute()
+  {
+    var relativePath = Nav.ToBaseRelativePath(Nav.Uri);
+    var path = "/" + relativePath.TrimStart('/');
+
+    // Public pages (allowed without auth)
+    if (IsPublicPath(path))
+      return;
+
+    if (!State.IsAuthenticated)
     {
-        State.OnChange += HandleChange;
-        EnforceRules();
+      Nav.NavigateTo("/login", replace: true);
+      return;
     }
 
-    private void HandleChange()
+    // Onboarding gate: only allow onboarding page until completed
+    if (!State.IsOnboarded && !path.StartsWith("/onboarding", StringComparison.OrdinalIgnoreCase))
     {
-        EnforceRules();
-        InvokeAsync(StateHasChanged);
+      Nav.NavigateTo("/onboarding", replace: true);
     }
+  }
 
-    private void EnforceRules()
-    {
-        var path = new Uri(Nav.Uri).AbsolutePath.ToLowerInvariant();
+  private static bool IsPublicPath(string path)
+  {
+    // Normalize "/" edge cases
+    if (string.IsNullOrWhiteSpace(path) || path == "/")
+      return true;
 
-        var isAuthPage = path is "/login" or "/register";
-        var isOnboarding = path == "/onboarding";
+    // Auth/public screens
+    return path.StartsWith("/login", StringComparison.OrdinalIgnoreCase)
+           || path.StartsWith("/register", StringComparison.OrdinalIgnoreCase);
+  }
 
-        if (!State.IsLoggedIn && !isAuthPage)
-        {
-            Nav.NavigateTo("/login", replace: true);
-            return;
-        }
-
-        if (State.IsLoggedIn && !State.HasCompletedOnboarding && !isOnboarding)
-        {
-            Nav.NavigateTo("/onboarding", replace: true);
-            return;
-        }
-
-        if (State.IsLoggedIn && State.HasCompletedOnboarding && isAuthPage)
-        {
-            Nav.NavigateTo("/home", replace: true);
-        }
-    }
-
-    public void Dispose() => State.OnChange -= HandleChange;
+  public void Dispose()
+  {
+    Nav.LocationChanged -= OnLocationChanged;
+  }
 }

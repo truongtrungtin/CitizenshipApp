@@ -1,3 +1,58 @@
 @page "/register"
+
+@using global::Shared.Dtos.Auth
+
+@inject Ui.Blazor.Services.ApiClient Api
+@inject Ui.Blazor.Services.AppState State
+@inject NavigationManager Nav
+
 <h1>Register</h1>
-<p>TODO: </p>
+
+<div class="mb-3">
+  <label class="form-label">Username (email)</label>
+  <input class="form-control" @bind="Username" />
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Password</label>
+  <input class="form-control" type="password" @bind="Password" />
+</div>
+
+<button class="btn btn-primary" @onclick="OnRegister" disabled="@Busy">Create account</button>
+<button class="btn btn-link" @onclick="GoLogin" disabled="@Busy">Back to login</button>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+  <div class="alert alert-danger mt-3">@Error</div>
+}
+
+@code {
+  private string Username { get; set; } = "";
+  private string Password { get; set; } = "";
+  private string? Error { get; set; }
+  private bool Busy { get; set; }
+
+  private async Task OnRegister()
+  {
+    Error = null;
+    Busy = true;
+
+    try
+    {
+      var auth = await Api.RegisterAsync(new RegisterRequestDto(Username, Password));
+
+      await State.SetAuthAsync(auth.AccessToken, userId: null, isOnboarded: auth.IsOnboarded);
+      Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
+    }
+    catch (Exception ex)
+    {
+      Error = ex.Message;
+    }
+    finally
+    {
+      Busy = false;
+    }
+  }
+
+  private void GoLogin() => Nav.NavigateTo("/login");
+}
