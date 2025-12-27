@@ -14,6 +14,15 @@ using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsDevelopment())
+{
+    // Why: Load secrets from the local user-secrets store (per developer machine),
+    // so we never commit DB passwords / JWT signing keys into appsettings.*.json.
+    // Note: CreateBuilder usually loads UserSecrets automatically when UserSecretsId exists,
+    // but keeping this explicit prevents "it works on my machine" config drift.
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+}
+
 const string corsPolicyName = "UiCors";
 
 builder.Services.AddControllers();
