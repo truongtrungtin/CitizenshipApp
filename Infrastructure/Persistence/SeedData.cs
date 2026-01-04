@@ -1,7 +1,12 @@
 using Domain.Entities;
 using Domain.Entities.Deck;
 
+using Infrastructure.Identity;
+
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Persistence;
 
@@ -55,6 +60,21 @@ public static class SeedData
         await db.SaveChangesAsync(ct);
 
         await SeedDecksAsync(db, ct);
+    }
+
+    /// <summary>
+    ///     Seed dữ liệu dev (system + identity).
+    ///     - Idempotent
+    ///     - Chỉ chạy khi caller gọi explicit (thường là Development startup)
+    /// </summary>
+    public static async Task SeedAsync(
+        IServiceProvider services,
+        IConfiguration configuration,
+        CancellationToken ct = default)
+    {
+        AppDbContext db = services.GetRequiredService<AppDbContext>();
+        await SeedAsync(db, ct);
+        await SeedAdminAsync(services, configuration, ct);
     }
 
     private static async Task SeedDecksAsync(AppDbContext db, CancellationToken ct)
@@ -121,5 +141,68 @@ public static class SeedData
         db.Questions.AddRange(q1, q2);
 
         await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task SeedAdminAsync(
+        IServiceProvider services,
+        IConfiguration configuration,
+        CancellationToken ct)
+    {
+        // Always ensure the Admin role exists (safe even without an admin user).
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var userManager = services.GetRequiredService<UserManager<AppUser>>();
+
+        const string adminRole = "Admin";
+
+        if (!await roleManager.RoleExistsAsync(adminRole))
+        {
+            var role = new IdentityRole<Guid>(adminRole) { Id = Guid.NewGuid() };
+            IdentityResult created = await roleManager.CreateAsync(role);
+            if (!created.Succeeded)
+            {
+                Console.WriteLine($"[DEV] Failed to create role '{adminRole}': {string.Join("; ", created.Errors.Select(e => e.Description))}");
+                return;
+            }
+        }
+
+        string? email = configuration["Seed:AdminEmail"];
+        string? password = configuration["Seed:AdminPassword"];
+
+        // No secrets? Then we only create the role and stop.
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            Console.WriteLine("[DEV] Admin user seed skipped (Seed:AdminEmail / Seed:AdminPassword not set)." );
+            return;
+        }
+
+        string normalized = email.Trim();
+
+        AppUser? user = await userManager.FindByNameAsync(normalized);
+        if (user is null)
+        {
+            user = new AppUser
+            {
+                Id = Guid.NewGuid(),
+                UserName = normalized,
+                Email = normalized,
+                EmailConfirmed = true
+            };
+
+            IdentityResult createUser = await userManager.CreateAsync(user, password);
+            if (!createUser.Succeeded)
+            {
+                Console.WriteLine($"[DEV] Failed to create admin user '{normalized}': {string.Join("; ", createUser.Errors.Select(e => e.Description))}");
+                return;
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(user, adminRole))
+        {
+            IdentityResult addRole = await userManager.AddToRoleAsync(user, adminRole);
+            if (!addRole.Succeeded)
+            {
+                Console.WriteLine($"[DEV] Failed to add role '{adminRole}' to '{normalized}': {string.Join("; ", addRole.Errors.Select(e => e.Description))}");
+            }
+        }
     }
 }

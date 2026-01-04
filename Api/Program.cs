@@ -216,8 +216,7 @@ if (app.Environment.IsDevelopment())
             DbConnection dbConn = db.Database.GetDbConnection();
             Console.WriteLine($"[DEV] EF DbConnection: DataSource={dbConn.DataSource}, Database={dbConn.Database}");
 
-            await db.Database.MigrateAsync();
-            await SeedData.SeedAsync(db);
+            await SeedData.SeedAsync(scope.ServiceProvider, builder.Configuration);
 
             Console.WriteLine("[DEV] Database migration + seed completed.");
             lastError = null;
