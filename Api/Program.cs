@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 using Api.Auth;
 
@@ -158,7 +159,7 @@ app.UseExceptionHandler(errorApp =>
         };
 
         context.Response.StatusCode = statusCode;
-        context.Response.ContentType = "application/problem+json";
+    context.Response.ContentType = "application/problem+json";
 
         var problem = new ProblemDetails
         {
@@ -182,7 +183,8 @@ app.UseExceptionHandler(errorApp =>
             problem.Extensions["exceptionType"] = ex.GetType().FullName;
         }
 
-        await context.Response.WriteAsJsonAsync(problem);
+        string json = JsonSerializer.Serialize(problem, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        await context.Response.WriteAsync(json);
     });
 });
 
@@ -284,3 +286,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Expose Program for integration testing (WebApplicationFactory).
+public partial class Program
+{
+}
