@@ -37,3 +37,4 @@ Last updated: 2026-01-03
 
 ## Release notes (draft)
 - v0.1: Auth + onboarding flag, deck/question seed, study flow + progress, Blazor UI baseline.
+
