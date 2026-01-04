@@ -1,0 +1,33 @@
+@*
+  Placeholder component.
+
+  MainLayout đang render <NavMenu /> ở sidebar. File này tồn tại để:
+  - tránh warning Razor "unexpected name 'NavMenu'"
+  - giữ chỗ cho menu bên trái khi bạn muốn thêm sau
+
+  Hiện tại app đã có các nút điều hướng ở top bar (MainLayout.razor),
+  nên sidebar để trống để tránh thay đổi UX ngoài ý muốn.
+*@
+@inject AppState State
+
+<nav class="nav flex-column">
+  <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Home</NavLink>
+
+  @if (State.IsAuthenticated)
+  {
+    <NavLink class="nav-link" href="/study">Study</NavLink>
+    <NavLink class="nav-link" href="/settings">Settings</NavLink>
+
+    @if (!State.IsOnboarded)
+    {
+      <NavLink class="nav-link" href="/onboarding">Onboarding</NavLink>
+    }
+
+    <NavLink class="nav-link" href="/logout">Logout</NavLink>
+  }
+  else
+  {
+    <NavLink class="nav-link" href="/login">Login</NavLink>
+    <NavLink class="nav-link" href="/register">Register</NavLink>
+  }
+</nav>
