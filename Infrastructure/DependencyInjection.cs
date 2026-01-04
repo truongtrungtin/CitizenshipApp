@@ -3,7 +3,6 @@ using Application.Decks;
 using Infrastructure.Decks;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
-using Infrastructure.QuestionBank;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
@@ -67,12 +66,8 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         // ---------------------------
-        // Question bank (read-only)
+        // Deck/question queries (read-only)
         // ---------------------------
-        // Why:
-        // - EPIC 4 requires read-only deck/question browsing.
-        // - Store is singleton (cached snapshot), query service is scoped.
-        services.AddSingleton<IQuestionBankStore, EmbeddedQuestionBankStore>();
         services.AddScoped<IDeckQueryService, DeckQueryService>();
 
         return services;

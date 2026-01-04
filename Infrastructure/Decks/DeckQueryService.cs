@@ -1,6 +1,8 @@
 using Application.Decks;
 
-using Infrastructure.QuestionBank;
+using Infrastructure.Persistence;
+
+using Microsoft.EntityFrameworkCore;
 
 using Shared.Contracts.Deck;
 
@@ -8,7 +10,7 @@ namespace Infrastructure.Decks;
 
 /// <summary>
 ///     Infrastructure implementation of <see cref="IDeckQueryService" />.
-///     Data source (MVP): <see cref="EmbeddedQuestionBankStore" /> loads an embedded JSON question bank.
+///     Data source: SQL Server via EF Core (<see cref="AppDbContext" />).
 ///     Why this lives in Infrastructure:
 ///     - It knows how to load/read data.
 ///     - Application only defines the contract.
@@ -16,34 +18,24 @@ namespace Infrastructure.Decks;
 /// </summary>
 public sealed class DeckQueryService : IDeckQueryService
 {
-    private readonly IQuestionBankStore _store;
+    private readonly AppDbContext _db;
 
-    public DeckQueryService(IQuestionBankStore store)
+    public DeckQueryService(AppDbContext db)
     {
-        _store = store;
+        _db = db;
     }
 
     public async Task<IReadOnlyList<DeckListItem>> GetDecksAsync(CancellationToken ct)
     {
-        QuestionBankSnapshot snapshot = await _store.GetSnapshotAsync(ct);
-
-        // Why: QuestionCount is derived from the question bank snapshot.
-        // We keep it computed here so the JSON file stays simple.
-        var result = new List<DeckListItem>(snapshot.Decks.Count);
-
-        foreach (DeckDefinition deck in snapshot.Decks)
-        {
-            snapshot.QuestionsByDeckId.TryGetValue(deck.Id, out IReadOnlyList<Question>? questions);
-            int count = questions?.Count ?? 0;
-
-            result.Add(new DeckListItem(
-                deck.Id,
-                deck.Code,
-                deck.Name,
-                count));
-        }
-
-        return result;
+        return await _db.Decks
+            .AsNoTracking()
+            .OrderBy(d => d.Name)
+            .Select(d => new DeckListItem(
+                d.DeckId,
+                d.Code,
+                d.Name,
+                d.Questions.Count))
+            .ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<Question>> GetDeckQuestionsAsync(
@@ -55,33 +47,77 @@ public sealed class DeckQueryService : IDeckQueryService
         // Why: Keep validation in one place so both controllers and future callers behave consistently.
         ValidatePaging(page, pageSize);
 
-        QuestionBankSnapshot snapshot = await _store.GetSnapshotAsync(ct);
+        bool deckExists = await _db.Decks
+            .AsNoTracking()
+            .AnyAsync(d => d.DeckId == deckId, ct);
 
-        if (!snapshot.QuestionsByDeckId.TryGetValue(deckId, out IReadOnlyList<Question>? questions))
+        if (!deckExists)
         {
-            // The deck exists but has zero questions, or the deck id does not exist.
-            // We decide that "missing deck" should be 404, while an empty deck should still be valid.
-            // Because the snapshot is built from JSON, if a deck exists it will appear in snapshot.Decks.
-            bool deckExists = snapshot.Decks.Any(d => d.Id == deckId);
-            if (!deckExists)
-            {
-                throw new KeyNotFoundException($"Deck '{deckId}' not found.");
-            }
-
-            return Array.Empty<Question>();
+            throw new KeyNotFoundException($"Deck '{deckId}' not found.");
         }
 
-        // Stable paging.
-        // Note: Questions are currently in the order they appear in JSON.
-        // If you want a deterministic sort independent of file order, add an Order field and sort by it.
         int skip = (page - 1) * pageSize;
-        return questions.Skip(skip).Take(pageSize).ToList();
+
+        // Stable paging. Order by PK for deterministic results.
+        return await _db.Questions
+            .AsNoTracking()
+            .Where(q => q.DeckId == deckId)
+            .OrderBy(q => q.QuestionId)
+            .Skip(skip)
+            .Take(pageSize)
+            .Select(q => new Question(
+                q.QuestionId,
+                q.DeckId,
+                MapQuestionType(q.Type),
+                new QuestionText(
+                    q.PromptEn,
+                    q.PromptVi ?? string.Empty,
+                    q.PromptViPhonetic,
+                    q.ExplainEn,
+                    q.ExplainVi),
+                q.Options
+                    .OrderBy(o => o.SortOrder)
+                    .Select(o => new AnswerOption(o.Key, o.TextEn, o.TextVi))
+                    .ToList()))
+            .ToListAsync(ct);
     }
 
     public async Task<Question?> GetQuestionByIdAsync(Guid questionId, CancellationToken ct)
     {
-        QuestionBankSnapshot snapshot = await _store.GetSnapshotAsync(ct);
-        return snapshot.QuestionsById.TryGetValue(questionId, out Question? q) ? q : null;
+        return await _db.Questions
+            .AsNoTracking()
+            .Where(q => q.QuestionId == questionId)
+            .Select(q => new Question(
+                q.QuestionId,
+                q.DeckId,
+                MapQuestionType(q.Type),
+                new QuestionText(
+                    q.PromptEn,
+                    q.PromptVi ?? string.Empty,
+                    q.PromptViPhonetic,
+                    q.ExplainEn,
+                    q.ExplainVi),
+                q.Options
+                    .OrderBy(o => o.SortOrder)
+                    .Select(o => new AnswerOption(o.Key, o.TextEn, o.TextVi))
+                    .ToList()))
+            .SingleOrDefaultAsync(ct);
+    }
+
+    private static QuestionType MapQuestionType(string? raw)
+    {
+        string? s = (raw ?? string.Empty).Trim().ToUpperInvariant();
+
+        return s switch
+        {
+            "TEXT" => QuestionType.Text,
+            "MCQ" => QuestionType.SingleChoice,
+            "SINGLE" => QuestionType.SingleChoice,
+            "SINGLECHOICE" => QuestionType.SingleChoice,
+            "MULTI" => QuestionType.MultiChoice,
+            "MULTICHOICE" => QuestionType.MultiChoice,
+            _ => QuestionType.Unknown
+        };
     }
 
     private static void ValidatePaging(int page, int pageSize)
