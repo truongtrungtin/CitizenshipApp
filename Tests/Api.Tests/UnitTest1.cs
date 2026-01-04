@@ -151,3 +151,84 @@ public sealed class ApiDeckQuestionQueryTests : IClassFixture<TestApiFactory>
         payload.Question.DeckId.Should().Be(_factory.SeedDeckId);
     }
 }
+
+public sealed class ApiStudyAnswerFlowTests : IClassFixture<TestApiFactory>
+{
+    private readonly TestApiFactory _factory;
+
+    public ApiStudyAnswerFlowTests(TestApiFactory factory)
+    {
+        _factory = factory;
+    }
+
+    [Fact]
+    public async Task Study_answer_logs_event_and_today_aggregates_counts()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        Guid userId = Guid.NewGuid();
+        client.DefaultRequestHeaders.Add("X-Test-Auth", "1");
+        client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
+
+        // Submit a correct answer.
+        var submitReq = new SubmitAnswerRequest
+        {
+            DeckId = _factory.SeedDeckId,
+            QuestionId = _factory.SeedQuestionId,
+            SelectedKey = "B"
+        };
+
+        HttpResponseMessage submitResp = await client.PostAsJsonAsync("/api/study/answer", submitReq);
+        submitResp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        SubmitAnswerResponse? submitPayload = await submitResp.Content.ReadFromJsonAsync<SubmitAnswerResponse>();
+        submitPayload.Should().NotBeNull();
+        submitPayload!.IsCorrect.Should().BeTrue();
+        submitPayload.CorrectKey.Should().Be("B");
+
+        // Today should reflect 1 answered / 1 correct for this user.
+        HttpResponseMessage todayResp = await client.GetAsync("/api/study/today");
+        todayResp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        TodayProgressResponse? todayPayload = await todayResp.Content.ReadFromJsonAsync<TodayProgressResponse>();
+        todayPayload.Should().NotBeNull();
+        todayPayload!.TotalAnswered.Should().Be(1);
+        todayPayload.CorrectAnswered.Should().Be(1);
+
+        // No UserSettings seeded for this user -> controller defaults goal to 10.
+        todayPayload.DailyGoalMinutes.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task Study_answer_incorrect_returns_correct_key_and_today_counts_correctly()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        Guid userId = Guid.NewGuid();
+        client.DefaultRequestHeaders.Add("X-Test-Auth", "1");
+        client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
+
+        var submitReq = new SubmitAnswerRequest
+        {
+            DeckId = _factory.SeedDeckId,
+            QuestionId = _factory.SeedQuestionId,
+            SelectedKey = "A"
+        };
+
+        HttpResponseMessage submitResp = await client.PostAsJsonAsync("/api/study/answer", submitReq);
+        submitResp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        SubmitAnswerResponse? submitPayload = await submitResp.Content.ReadFromJsonAsync<SubmitAnswerResponse>();
+        submitPayload.Should().NotBeNull();
+        submitPayload!.IsCorrect.Should().BeFalse();
+        submitPayload.CorrectKey.Should().Be("B");
+
+        HttpResponseMessage todayResp = await client.GetAsync("/api/study/today");
+        todayResp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        TodayProgressResponse? todayPayload = await todayResp.Content.ReadFromJsonAsync<TodayProgressResponse>();
+        todayPayload.Should().NotBeNull();
+        todayPayload!.TotalAnswered.Should().Be(1);
+        todayPayload.CorrectAnswered.Should().Be(0);
+    }
+}
