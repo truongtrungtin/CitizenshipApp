@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 
 using Shared.Contracts.Deck;
+using Shared.Contracts.Study;
 
 namespace Api.Tests;
 
@@ -113,5 +114,40 @@ public sealed class ApiDeckQuestionQueryTests : IClassFixture<TestApiFactory>
         HttpResponseMessage resp = await client.GetAsync($"/api/questions/{Guid.NewGuid()}");
 
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Deck_by_id_returns_question_count()
+    {
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-Auth", "1");
+        client.DefaultRequestHeaders.Add("X-Test-UserId", Guid.NewGuid().ToString());
+
+        HttpResponseMessage resp = await client.GetAsync($"/api/decks/{_factory.SeedDeckId}");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        DeckListItem? payload = await resp.Content.ReadFromJsonAsync<DeckListItem>();
+        payload.Should().NotBeNull();
+        payload!.Id.Should().Be(_factory.SeedDeckId);
+        payload.QuestionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Study_next_returns_a_question_from_db()
+    {
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-Auth", "1");
+        client.DefaultRequestHeaders.Add("X-Test-UserId", Guid.NewGuid().ToString());
+
+        HttpResponseMessage resp = await client.GetAsync($"/api/study/next?deckId={_factory.SeedDeckId}");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        NextQuestionResponse? payload = await resp.Content.ReadFromJsonAsync<NextQuestionResponse>();
+        payload.Should().NotBeNull();
+        payload!.Question.Should().NotBeNull();
+        payload.Question.Id.Should().Be(_factory.SeedQuestionId);
+        payload.Question.DeckId.Should().Be(_factory.SeedDeckId);
     }
 }
