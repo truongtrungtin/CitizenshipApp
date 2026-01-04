@@ -39,6 +39,10 @@ cd Api
 
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CitizenshipApp;User Id=sa;Password=<YOUR_PASSWORD>;TrustServerCertificate=True"
 dotnet user-secrets set "Jwt:Key" "<YOUR_LONG_RANDOM_KEY_32+>"
+
+# (Optional) Seed 1 tài khoản admin cho local dev (để gọi các endpoint Admin-only)
+dotnet user-secrets set "Seed:AdminEmail" "admin@local"
+dotnet user-secrets set "Seed:AdminPassword" "ChangeMe123!"
 ```
 
 Ghi chú:

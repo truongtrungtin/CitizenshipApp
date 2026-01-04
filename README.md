@@ -60,6 +60,12 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,
 
 # JWT signing key (>= 32 ký tự)
 dotnet user-secrets set "Jwt:Key" "<YOUR_LONG_RANDOM_KEY_32+>"
+
+# (Optional) Seed 1 tài khoản admin cho local dev
+# - role: Admin
+# - dùng để gọi các endpoint Admin-only (ví dụ: AppSettings)
+dotnet user-secrets set "Seed:AdminEmail" "admin@local"
+dotnet user-secrets set "Seed:AdminPassword" "ChangeMe123!"
 ```
 
 Tuỳ chọn (prod / non-dev):
