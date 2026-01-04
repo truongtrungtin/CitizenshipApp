@@ -1,10 +1,8 @@
 @inherits LayoutComponentBase
-@inject NavigationManager Nav
-@inject Ui.Blazor.Services.AppState State
 
 <div class="page">
   <div class="sidebar">
-    <NavMenu />
+    <NavMenu/>
   </div>
 
   <main>
@@ -15,10 +13,34 @@
 </div>
 
 @code {
-  private void GoHome() => Nav.NavigateTo("/");
-  private void GoLogin() => Nav.NavigateTo("/login");
-  private void GoRegister() => Nav.NavigateTo("/register");
-  private void GoLogout() => Nav.NavigateTo("/logout");
-  private void GoMe() => Nav.NavigateTo("/me");
-  private void GoSettings() => Nav.NavigateTo("/me/settings");
+  private void GoHome()
+  {
+    Nav.NavigateTo("/");
+  }
+
+  private void GoLogin()
+  {
+    Nav.NavigateTo("/login");
+  }
+
+  private void GoRegister()
+  {
+    Nav.NavigateTo("/register");
+  }
+
+  private void GoLogout()
+  {
+    Nav.NavigateTo("/logout");
+  }
+
+  private void GoMe()
+  {
+    Nav.NavigateTo("/me");
+  }
+
+  private void GoSettings()
+  {
+    Nav.NavigateTo("/me/settings");
+  }
+
 }

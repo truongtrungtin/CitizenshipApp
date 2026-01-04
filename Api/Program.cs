@@ -1,3 +1,5 @@
+using System.Data.Common;
+using System.Net.Sockets;
 using System.Text;
 
 using Api.Auth;
@@ -6,11 +8,10 @@ using Infrastructure;
 using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using Microsoft.Extensions.Options;
-
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ if (builder.Environment.IsDevelopment())
     // so we never commit DB passwords / JWT signing keys into appsettings.*.json.
     // Note: CreateBuilder usually loads UserSecrets automatically when UserSecretsId exists,
     // but keeping this explicit prevents "it works on my machine" config drift.
-    builder.Configuration.AddUserSecrets<Program>(optional: true);
+    builder.Configuration.AddUserSecrets<Program>(true);
 }
 
 const string corsPolicyName = "UiCors";
@@ -86,7 +87,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            var allowedOrigins = builder.Configuration
+            string[] allowedOrigins = builder.Configuration
                 .GetSection("Cors:AllowedOrigins")
                 .Get<string[]>() ?? Array.Empty<string>();
 
@@ -104,11 +105,11 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Authentication / Authorization (JWT)
 // ---------------------------
 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
-var jwtAudience = builder.Configuration["Jwt:Audience"]!;
-var jwtKey = builder.Configuration["Jwt:Key"]!;
+string jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
+string jwtAudience = builder.Configuration["Jwt:Audience"]!;
+string jwtKey = builder.Configuration["Jwt:Key"]!;
 
-var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+byte[] keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 var signingKey = new SymmetricSecurityKey(keyBytes);
 
 builder.Services
@@ -130,7 +131,7 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -142,11 +143,84 @@ if (app.Environment.IsDevelopment())
     });
 
     // Auto migrate on startup (dev)
-    using IServiceScope scope = app.Services.CreateScope();
-    AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // Migrate + seed (dev)
-    db.Database.Migrate();
-    await SeedData.SeedAsync(db);
+    const int maxAttempts = 15;
+    const int delaySeconds = 2;
+
+    // Why: In dev, when SQL Server runs in Docker, it may not be ready immediately.
+    // We retry migrations to avoid crash loops and reduce "works on my machine" issues.
+    Exception? lastError = null;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try
+        {
+            // Why: Create a fresh scope + DbContext per attempt.
+            // If the connection fails, reusing the same DbContext can keep a broken state.
+            using IServiceScope scope = app.Services.CreateScope();
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+// Why: Confirm the actual resolved connection EF Core is using at runtime.
+// This helps detect cases where AddInfrastructure() config differs from what we think.
+            DbConnection dbConn = db.Database.GetDbConnection();
+            Console.WriteLine($"[DEV] EF DbConnection: DataSource={dbConn.DataSource}, Database={dbConn.Database}");
+
+            await db.Database.MigrateAsync();
+            await SeedData.SeedAsync(db);
+
+            Console.WriteLine("[DEV] Database migration + seed completed.");
+            lastError = null;
+            break;
+        }
+        catch (Exception ex) when (attempt < maxAttempts && IsTransientDbStartupError(ex))
+        {
+            lastError = ex;
+
+            Console.WriteLine(
+                $"[DEV] DB not ready (attempt {attempt}/{maxAttempts}). " +
+                $"Retrying in {delaySeconds}s. Root: {GetRootCauseMessage(ex)}");
+
+            await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+        }
+    }
+
+    // If all retries failed, crash with a clear message (dev).
+    if (lastError is not null)
+    {
+        throw new InvalidOperationException(
+            "Database is not reachable after multiple attempts. " +
+            "Make sure SQL Server Docker is running and your connection string is correct.",
+            lastError);
+    }
+
+    // -------------------------
+    // Local helper methods
+    // -------------------------
+
+    static bool IsTransientDbStartupError(Exception ex)
+    {
+        // Why:
+        // EF Core often wraps SqlException inside InvalidOperationException, DbUpdateException,
+        // or other exceptions. We treat these as transient during container warm-up.
+        Exception? root = ex;
+        while (root.InnerException is not null)
+        {
+            root = root.InnerException;
+        }
+
+        return root is SqlException
+               || root is TimeoutException
+               || root is SocketException;
+    }
+
+    static string GetRootCauseMessage(Exception ex)
+    {
+        Exception? root = ex;
+        while (root.InnerException is not null)
+        {
+            root = root.InnerException;
+        }
+
+        return root.Message;
+    }
 }
 
 app.UseHttpsRedirection();

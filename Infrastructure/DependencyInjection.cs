@@ -1,6 +1,12 @@
-using Infrastructure.Persistence;
+using Application.Decks;
+
+using Infrastructure.Decks;
 using Infrastructure.Identity;
+using Infrastructure.Persistence;
+using Infrastructure.QuestionBank;
+
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,9 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Infrastructure;
 
 /// <summary>
-/// DependencyInjection:
-/// - Gom toàn bộ đăng ký DI của Infrastructure vào 1 nơi.
-/// - Api chỉ cần gọi services.AddInfrastructure(configuration);
+///     DependencyInjection:
+///     - Gom toàn bộ đăng ký DI của Infrastructure vào 1 nơi.
+///     - Api chỉ cần gọi services.AddInfrastructure(configuration);
 /// </summary>
 public static class DependencyInjection
 {
@@ -19,7 +25,10 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         // Lấy connection string từ Api/appsettings*.json
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        string? connectionString = configuration.GetConnectionString("DefaultConnection");
+        var builderCs = new SqlConnectionStringBuilder(connectionString);
+        Console.WriteLine(
+            $"[DEV] SQL Target: {builderCs.DataSource}, DB: {builderCs.InitialCatalog}, User: {builderCs.UserID}");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
@@ -56,6 +65,15 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
+
+        // ---------------------------
+        // Question bank (read-only)
+        // ---------------------------
+        // Why:
+        // - EPIC 4 requires read-only deck/question browsing.
+        // - Store is singleton (cached snapshot), query service is scoped.
+        services.AddSingleton<IQuestionBankStore, EmbeddedQuestionBankStore>();
+        services.AddScoped<IDeckQueryService, DeckQueryService>();
 
         return services;
     }

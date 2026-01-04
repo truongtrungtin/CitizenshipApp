@@ -1,7 +1,7 @@
 namespace Domain.Enums;
 
 /// <summary>
-/// Nội dung ưu tiên khi học.
+///     Nội dung ưu tiên khi học.
 /// </summary>
 public enum StudyFocus
 {

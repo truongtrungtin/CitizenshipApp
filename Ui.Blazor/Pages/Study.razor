@@ -1,3 +1,313 @@
 @page "/study"
-<h1>Study</h1>
-<p>TODO: </p>
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+  <h3 class="mb-0">Study</h3>
+
+  <div class="btn-group" role="group" aria-label="Language">
+    <button type="button" class="btn btn-sm @(_language == LanguageCode.Vi ? "btn-primary" : "btn-outline-primary")"
+            @onclick="() => SetLanguage(LanguageCode.Vi)">
+      VI
+    </button>
+
+    <button type="button" class="btn btn-sm @(_language == LanguageCode.En ? "btn-primary" : "btn-outline-primary")"
+            @onclick="() => SetLanguage(LanguageCode.En)">
+      EN
+    </button>
+  </div>
+</div>
+
+<hr/>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <div class="alert alert-danger" role="alert">
+    <strong>Error:</strong> @_error
+  </div>
+}
+
+<div class="d-flex align-items-center gap-2 flex-wrap">
+  <label class="form-label mb-0"><strong>Deck</strong></label>
+
+  <select class="form-select form-select-sm" style="min-width: 260px"
+          @onchange="OnDeckChanged" disabled="@(_busy || _decks.Count == 0)">
+    @if (_decks.Count == 0)
+    {
+      <option selected>— No decks —</option>
+    }
+    else
+    {
+      @foreach (var deck in _decks)
+      {
+        <option value="@deck.Id" selected="@(deck.Id == _selectedDeckId)">
+          @deck.Name (@deck.Code) • @deck.QuestionCount
+        </option>
+      }
+    }
+  </select>
+
+  <button class="btn btn-sm btn-outline-secondary" @onclick="ReloadAllAsync" disabled="@_busy">
+    Reload
+  </button>
+
+  <button class="btn btn-sm btn-primary" @onclick="LoadNextQuestionAsync"
+          disabled="@(!_selectedDeckId.HasValue || _busy)">
+    Next
+  </button>
+</div>
+
+@if (_today is not null)
+{
+  <div class="mt-3 p-3 border rounded">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <div class="fw-semibold">Today</div>
+        <div class="text-muted small">
+          Goal: @_today.DailyGoalMinutes
+          &nbsp;|&nbsp; Answered: @_today.TotalAnswered
+          &nbsp;|&nbsp; Correct: @_today.CorrectAnswered
+        </div>
+      </div>
+
+      <div class="small text-muted">(UTC day boundary)</div>
+    </div>
+  </div>
+}
+
+@if (_busy && _question is null)
+{
+  <div class="mt-3 alert alert-info">Loading…</div>
+}
+
+@if (_question is not null)
+{
+  <div class="mt-4 p-3 border rounded">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <div class="text-muted small">Question type: @_question.Type</div>
+        <div class="fs-5 fw-semibold">@GetPrompt(_question.Prompt)</div>
+
+        @if (_language == LanguageCode.Vi && !string.IsNullOrWhiteSpace(_question.Prompt.ViPhonetic))
+        {
+          <div class="mt-1 text-muted"><em>@_question.Prompt.ViPhonetic</em></div>
+        }
+      </div>
+
+      <div class="text-muted small">ID: @_question.Id</div>
+    </div>
+
+    @if (_lastAnswer is not null)
+    {
+      <hr/>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge @(_lastAnswer.IsCorrect ? "bg-success" : "bg-danger")">
+          @(_lastAnswer.IsCorrect ? "Correct" : "Incorrect")
+        </span>
+
+        <div class="small"><strong>Your:</strong> @GetOptionLabel(_lastAnswer.SelectedKey)</div>
+        <div class="small"><strong>Correct:</strong> @GetOptionLabel(_lastAnswer.CorrectKey)</div>
+      </div>
+
+      @if (!string.IsNullOrWhiteSpace(GetExplain(_question.Prompt)))
+      {
+        <div class="mt-3 alert alert-secondary mb-0">
+          <div class="fw-semibold">Explanation</div>
+          <div>@GetExplain(_question.Prompt)</div>
+        </div>
+      }
+
+      <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary" @onclick="LoadNextQuestionAsync" disabled="@_busy">Continue</button>
+        <button class="btn btn-outline-secondary" @onclick="ClearAnswer">Clear result</button>
+      </div>
+    }
+    else
+    {
+      <hr/>
+      @if (_question.Options is null || _question.Options.Count == 0)
+      {
+        <div class="alert alert-warning mb-0">
+          This question has no options yet (free-text not implemented in MVP).
+        </div>
+      }
+      else
+      {
+        <div class="d-grid gap-2">
+          @foreach (var opt in _question.Options)
+          {
+            <button class="btn btn-outline-primary text-start"
+                    disabled="@_busy"
+                    @onclick="() => SubmitAnswerAsync(opt.Key)">
+              <strong>@opt.Key</strong>. @GetOptionText(opt)
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+}
+
+@code {
+  private readonly List<DeckListItem> _decks = new();
+  private Guid? _selectedDeckId;
+
+  private TodayProgressResponse? _today;
+  private Question? _question;
+
+  private AnswerResult? _lastAnswer;
+  private bool _busy;
+  private string? _error;
+
+  private LanguageCode _language = LanguageCode.En;
+  private bool IsVietnamese => _language == LanguageCode.Vi;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await ReloadAllAsync();
+  }
+
+  private void SetLanguage(LanguageCode lang)
+  {
+    _language = lang;
+    StateHasChanged();
+  }
+
+  private async Task ReloadAllAsync()
+  {
+    _error = null;
+    _busy = true;
+
+    try
+    {
+      var meSettings = await Api.GetMeSettingsAsync();
+      SetLanguage(meSettings.Language);
+
+      _decks.Clear();
+      _decks.AddRange(await Api.GetDecksAsync());
+
+      _selectedDeckId = _decks.FirstOrDefault()?.Id;
+
+      await LoadTodayAsync();
+      await LoadNextQuestionAsync();
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private async Task OnDeckChanged(ChangeEventArgs e)
+  {
+    _error = null;
+
+    var raw = e.Value?.ToString();
+    if (!Guid.TryParse(raw, out var deckId))
+      return;
+
+    _selectedDeckId = deckId;
+    _lastAnswer = null;
+
+    await LoadNextQuestionAsync();
+  }
+
+  private async Task LoadTodayAsync()
+  {
+    try
+    {
+      _today = await Api.GetTodayProgressAsync();
+    }
+    catch
+    {
+      _today = null; // optional UI
+    }
+  }
+
+  private async Task LoadNextQuestionAsync()
+  {
+    _error = null;
+    _lastAnswer = null;
+
+    if (!_selectedDeckId.HasValue)
+      return;
+
+    _busy = true;
+
+    try
+    {
+      var res = await Api.GetNextQuestionAsync(_selectedDeckId.Value);
+      _question = res.Question;
+    }
+    catch (Exception ex)
+    {
+      _question = null;
+      _error = ex.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private async Task SubmitAnswerAsync(string selectedKey)
+  {
+    if (!_selectedDeckId.HasValue || _question is null)
+      return;
+
+    _error = null;
+    _busy = true;
+
+    try
+    {
+      var req = new SubmitAnswerRequest
+      {
+        DeckId = _selectedDeckId.Value,
+        QuestionId = _question.Id,
+        SelectedKey = selectedKey
+      };
+
+      var res = await Api.SubmitAnswerAsync(req);
+
+      _lastAnswer = new AnswerResult(
+        selectedKey,
+        res.CorrectKey ?? string.Empty,
+        res.IsCorrect
+      );
+
+      await LoadTodayAsync();
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private void ClearAnswer() => _lastAnswer = null;
+
+  private string GetPrompt(QuestionText t) =>
+    IsVietnamese ? (t.TextVi ?? t.TextEn ?? "") : (t.TextEn ?? t.TextVi ?? "");
+
+  private string GetExplain(QuestionText t) =>
+    IsVietnamese ? (t.ExplainVi ?? t.ExplainEn ?? "") : (t.ExplainEn ?? t.ExplainVi ?? "");
+
+  private string GetOptionText(AnswerOption o) =>
+    IsVietnamese ? (o.TextVi ?? o.TextEn ?? "") : (o.TextEn ?? o.TextVi ?? "");
+
+  private string GetOptionLabel(string key)
+  {
+    if (_question?.Options is null) return key;
+
+    var opt = _question.Options.FirstOrDefault(o =>
+      string.Equals(o.Key, key, StringComparison.OrdinalIgnoreCase));
+
+    return opt is null ? key : $"{opt.Key}. {GetOptionText(opt)}";
+  }
+
+  private sealed record AnswerResult(string SelectedKey, string CorrectKey, bool IsCorrect);
+}

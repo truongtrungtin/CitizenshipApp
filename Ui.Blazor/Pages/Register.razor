@@ -1,11 +1,5 @@
 @page "/register"
 
-@using global::Shared.Dtos.Auth
-
-@inject Ui.Blazor.Services.ApiClient Api
-@inject Ui.Blazor.Services.AppState State
-@inject NavigationManager Nav
-
 <h1>Register</h1>
 
 <div class="mb-3">
@@ -39,9 +33,10 @@
 
     try
     {
-      var auth = await Api.RegisterAsync(new RegisterRequestDto(Username, Password));
+      var req = new RegisterRequest { Email = Username, Password = Password };
+      var auth = await Api.RegisterAsync(req);
 
-      await State.SetAuthAsync(auth.AccessToken, userId: null, isOnboarded: auth.IsOnboarded);
+      await AppState.SetAuthAsync(auth.AccessToken, userId: auth.UserId.ToString(), isOnboarded: auth.IsOnboarded);
       Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
     }
     catch (Exception ex)

@@ -53,6 +53,143 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("AppSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Deck.Deck", b =>
+                {
+                    b.Property<Guid>("DeckId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("DeckId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Decks", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Deck.Question", b =>
+                {
+                    b.Property<Guid>("QuestionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CorrectOptionKey")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<Guid>("DeckId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExplainEn")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("ExplainVi")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("PromptEn")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("PromptVi")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("PromptViPhonetic")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("QuestionId");
+
+                    b.HasIndex("DeckId");
+
+                    b.ToTable("Questions", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Deck.QuestionOption", b =>
+                {
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TextEn")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TextVi")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("QuestionId", "Key");
+
+                    b.HasIndex("QuestionId", "SortOrder");
+
+                    b.ToTable("QuestionOptions", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Deck.StudyEvent", b =>
+                {
+                    b.Property<Guid>("StudyEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DeckId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SelectedKey")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("StudyEventId");
+
+                    b.HasIndex("DeckId", "CreatedUtc");
+
+                    b.HasIndex("UserId", "CreatedUtc");
+
+                    b.ToTable("StudyEvents", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Users.UserProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -329,6 +466,28 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Deck.Question", b =>
+                {
+                    b.HasOne("Domain.Entities.Deck.Deck", "Deck")
+                        .WithMany("Questions")
+                        .HasForeignKey("DeckId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deck");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Deck.QuestionOption", b =>
+                {
+                    b.HasOne("Domain.Entities.Deck.Question", "Question")
+                        .WithMany("Options")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+                });
+
             modelBuilder.Entity("Domain.Entities.Users.UserProfile", b =>
                 {
                     b.HasOne("Infrastructure.Identity.AppUser", null)
@@ -396,6 +555,16 @@ namespace Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.Deck.Deck", b =>
+                {
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Deck.Question", b =>
+                {
+                    b.Navigation("Options");
                 });
 #pragma warning restore 612, 618
         }

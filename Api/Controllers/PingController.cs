@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Shared.Dtos;
+
+using Shared.Contracts.Ping;
 
 namespace Api.Controllers;
 
@@ -8,5 +9,8 @@ namespace Api.Controllers;
 public class PingController : ControllerBase
 {
     [HttpGet]
-    public ActionResult<PingResponseDto> Get() => Ok(new PingResponseDto("pong"));
+    public ActionResult<PingResponse> Get()
+    {
+        return Ok(new PingResponse("pong"));
+    }
 }

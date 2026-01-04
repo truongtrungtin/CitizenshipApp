@@ -1,8 +1,5 @@
 @implements IDisposable
 
-@inject NavigationManager Nav
-@inject AppState State
-
 @if (!_isReady)
 {
   <div class="p-4">Loading...</div>
@@ -20,7 +17,7 @@ else
   protected override async Task OnInitializedAsync()
   {
     // Ensure state is loaded exactly once when app starts
-    await State.InitializeAsync();
+    await AppState.InitializeAsync();
 
     // Re-check guard when navigation occurs
     Nav.LocationChanged += OnLocationChanged;
@@ -46,14 +43,14 @@ else
     if (IsPublicPath(path))
       return;
 
-    if (!State.IsAuthenticated)
+    if (!AppState.IsAuthenticated)
     {
       Nav.NavigateTo("/login", replace: true);
       return;
     }
 
     // Onboarding gate: only allow onboarding page until completed
-    if (!State.IsOnboarded && !path.StartsWith("/onboarding", StringComparison.OrdinalIgnoreCase))
+    if (!AppState.IsOnboarded && !path.StartsWith("/onboarding", StringComparison.OrdinalIgnoreCase))
     {
       Nav.NavigateTo("/onboarding", replace: true);
     }
@@ -74,4 +71,5 @@ else
   {
     Nav.LocationChanged -= OnLocationChanged;
   }
+
 }

@@ -1,17 +1,19 @@
 @page "/logout"
-@inject Ui.Blazor.Services.AppState State
-@inject NavigationManager Nav
-
 <PageTitle>Logout</PageTitle>
 
 <p>Signing out...</p>
 
 @code {
+
   protected override async Task OnInitializedAsync()
   {
-    await State.LogoutAsync();
+    await AppState.LogoutAsync();
     GoLogin();
   }
 
-  private void GoLogin() => Nav.NavigateTo("/login");
+  private void GoLogin()
+  {
+    Nav.NavigateTo("/login");
+  }
+
 }

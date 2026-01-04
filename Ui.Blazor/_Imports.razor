@@ -12,4 +12,12 @@
 @using Ui.Blazor.Auth
 @using Ui.Blazor.Services
 @using Microsoft.AspNetCore.Authorization
-
+@using global::Shared.Contracts
+@using global::Shared.Contracts.Auth
+@using global::Shared.Contracts.Me
+@using global::Shared.Contracts.Deck
+@using global::Shared.Contracts.Study
+@using Domain.Enums
+@inject ApiClient Api
+@inject AppState AppState
+@inject NavigationManager Nav

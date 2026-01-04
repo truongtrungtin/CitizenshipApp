@@ -1,28 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <PackageReference Include="Azure.Core" Version="1.50.0" />
+        <PackageReference Include="Azure.Identity" Version="1.17.1" />
+        <PackageReference Include="Humanizer.Core" Version="3.0.1" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
 
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.11">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-          <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Application\Application.csproj" />
-      <ProjectReference Include="..\Domain\Domain.csproj" />
+        <ProjectReference Include="..\Application\Application.csproj"/>
+        <ProjectReference Include="..\Domain\Domain.csproj"/>
+        <!-- Why: Infrastructure implements query services returning Shared.Contracts DTOs. -->
+        <ProjectReference Include="..\Shared\Shared.csproj"/>
     </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <!-- Why: MVP question bank is shipped as an embedded JSON resource.
+      This avoids "copy to output" issues when deploying the API. -->
+    <ItemGroup>
+        <EmbeddedResource Include="QuestionBank\question-bank.sample.json"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
 </Project>
