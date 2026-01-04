@@ -1,14 +1,4 @@
-﻿@if (AppState.IsAuthenticated)
-{
-  <HomeProgress/>
-}
-
-@code {
-}
-
-@* Component nhỏ inline để Home gọn *@
-
-@code {
+﻿@code {
   private TodayProgressResponse? _today;
 
   protected override async Task OnInitializedAsync()

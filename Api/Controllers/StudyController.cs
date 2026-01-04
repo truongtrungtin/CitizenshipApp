@@ -68,7 +68,7 @@ public sealed class StudyController : ControllerBase
             MapQuestionType(q.Type),
             new QuestionText(
                 q.PromptEn,
-                q.PromptVi,
+                q.PromptVi ?? string.Empty,
                 q.PromptViPhonetic,
                 q.ExplainEn,
                 q.ExplainVi
