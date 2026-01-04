@@ -8,6 +8,8 @@ using Infrastructure;
 using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -132,6 +134,57 @@ builder.Services
 builder.Services.AddAuthorization();
 
 WebApplication app = builder.Build();
+
+// Global exception handling -> ProblemDetails (RFC 7807)
+// Why: standardize error responses and avoid leaking stack traces.
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        IExceptionHandlerFeature? feature = context.Features.Get<IExceptionHandlerFeature>();
+        Exception? ex = feature?.Error;
+        if (ex is null)
+        {
+            return;
+        }
+
+        int statusCode = ex switch
+        {
+            UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+            ArgumentException => StatusCodes.Status400BadRequest,
+            InvalidOperationException => StatusCodes.Status400BadRequest,
+            KeyNotFoundException => StatusCodes.Status404NotFound,
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
+
+        var problem = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = statusCode switch
+            {
+                StatusCodes.Status400BadRequest => "Bad Request",
+                StatusCodes.Status401Unauthorized => "Unauthorized",
+                StatusCodes.Status404NotFound => "Not Found",
+                _ => "Internal Server Error"
+            },
+            Type = $"https://httpstatuses.com/{statusCode}",
+            Instance = context.Request.Path
+        };
+
+        problem.Extensions["traceId"] = context.TraceIdentifier;
+
+        if (app.Environment.IsDevelopment())
+        {
+            problem.Detail = ex.Message;
+            problem.Extensions["exceptionType"] = ex.GetType().FullName;
+        }
+
+        await context.Response.WriteAsJsonAsync(problem);
+    });
+});
 
 if (app.Environment.IsDevelopment())
 {
