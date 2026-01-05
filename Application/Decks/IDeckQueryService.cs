@@ -15,9 +15,20 @@ namespace Application.Decks;
 public interface IDeckQueryService
 {
     /// <summary>
+    ///     Get a list of decks for the deck picker UI.
+    /// </summary>
+    Task<IReadOnlyList<DeckSummary>> GetDeckSummariesAsync(CancellationToken ct);
+
+    /// <summary>
     ///     Get a list of decks available in the question bank.
     /// </summary>
     Task<IReadOnlyList<DeckListItem>> GetDecksAsync(CancellationToken ct);
+
+    /// <summary>
+    ///     Get a single deck by its id.
+    ///     Returns null if not found.
+    /// </summary>
+    Task<DeckListItem?> GetDeckByIdAsync(Guid deckId, CancellationToken ct);
 
     /// <summary>
     ///     Get paged questions for a specific deck.

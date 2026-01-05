@@ -38,6 +38,35 @@ public sealed class DeckQueryService : IDeckQueryService
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<DeckSummary>> GetDeckSummariesAsync(CancellationToken ct)
+    {
+        return await _db.Decks
+            .AsNoTracking()
+            .OrderByDescending(d => d.IsActive)
+            .ThenBy(d => d.Name)
+            .Select(d => new DeckSummary
+            {
+                Id = d.DeckId,
+                Name = d.Name,
+                IsActive = d.IsActive,
+                QuestionCount = d.Questions.Count
+            })
+            .ToListAsync(ct);
+    }
+
+    public async Task<DeckListItem?> GetDeckByIdAsync(Guid deckId, CancellationToken ct)
+    {
+        return await _db.Decks
+            .AsNoTracking()
+            .Where(d => d.DeckId == deckId)
+            .Select(d => new DeckListItem(
+                d.DeckId,
+                d.Code,
+                d.Name,
+                d.Questions.Count))
+            .SingleOrDefaultAsync(ct);
+    }
+
     public async Task<IReadOnlyList<Question>> GetDeckQuestionsAsync(
         Guid deckId,
         int page,
