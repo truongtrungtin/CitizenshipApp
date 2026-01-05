@@ -1,7 +1,7 @@
 # DECISIONS (Architecture Decision Records)
 
 Project: Citizenship Tutor
-Last updated: 2026-01-03
+Last updated: 2026-01-04
 
 Format cho mỗi ADR:
 - Context
@@ -137,7 +137,7 @@ Consequences:
 - UI có thể parse và hiển thị lỗi nhất quán.
 - Giảm rò rỉ thông tin nội bộ.
 
-Status: Proposed
+Status: Accepted (Implemented)
 Date: 2026-01-03
 
 ---
@@ -173,5 +173,23 @@ Consequences:
 - Tránh UI thấy decks khác với endpoint questions.
 - Seed/import trở nên rõ ràng.
 
-Status: Proposed
+Status: Accepted (Implemented)
 Date: 2026-01-03
+
+---
+
+## ADR-010 — Integration test strategy for API
+Context:
+- Cần integration tests để khoá hành vi security + query endpoints.
+- Test environment không nên phụ thuộc SQL Server thật (tăng friction, flaky trên CI/dev).
+
+Decision:
+- Dùng `WebApplicationFactory` + test auth scheme (header-driven) để kiểm soát auth/roles deterministically.
+- Override `AppDbContext` trong test host sang EF Core InMemory provider và seed dữ liệu tối thiểu cho test.
+
+Consequences:
+- Tests chạy nhanh, ổn định, không cần external DB.
+- Lưu ý: EF InMemory không phản ánh hoàn toàn SQL semantics; các test về query phức tạp/constraint nên bổ sung layer test khác (SQLite/SQLServer) khi cần.
+
+Status: Accepted (Implemented)
+Date: 2026-01-04

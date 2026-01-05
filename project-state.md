@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-01-03
+Last updated: 2026-01-04
 
 ## Current state (as-is)
 - Solution builds on .NET 9 (`net9.0`) with Clean Architecture-style project split.
@@ -15,17 +15,28 @@ Last updated: 2026-01-03
 - User settings read/update (`Language`, `DailyGoalMinutes` used by UI).
 - Study endpoints: next question, submit answer, today progress.
 - SQL schema + migrations + seed sample deck/questions.
+- Admin/system hardening:
+	- `AppSettingsController` is Admin-only and uses DTOs/contracts (no Domain entity exposure).
+- Standardized API errors:
+	- Global exception handling returns RFC7807-like `application/problem+json`.
+- Question/deck source-of-truth unified:
+	- Read-only deck/question queries are DB-backed via EF Core.
+	- Embedded JSON question bank is no longer used by DI at runtime.
+- Quality gates:
+	- CI pipeline runs restore/build/test.
+	- API integration tests cover security + decks/questions + study flow (next/answer/today) using an in-memory test host.
 
 ## Known issues
-- Security: `AppSettingsController` exposes unauthenticated CRUD for `AppSettings`.
-- Data source split: question bank exists as embedded JSON (Infrastructure) but UI flows use SQL-backed decks/questions; endpoints are inconsistent.
-- Error handling is not standardized (string messages, no global ProblemDetails), UI surfaces raw exceptions.
-- Minor: build warning in StudyController mapping null `PromptVi` into non-null contract field.
+- Infrastructure logs: connection target is printed via `Console.WriteLine` in DI (should be moved to ILogger + redacted).
+- Architecture consistency: `StudyController` still queries `AppDbContext` directly (not via an Application service).
+- Validation: public endpoints do not yet return field-level validation ProblemDetails.
+- UX: onboarding route guard and richer onboarding fields are still pending.
 
 ## Next milestones
-1) Stabilization: secure admin/system endpoints, unify data source, add consistent error handling.
-2) Quality: tests (API + integration), CI pipeline, basic observability.
-3) MVP UX: route guard for onboarding, refine onboarding fields to match Domain settings.
+1) Finish controller/service consistency: move remaining direct EF usage (notably study queries) behind Application interfaces.
+2) Quality: add request validation + more targeted tests; consider a DB-realistic integration test layer when needed.
+3) Observability + DevEx: remove sensitive console output; add health/readiness; add docker-compose for local SQL.
+4) MVP UX: route guard for onboarding; extend onboarding to match Domain settings.
 
 ## Risk register
 - Accidental exposure of system settings via public endpoint.
