@@ -1,0 +1,48 @@
+name: Deploy UI (Self-hosted)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ui
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, ui, citizenship]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+          cache: true
+
+      - name: Install WASM workload
+        run: |
+          dotnet workload install wasm-tools
+          dotnet workload list
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish UI
+        run: |
+          rm -rf ./publish
+          dotnet publish ./Ui.Blazor/Ui.Blazor.csproj -c Release -o ./publish
+          test -f ./publish/wwwroot/index.html
+          ls -la ./publish | head -n 50
+
+      - name: Deploy (release/current + reload nginx)
+        run: |
+          sudo /usr/local/bin/deploy-citizenship-ui.sh "$(pwd)/publish"
+
+      - name: Health check (local)
+        run: |
+          curl -fsS -I -H "Host: blazor.sixtyslash.store" http://127.0.0.1 | head

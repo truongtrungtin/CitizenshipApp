@@ -25,20 +25,20 @@ public sealed class ApiClient
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
-        using var response = await _http.PostAsJsonAsync("/api/auth/register", request, JsonOptions, ct);
+        using var response = await _http.PostAsJsonAsync("/api/Auth/register", request, JsonOptions, ct);
         response.EnsureSuccessStatusCode();
 
         return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions, ct))
-               ?? throw new InvalidOperationException("Empty response from /api/auth/register");
+               ?? throw new InvalidOperationException("Empty response from /api/Auth/register");
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
-        using var response = await _http.PostAsJsonAsync("/api/auth/login", request, JsonOptions, ct);
+        using var response = await _http.PostAsJsonAsync("/api/Auth/login", request, JsonOptions, ct);
         response.EnsureSuccessStatusCode();
 
         return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions, ct))
-               ?? throw new InvalidOperationException("Empty response from /api/auth/login");
+               ?? throw new InvalidOperationException("Empty response from /api/Auth/login");
     }
 
     public async Task<MeSettingsResponse> GetMeSettingsAsync(CancellationToken ct = default)
