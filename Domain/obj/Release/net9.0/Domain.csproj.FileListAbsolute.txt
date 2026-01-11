@@ -1,0 +1,12 @@
+/home/dev/projects/CitizenshipApp/Domain/bin/Release/net9.0/Domain.deps.json
+/home/dev/projects/CitizenshipApp/Domain/bin/Release/net9.0/Domain.dll
+/home/dev/projects/CitizenshipApp/Domain/bin/Release/net9.0/Domain.pdb
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.AssemblyInfoInputs.cache
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.AssemblyInfo.cs
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.csproj.CoreCompileInputs.cache
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.sourcelink.json
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.dll
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/refint/Domain.dll
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/Domain.pdb
+/home/dev/projects/CitizenshipApp/Domain/obj/Release/net9.0/ref/Domain.dll

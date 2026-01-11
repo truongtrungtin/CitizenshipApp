@@ -1,0 +1,7 @@
+{
+  "Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/dev\/projects\/CitizenshipApp\/Api",
+  "Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/dev\/projects\/CitizenshipApp\/Application",
+  "Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/dev\/projects\/CitizenshipApp\/Domain",
+  "Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/dev\/projects\/CitizenshipApp\/Infrastructure",
+  "Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/dev\/projects\/CitizenshipApp\/Shared"
+}

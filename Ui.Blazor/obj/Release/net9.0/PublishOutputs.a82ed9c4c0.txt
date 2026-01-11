@@ -1,0 +1,1 @@
+/home/dev/projects/CitizenshipApp/Ui.Blazor/bin/Release/net9.0/publish/web.config
