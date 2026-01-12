@@ -11,32 +11,28 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, Linux, X64]  # hoặc [self-hosted, ui, citizenship] nếu bạn gắn label đúng
+    runs-on: [self-hosted, ui, citizenship]
     timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show dotnet info (from server)
+      - name: Show dotnet info (server)
         run: |
           whoami
+          which dotnet
           dotnet --info
           dotnet --list-sdks
 
-      # Nếu bạn đã cài wasm-tools sẵn trên server thì KHÔNG cần install workload mỗi lần.
-      - name: Workload list
-        run: dotnet workload list
-
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore CitizenshipApp.sln
 
       - name: Publish UI
         run: |
           rm -rf ./publish
           dotnet publish ./Ui.Blazor/Ui.Blazor.csproj -c Release -o ./publish
           test -f ./publish/wwwroot/index.html
-          ls -la ./publish | head -n 50
 
       - name: Deploy (release/current + reload nginx)
         run: |
