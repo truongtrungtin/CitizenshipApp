@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Ui.Blazor",
   "resources": {
-    "hash": "sha256-TW81NybDfOLTbtVz2o3nvQcTgE2k6mtIGER9AQo3FaU=",
+    "hash": "sha256-xeRVUpUg4OhG6ugVggnLXsy4DzEayVhjo8tMu3orgv8=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Authorization.is84zt9n9u.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.3zig3jhz80.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -208,12 +208,12 @@
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "Domain.90gikc5z3o.wasm": "Domain.wasm",
-      "Shared.pl53g8b1lf.wasm": "Shared.wasm",
-      "Shared.nxb90krngt.pdb": "Shared.pdb",
-      "Domain.mvhrdw2918.pdb": "Domain.pdb",
-      "Ui.Blazor.i8o6b80y11.wasm": "Ui.Blazor.wasm",
-      "Ui.Blazor.ckfwllkkuf.pdb": "Ui.Blazor.pdb"
+      "Domain.a91977fxfp.wasm": "Domain.wasm",
+      "Shared.563ziw2tas.wasm": "Shared.wasm",
+      "Shared.kflf2fx1ki.pdb": "Shared.pdb",
+      "Domain.bo10r9jxli.pdb": "Domain.pdb",
+      "Ui.Blazor.m9ltfcyzx3.wasm": "Ui.Blazor.wasm",
+      "Ui.Blazor.acfwvk5ucc.pdb": "Ui.Blazor.pdb"
     },
     "jsModuleNative": {
       "dotnet.native.noby4tlk4d.js": "sha256-p9eEzXhQIsI0a5bBJhfzW15iRafgplTxT8XrO5FiH9o="
@@ -430,14 +430,14 @@
       "WindowsBase.i7qip04bb5.wasm": "sha256-Lg5W8BM50Cpl1dgTrG9RQOrBRKOJq6H1t5sH3yf4KDU=",
       "mscorlib.ijjuvl21w4.wasm": "sha256-ku4DyQX7IfTdwPwDlrz9odvCs4mrgsJl0fNaqY56KOI=",
       "netstandard.jgp13znru0.wasm": "sha256-I7arRnyxWh5PItslQKjzLIG7EpohJACm7p/7K8eD0YA=",
-      "Domain.90gikc5z3o.wasm": "sha256-iXWu9xXVJjYldxNEOrUwM9DLm1ehpaEN+hoaLEsVc0I=",
-      "Shared.pl53g8b1lf.wasm": "sha256-46BJwiGl/MDSqsvieJKQ2sPw3LgHsqHO07740i1NRYY=",
-      "Ui.Blazor.i8o6b80y11.wasm": "sha256-zrTyCsSe21TysBxKpHKXkMGx8ZD1jjEi045YUC8C78g="
+      "Domain.a91977fxfp.wasm": "sha256-noGPL/W7ob5eOS23IA7jbpXx9kcCl29csmrVq0YPe8M=",
+      "Shared.563ziw2tas.wasm": "sha256-M9MPbN2A1MH2hcXL8fWDyOgS/1T6Kq/gcbtgmgvz5/Y=",
+      "Ui.Blazor.m9ltfcyzx3.wasm": "sha256-6g/FQMeVKB9fcJLe0WQhEOa7KiWF7QjroyoSFaVkRHs="
     },
     "pdb": {
-      "Shared.nxb90krngt.pdb": "sha256-VRuSnMWwjJuTpvbcgN58dCyD1lxrlhDvBlqcaOznRZQ=",
-      "Domain.mvhrdw2918.pdb": "sha256-vl8LM+3IvM6+61TIQS7ygEu/JvrSpuwf+vRpwtzT014=",
-      "Ui.Blazor.ckfwllkkuf.pdb": "sha256-zP90CUqg4q4wqIP35iHTMKBXy0usk6TN7laI91I2JsM="
+      "Shared.kflf2fx1ki.pdb": "sha256-QEiJqHz38w5zXT3I5z9fvwV/e/ePWx05a1yRIhs7Dv8=",
+      "Domain.bo10r9jxli.pdb": "sha256-ezfFk7qMiiYurn46u1C5CmslMYj2oCZ6ikGf4MDNP6c=",
+      "Ui.Blazor.acfwvk5ucc.pdb": "sha256-qjTZ+6K75zMqOM/YUfcBYE/K5Awtw0l+yHhmqUOzRGs="
     }
   },
   "cacheBootResources": true,

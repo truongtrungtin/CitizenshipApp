@@ -11,23 +11,22 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, ui, citizenship]
+    runs-on: [self-hosted, Linux, X64]  # hoặc [self-hosted, ui, citizenship] nếu bạn gắn label đúng
     timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "9.0.x"
-          cache: true
-
-      - name: Install WASM workload
+      - name: Show dotnet info (from server)
         run: |
-          dotnet workload install wasm-tools
-          dotnet workload list
+          whoami
+          dotnet --info
+          dotnet --list-sdks
+
+      # Nếu bạn đã cài wasm-tools sẵn trên server thì KHÔNG cần install workload mỗi lần.
+      - name: Workload list
+        run: dotnet workload list
 
       - name: Restore
         run: dotnet restore
