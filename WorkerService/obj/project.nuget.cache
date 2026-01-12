@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "depyFMeuu3U=",
+  "dgSpecHash": "aXfTkUOLgSE=",
   "success": true,
   "projectFilePath": "/home/dev/projects/CitizenshipApp/WorkerService/WorkerService.csproj",
   "expectedPackageFiles": [
+    "/home/dev/.nuget/packages/microsoft.aspnetcore.components.webassembly.devserver/9.0.11/microsoft.aspnetcore.components.webassembly.devserver.9.0.11.nupkg.sha512",
     "/home/dev/.nuget/packages/microsoft.extensions.configuration/9.0.11/microsoft.extensions.configuration.9.0.11.nupkg.sha512",
     "/home/dev/.nuget/packages/microsoft.extensions.configuration.abstractions/9.0.11/microsoft.extensions.configuration.abstractions.9.0.11.nupkg.sha512",
     "/home/dev/.nuget/packages/microsoft.extensions.configuration.binder/9.0.11/microsoft.extensions.configuration.binder.9.0.11.nupkg.sha512",

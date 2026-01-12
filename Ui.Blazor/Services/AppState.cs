@@ -8,6 +8,11 @@ public sealed class AppState
 
     private readonly StorageInterop _storage;
 
+    public AppState(StorageInterop storage)
+    {
+        _storage = storage;
+    }
+
     public string? AccessToken { get; private set; }
     public string? UserId { get; private set; }
 
@@ -16,17 +21,12 @@ public sealed class AppState
 
     public event Action? OnChange;
 
-    public AppState(StorageInterop storage)
-    {
-        _storage = storage;
-    }
-
     public async Task InitializeAsync()
     {
         AccessToken = await _storage.GetItemAsync(AccessTokenKey);
         UserId = await _storage.GetItemAsync(UserIdKey);
 
-        var onboardedRaw = await _storage.GetItemAsync(IsOnboardedKey);
+        string? onboardedRaw = await _storage.GetItemAsync(IsOnboardedKey);
         IsOnboarded = string.Equals(onboardedRaw, "true", StringComparison.OrdinalIgnoreCase);
 
         NotifyStateChanged();
@@ -65,5 +65,8 @@ public sealed class AppState
         NotifyStateChanged();
     }
 
-    private void NotifyStateChanged() => OnChange?.Invoke();
+    private void NotifyStateChanged()
+    {
+        OnChange?.Invoke();
+    }
 }

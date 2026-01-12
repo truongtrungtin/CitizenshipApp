@@ -1,46 +1,19 @@
-﻿@page "/"
-@inject Ui.Blazor.Services.AppState State
-@inject NavigationManager Nav
+﻿@code {
+  private TodayProgressResponse? _today;
 
-<PageTitle>Home</PageTitle>
-
-<h3>Citizenship Tutor</h3>
-
-@if (!State.IsAuthenticated)
-{
-  <p>Bạn chưa đăng nhập.</p>
-  <button class="btn btn-primary" @onclick="GoLogin">Login</button>
-  <button class="btn btn-outline-primary ms-2" @onclick="GoRegister">Register</button>
-}
-else
-{
-  <p>
-    ✅ Đã đăng nhập
-    @if (State.IsOnboarded)
-    {
-      <span>(Onboarded)</span>
-    }
-    else
-    {
-      <span>(Chưa onboarding)</span>
-    }
-  </p>
-
-  @if (!State.IsOnboarded)
+  protected override async Task OnInitializedAsync()
   {
-    <button class="btn btn-warning" @onclick="GoOnboarding">
-      Complete onboarding
-    </button>
+    if (AppState.IsAuthenticated)
+    {
+      _today = await Api.GetTodayProgressAsync();
+    }
   }
 
-  <button class="btn btn-danger ms-2" @onclick="GoLogout">
-    Logout
-  </button>
 }
 
-@code {
-  private void GoLogin() => Nav.NavigateTo("/login");
-  private void GoRegister() => Nav.NavigateTo("/register");
-  private void GoOnboarding() => Nav.NavigateTo("/onboarding");
-  private void GoLogout() => Nav.NavigateTo("/logout");
+@if (_today is not null)
+{
+  <hr/>
+  <p><b>Today:</b> @_today.TotalAnswered / @_today.DailyGoalMinutes (Correct: @_today.CorrectAnswered)</p>
+  <p><a href="/study">Go to Study</a></p>
 }

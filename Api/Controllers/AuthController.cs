@@ -1,61 +1,54 @@
 using Api.Auth;
 using Api.Infrastructure;
+
 using Domain.Entities.Users;
+
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Shared.Dtos.Auth;
+
+using Shared.Contracts.Auth;
+
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace Api.Controllers;
 
 /// <summary>
-/// Auth endpoints (MVP): register / login.
-///
-/// Luồng đăng ký:
-/// 1) Tạo AppUser (Identity)
-/// 2) Tạo UserProfile (IsOnboarded=false)
-/// 3) Tạo UserSettings (default elderly-first)
-/// 4) Trả về JWT + IsOnboarded
+///     Auth endpoints (MVP): register / login.
+///     Luồng đăng ký:
+///     1) Tạo AppUser (Identity)
+///     2) Tạo UserProfile (IsOnboarded=false)
+///     3) Tạo UserSettings (default elderly-first)
+///     4) Trả về JWT + IsOnboarded
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class AuthController : ControllerBase
+public sealed class AuthController(
+    UserManager<AppUser> userManager,
+    SignInManager<AppUser> signInManager,
+    JwtTokenService jwt,
+    AppDbContext db)
+    : ControllerBase
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly SignInManager<AppUser> _signInManager;
-    private readonly JwtTokenService _jwt;
-    private readonly AppDbContext _db;
-
-    public AuthController(
-        UserManager<AppUser> userManager,
-        SignInManager<AppUser> signInManager,
-        JwtTokenService jwt,
-        AppDbContext db)
-    {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _jwt = jwt;
-        _db = db;
-    }
-
     /// <summary>
-    /// POST /api/auth/register
+    ///     POST /api/auth/register
     /// </summary>
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequestDto req)
+    public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
     {
         // Basic validation (MVP)
-        if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
         {
             return BadRequest("Username và Password là bắt buộc.");
         }
 
-        var normalized = req.Username.Trim();
+        string normalized = req.Email.Trim();
 
         // Tránh trùng username
-        var existing = await _userManager.FindByNameAsync(normalized);
+        AppUser? existing = await userManager.FindByNameAsync(normalized);
         if (existing is not null)
         {
             return Conflict("Tài khoản đã tồn tại.");
@@ -76,19 +69,19 @@ public sealed class AuthController : ControllerBase
 
         try
         {
-            return await _db.RunInTransactionAsync<ActionResult<AuthResponseDto>>(async () =>
+            return await db.RunInTransactionAsync(async () =>
             {
                 // 1) Create identity user
-                var create = await _userManager.CreateAsync(user, req.Password);
+                IdentityResult create = await userManager.CreateAsync(user, req.Password);
                 if (!create.Succeeded)
                 {
                     // Không commit transaction.
-                    var msg = string.Join(" ", create.Errors.Select(e => e.Description));
-                    return (commit: false, result: (ActionResult<AuthResponseDto>)BadRequest(msg));
+                    string msg = string.Join(" ", create.Errors.Select(e => e.Description));
+                    return (commit: false, result: BadRequest(msg));
                 }
 
                 // 2) Tạo Profile + Settings (default)
-                var now = DateTime.UtcNow;
+                DateTime now = DateTime.UtcNow;
                 var profile = new UserProfile
                 {
                     Id = Guid.NewGuid(),
@@ -108,16 +101,21 @@ public sealed class AuthController : ControllerBase
                     UpdatedUtc = now
                 };
 
-                _db.UserProfiles.Add(profile);
-                _db.UserSettings.Add(settings);
-                await _db.SaveChangesAsync();
+                db.UserProfiles.Add(profile);
+                db.UserSettings.Add(settings);
+                await db.SaveChangesAsync();
 
                 // 3) Auto-login: trả về JWT
-                var roles = await _userManager.GetRolesAsync(user);
-                var token = _jwt.CreateAccessToken(user, roles);
+                IList<string> roles = await userManager.GetRolesAsync(user);
+                string token = jwt.CreateAccessToken(user, roles);
 
                 // Commit khi toàn bộ bước thành công.
-                return (commit: true, result: (ActionResult<AuthResponseDto>)Ok(new AuthResponseDto(token, IsOnboarded: false)));
+                return (commit: true, result: (ActionResult<AuthResponse>)Ok(new AuthResponse
+                {
+                    AccessToken = token,
+                    UserId = user.Id,
+                    IsOnboarded = false
+                }));
             });
         }
         catch
@@ -126,10 +124,10 @@ public sealed class AuthController : ControllerBase
             // Nếu vì lý do nào đó user đã được lưu ở ngoài transaction, ta cố gắng xóa user để tránh orphan.
             try
             {
-                var existingUser = await _userManager.FindByNameAsync(normalized);
+                AppUser? existingUser = await userManager.FindByNameAsync(normalized);
                 if (existingUser is not null)
                 {
-                    await _userManager.DeleteAsync(existingUser);
+                    await userManager.DeleteAsync(existingUser);
                 }
             }
             catch
@@ -144,41 +142,44 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// POST /api/auth/login
+    ///     POST /api/auth/login
     /// </summary>
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto req)
+    public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
         {
             return BadRequest("Username và Password là bắt buộc.");
         }
 
-        var normalized = req.Username.Trim();
-        var user = await _userManager.FindByNameAsync(normalized);
+        string normalized = req.Email.Trim();
+        AppUser? user = await userManager.FindByNameAsync(normalized);
         if (user is null)
         {
             return Unauthorized("Sai tài khoản hoặc mật khẩu.");
         }
 
         // Kiểm tra password
-        var ok = await _signInManager.CheckPasswordSignInAsync(user, req.Password, lockoutOnFailure: false);
+        SignInResult ok = await signInManager.CheckPasswordSignInAsync(user, req.Password, false);
         if (!ok.Succeeded)
         {
             return Unauthorized("Sai tài khoản hoặc mật khẩu.");
         }
 
         // Lấy IsOnboarded
-        var profile = await _db.UserProfiles.AsNoTracking()
+        UserProfile? profile = await db.UserProfiles.AsNoTracking()
             .FirstOrDefaultAsync(x => x.UserId == user.Id);
 
-        var isOnboarded = profile?.IsOnboarded ?? false;
+        bool isOnboarded = profile?.IsOnboarded ?? false;
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var token = _jwt.CreateAccessToken(user, roles);
+        IList<string> roles = await userManager.GetRolesAsync(user);
+        string token = jwt.CreateAccessToken(user, roles);
 
-        return Ok(new AuthResponseDto(token, isOnboarded));
-
-
+        return Ok(new AuthResponse
+        {
+            AccessToken = token,
+            UserId = user.Id,
+            IsOnboarded = isOnboarded
+        });
     }
 }

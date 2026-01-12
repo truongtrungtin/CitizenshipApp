@@ -1,7 +1,7 @@
 namespace Domain.Enums;
 
 /// <summary>
-/// Tốc độ audio khi đọc câu hỏi/đáp án.
+///     Tốc độ audio khi đọc câu hỏi/đáp án.
 /// </summary>
 public enum AudioSpeed
 {

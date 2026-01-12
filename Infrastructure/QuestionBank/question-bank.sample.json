@@ -1,0 +1,71 @@
+{
+  "decks": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "code": "ALL",
+      "name": "ALL (Sample)"
+    }
+  ],
+  "questions": [
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "deckId": "11111111-1111-1111-1111-111111111111",
+      "type": "CivicsMcq",
+      "prompt": {
+        "textEn": "What is the supreme law of the land?",
+        "textVi": "Luật tối cao của đất nước là gì?",
+        "viPhonetic": null,
+        "explainEn": "The Constitution is the highest law in the United States.",
+        "explainVi": "Hiến pháp là luật cao nhất của Hoa Kỳ."
+      },
+      "options": [
+        {
+          "key": "A",
+          "textEn": "The Constitution",
+          "textVi": "Hiến pháp"
+        },
+        {
+          "key": "B",
+          "textEn": "The Declaration of Independence",
+          "textVi": "Tuyên ngôn Độc lập"
+        },
+        {
+          "key": "C",
+          "textEn": "The Bill of Rights",
+          "textVi": "Tuyên ngôn Nhân quyền (Bill of Rights)"
+        },
+        {
+          "key": "D",
+          "textEn": "The Articles of Confederation",
+          "textVi": "Các Điều khoản Liên bang"
+        }
+      ]
+    },
+    {
+      "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "deckId": "11111111-1111-1111-1111-111111111111",
+      "type": "Reading",
+      "prompt": {
+        "textEn": "The President lives in the White House.",
+        "textVi": "Tổng thống sống trong Nhà Trắng.",
+        "viPhonetic": null,
+        "explainEn": null,
+        "explainVi": null
+      },
+      "options": []
+    },
+    {
+      "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+      "deckId": "11111111-1111-1111-1111-111111111111",
+      "type": "Writing",
+      "prompt": {
+        "textEn": "Citizens can vote.",
+        "textVi": "Công dân có thể bỏ phiếu.",
+        "viPhonetic": null,
+        "explainEn": null,
+        "explainVi": null
+      },
+      "options": []
+    }
+  ]
+}

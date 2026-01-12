@@ -1,132 +1,165 @@
 using System.Security.Claims;
 
 using Domain.Entities.Users;
+using Domain.Enums;
+
 using Infrastructure.Persistence;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Shared.Dtos.Me;
+
+using Shared.Contracts.Me;
+
+using UserSettings = Domain.Entities.Users.UserSettings;
 
 namespace Api.Controllers;
 
 /// <summary>
-/// Các endpoint "me" dành cho user đã đăng nhập.
-///
-/// Những endpoint này dùng để:
-/// - Lấy trạng thái onboarding (IsOnboarded)
-/// - Đọc/ghi UserSettings
-///
-/// NOTE: Mọi endpoint trong controller này đều require JWT.
+///     Các endpoint "me" dành cho user đã đăng nhập.
+///     Những endpoint này dùng để:
+///     - Lấy trạng thái onboarding (IsOnboarded)
+///     - Đọc/ghi UserSettings
+///     NOTE: Mọi endpoint trong controller này đều require JWT.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public sealed class MeController : ControllerBase
+public sealed class MeController(AppDbContext db) : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public MeController(AppDbContext db)
-    {
-        _db = db;
-    }
-
     /// <summary>
-    /// GET /api/me/profile
+    ///     GET /api/me/profile
     /// </summary>
     [HttpGet("profile")]
-    public async Task<ActionResult<UserProfileDto>> GetProfile()
+    public async Task<ActionResult<MeProfileResponse>> GetProfile()
     {
-        var userId = GetUserIdOrThrow();
-        var profile = await _db.UserProfiles.AsNoTracking()
+        Guid userId = GetUserIdOrThrow();
+
+        UserProfile? profile = await db.UserProfiles
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (profile is null)
+        {
             return NotFound();
+        }
 
-        return Ok(new UserProfileDto(profile.IsOnboarded));
+        // Identity email nằm trong db.Users (IdentityDbContext)
+        string? email = await db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.Email)
+            .FirstOrDefaultAsync();
+
+        return Ok(new MeProfileResponse
+        {
+            UserId = userId,
+            Email = email ?? string.Empty,
+            IsOnboarded = profile.IsOnboarded
+        });
     }
 
-    /// <summary>
-    /// GET /api/me/settings
-    /// </summary>
     [HttpGet("settings")]
-    public async Task<ActionResult<UserSettingsDto>> GetSettings()
+    public async Task<ActionResult<MeSettingsResponse>> GetSettings(CancellationToken ct)
     {
-        var userId = GetUserIdOrThrow();
-        var settings = await _db.UserSettings.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserId == userId);
+        Guid userId = GetUserIdOrThrow();
+
+        UserSettings? settings = await db.UserSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
 
         if (settings is null)
-            return NotFound();
+        {
+            // mặc định MVP (đồng bộ với UI)
+            return Ok(new MeSettingsResponse
+            {
+                Language = LanguageCode.En,
+                DailyGoalMinutes = 10
+            });
+        }
 
-        return Ok(new UserSettingsDto(
-            settings.Language,
-            settings.FontScale,
-            settings.AudioSpeed,
-            settings.DailyGoalMinutes,
-            settings.Focus,
-            settings.SilentMode));
+        return Ok(new MeSettingsResponse
+        {
+            Language = settings.Language,
+            DailyGoalMinutes = settings.DailyGoalMinutes
+        });
     }
 
-    /// <summary>
-    /// PUT /api/me/settings
-    ///
-    /// Dùng cho onboarding + settings page.
-    /// </summary>
     [HttpPut("settings")]
-    public async Task<IActionResult> UpdateSettings([FromBody] UserSettingsDto req)
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateMeSettingsRequest req, CancellationToken ct)
     {
-        var userId = GetUserIdOrThrow();
-        var settings = await _db.UserSettings
-            .FirstOrDefaultAsync(x => x.UserId == userId);
+        Guid userId = GetUserIdOrThrow();
+
+        // Validate nhẹ cho MVP
+        int goal = req.DailyGoalMinutes <= 0 ? 10 : req.DailyGoalMinutes;
+
+        UserSettings? settings = await db.UserSettings
+            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
 
         if (settings is null)
-            return NotFound();
+        {
+            // Nếu DB chưa tạo settings (hiếm), tạo mới
+            var now = DateTime.UtcNow;
+            settings = new Domain.Entities.Users.UserSettings
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Language = req.Language,
+                DailyGoalMinutes = goal,
+                CreatedUtc = now,
+                UpdatedUtc = now
+            };
+            db.UserSettings.Add(settings);
+        }
+        else
+        {
+            settings.Language = req.Language;
+            settings.DailyGoalMinutes = goal;
+            settings.UpdatedUtc = DateTime.UtcNow;
+        }
 
-        settings.Language = req.Language;
-        settings.FontScale = req.FontScale;
-        settings.AudioSpeed = req.AudioSpeed;
-        settings.DailyGoalMinutes = req.DailyGoalMinutes;
-        settings.Focus = req.Focus;
-        settings.SilentMode = req.SilentMode;
-        settings.UpdatedUtc = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
-        return NoContent();
+        await db.SaveChangesAsync(ct);
+        return Ok(new MeSettingsResponse
+        {
+            Language = settings.Language,
+            DailyGoalMinutes = settings.DailyGoalMinutes
+        });
     }
 
     /// <summary>
-    /// PUT /api/me/onboarding/complete
-    ///
-    /// Chỉ đánh dấu hoàn tất onboarding.
-    /// (Settings đã được cập nhật qua /me/settings.)
+    ///     PUT /api/me/onboarding/complete
+    ///     Chỉ đánh dấu hoàn tất onboarding.
+    ///     (Settings đã được cập nhật qua /me/settings.)
     /// </summary>
     [HttpPut("onboarding/complete")]
     public async Task<IActionResult> CompleteOnboarding()
     {
-        var userId = GetUserIdOrThrow();
-        var profile = await _db.UserProfiles
+        Guid userId = GetUserIdOrThrow();
+        UserProfile? profile = await db.UserProfiles
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (profile is null)
+        {
             return NotFound();
+        }
 
         profile.IsOnboarded = true;
         profile.UpdatedUtc = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
         return NoContent();
     }
 
     /// <summary>
-    /// Lấy Guid userId từ JWT claim (sub).
+    ///     Lấy Guid userId từ JWT claim (sub).
     /// </summary>
     private Guid GetUserIdOrThrow()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirstValue(ClaimTypes.Name)
-                  ?? User.FindFirstValue("sub");
+        string? sub = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                      ?? User.FindFirstValue(ClaimTypes.Name)
+                      ?? User.FindFirstValue("sub");
 
-        if (sub is null || !Guid.TryParse(sub, out var userId))
+        if (sub is null || !Guid.TryParse(sub, out Guid userId))
         {
             // Nếu token không có sub hoặc parse fail => token invalid.
             throw new InvalidOperationException("Invalid JWT: missing/invalid user id.");

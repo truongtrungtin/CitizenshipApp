@@ -1,11 +1,5 @@
 @page "/login"
 
-@using global::Shared.Dtos.Auth
-
-@inject Ui.Blazor.Services.ApiClient Api
-@inject Ui.Blazor.Services.AppState State
-@inject NavigationManager Nav
-
 <h1>Login</h1>
 
 <div class="mb-3">
@@ -39,10 +33,10 @@
 
     try
     {
-      var auth = await Api.LoginAsync(new LoginRequestDto(Username, Password));
+      var req = new LoginRequest { Email = Username, Password = Password };
+      var auth = await Api.LoginAsync(req);
 
-      // API trả về IsOnboarded, không cần gọi thêm endpoint khác.
-      await State.SetAuthAsync(auth.AccessToken, userId: null, isOnboarded: auth.IsOnboarded);
+      await AppState.SetAuthAsync(auth.AccessToken, userId: auth.UserId.ToString(), isOnboarded: auth.IsOnboarded);
       Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
     }
     catch (Exception ex)

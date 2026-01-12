@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 using Ui.Blazor;
 using Ui.Blazor.Auth;
@@ -10,7 +10,7 @@ builder.RootComponents.Add<App>("#app");
 
 // Config: ApiBaseUrl
 // appsettings.json (UI) nên có: { "Api": { "BaseUrl": "https://localhost:7070" } }
-var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "https://localhost:7070";
+string apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "https://0.0.0.0:7070";
 
 // Default HttpClient used by razor pages that @inject HttpClient.
 // Without this, calling HttpClient with relative URLs (e.g. "/api/auth/login") throws:
@@ -26,15 +26,12 @@ builder.Services.AddScoped<StorageInterop>();
 
 builder.Services.AddScoped<AuthHeaderHandler>();
 
-builder.Services.AddHttpClient<ApiClient>(client =>
-    {
-        client.BaseAddress = new Uri(apiBaseUrl);
-    })
+builder.Services.AddHttpClient<ApiClient>(client => { client.BaseAddress = new Uri(apiBaseUrl); })
     .AddHttpMessageHandler<AuthHeaderHandler>();
 
-var app = builder.Build();
+WebAssemblyHost app = builder.Build();
 
-var state = app.Services.GetRequiredService<Ui.Blazor.Services.AppState>();
+AppState state = app.Services.GetRequiredService<AppState>();
 await state.InitializeAsync();
 
 await app.RunAsync();

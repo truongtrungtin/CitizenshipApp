@@ -68,6 +68,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL01haW5MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/dev/projects/CitizenshipApp/Ui.Blazor/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL05hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/dev/projects/CitizenshipApp/Ui.Blazor/Shared/RedirectToOnboarding.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL1JlZGlyZWN0VG9PbmJvYXJkaW5nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/dev/projects/CitizenshipApp/Ui.Blazor/Shared/RouteGuard.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL1JvdXRlR3VhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

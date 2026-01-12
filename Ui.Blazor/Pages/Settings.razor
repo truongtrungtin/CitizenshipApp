@@ -1,116 +1,100 @@
 @page "/settings"
 
-@using global::Shared.Dtos.Me
-@using global::Domain.Enums
-
-@inject Ui.Blazor.Services.ApiClient Api
-@inject Ui.Blazor.Services.AppState State
-@inject NavigationManager Nav
-
 <h1>Settings</h1>
 
-@if (!State.IsAuthenticated)
+@if (!AppState.IsAuthenticated)
 {
-    <div class="alert alert-warning">Please login to access settings.</div>
-    <button class="btn btn-primary" @onclick="GoLogin">Go to login</button>
+  <div class="alert alert-warning">Please login to access settings.</div>
+  <button class="btn btn-primary" @onclick="GoLogin">Go to login</button>
 }
 else if (_loading)
 {
-    <p>Loading settings...</p>
+  <p>Loading settings...</p>
 }
 else
 {
-    <div class="mb-3">
-        <label class="form-label">Language</label>
-        <select class="form-select" @bind="_language">
-            <option value="@LanguageCode.Vi">Vietnamese</option>
-            <option value="@LanguageCode.En">English</option>
-        </select>
-    </div>
+  <div class="mb-3">
+    <label class="form-label">Language</label>
 
-    <div class="mb-3">
-        <label class="form-label">Daily study goal</label>
-        <input class="form-control" type="number" @bind="_dailyGoalMinutes" min="1" max="200" />
-    </div>
+    <!-- Bind trực tiếp vào _edit.Language (enum) -->
+    <select class="form-select" @bind="_edit.Language">
+      <option value="@LanguageCode.Vi">Vietnamese</option>
+      <option value="@LanguageCode.En">English</option>
+    </select>
+  </div>
 
-    <button class="btn btn-primary" @onclick="Save" disabled="@_saving">Save</button>
+  <div class="mb-3">
+    <label class="form-label">Daily study goal</label>
 
-    @if (!string.IsNullOrWhiteSpace(_message))
-    {
-        <div class="alert alert-info mt-3">@_message</div>
-    }
+    <!-- Bind trực tiếp vào _edit.DailyGoalMinutes -->
+    <input class="form-control" type="number" @bind="_edit.DailyGoalMinutes" min="1" max="200"/>
+  </div>
+
+  <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">Save</button>
+
+  @if (!string.IsNullOrWhiteSpace(_message))
+  {
+    <div class="alert alert-info mt-3">@_message</div>
+  }
 }
 
 @code {
-    private bool _loading = true;
-    private bool _saving;
-    private string? _message;
+  private MeSettingsResponse? _current;
+  private UpdateMeSettingsRequest _edit = new();
 
-    private UserSettingsDto? _current;
+  private bool _loading = true;
+  private bool _saving;
+  private string? _message;
 
-    private LanguageCode _language = LanguageCode.Vi;
-    private int _dailyGoalMinutes = 10;
-
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    try
     {
-        if (!State.IsAuthenticated)
-        {
-            _loading = false;
-            return;
-        }
+      _current = await Api.GetMeSettingsAsync();
 
-        try
-        {
-            var dto = await Api.GetMeSettingsAsync();
-            _current = dto;
-            _language = dto.Language;
-            _dailyGoalMinutes = dto.DailyGoalMinutes;
-        }
-        catch (Exception ex)
-        {
-            _message = $"Failed to load settings: {ex.Message}";
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _edit = new UpdateMeSettingsRequest
+      {
+        Language = _current.Language,
+        DailyGoalMinutes = _current.DailyGoalMinutes
+      };
     }
-
-    private async Task Save()
+    catch (Exception ex)
     {
-        _saving = true;
-        _message = null;
-
-        try
-        {
-            if (_current is null)
-            {
-                _message = "Settings not loaded.";
-                return;
-            }
-
-            var updated = new UserSettingsDto(
-                Language: _language,
-                FontScale: _current.FontScale,
-                AudioSpeed: _current.AudioSpeed,
-                DailyGoalMinutes: _dailyGoalMinutes,
-                Focus: _current.Focus,
-                SilentMode: _current.SilentMode);
-
-            await Api.UpdateMeSettingsAsync(updated);
-            _current = updated;
-
-            _message = "Saved!";
-        }
-        catch (Exception ex)
-        {
-            _message = $"Save failed: {ex.Message}";
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _message = ex.Message;
     }
+    finally
+    {
+      _loading = false;
+    }
+  }
 
-    private void GoLogin() => Nav.NavigateTo("/login");
+  private async Task SaveAsync()
+  {
+    _message = null;
+    _saving = true;
+
+    try
+    {
+      await Api.UpdateMeSettingsAsync(_edit);
+
+      // (Optional) update state nếu bạn có lưu settings trong AppState
+      // State.MeSettings = new MeSettingsResponse { Language = _edit.Language, DailyGoalMinutes = _edit.DailyGoalMinutes };
+
+      _message = "Saved.";
+    }
+    catch (Exception ex)
+    {
+      _message = ex.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private void GoLogin()
+  {
+    Nav.NavigateTo("/login");
+  }
+
 }
