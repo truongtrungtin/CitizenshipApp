@@ -30,11 +30,31 @@ jobs:
       - name: Restore
         run: dotnet restore CitizenshipApp.sln
 
+      - name: Load production environment variables
+        run: |
+          # Read production env file (requires sudo on most setups) and export to the job environment.
+          # This provides ConnectionStrings__DefaultConnection for EF migrations.
+          sudo cat /etc/citizenship/api.env | grep -vE '^\s*#|^\s*$' >> "$GITHUB_ENV"
+
+      - name: Restore dotnet tools (dotnet-ef)
+        run: dotnet tool restore
+
       - name: Publish API
         run: |
           rm -rf ./publish
           dotnet publish ./Api/Api.csproj -c Release -o ./publish
           test -f ./publish/Api.dll
+
+      - name: Stop API service (for migration)
+        run: sudo systemctl stop citizenship-api
+
+      - name: Run database migrations
+        run: |
+          # Migrations live in Infrastructure; startup is Api (for config/DI).
+          dotnet tool run dotnet-ef database update \
+            --project Infrastructure/Infrastructure.csproj \
+            --startup-project Api/Api.csproj \
+            --configuration Release
 
       - name: Deploy (release/current + restart service)
         run: |
