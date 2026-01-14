@@ -30,11 +30,13 @@ jobs:
       - name: Restore
         run: dotnet restore CitizenshipApp.sln
 
-      - name: Load production environment variables
+      - name: Configure env for migrations
         run: |
-          # Read production env file (requires sudo on most setups) and export to the job environment.
-          # This provides ConnectionStrings__DefaultConnection for EF migrations.
-          sudo cat /etc/citizenship/api.env | grep -vE '^\s*#|^\s*$' >> "$GITHUB_ENV"
+          # Avoid interactive sudo prompts in GitHub Actions.
+          # Provide the DB connection string via GitHub Secrets.
+          # Required secret: PROD_CONNECTION_STRING
+          echo "ASPNETCORE_ENVIRONMENT=Production" >> "$GITHUB_ENV"
+          echo "ConnectionStrings__DefaultConnection=${{ secrets.PROD_CONNECTION_STRING }}" >> "$GITHUB_ENV"
 
       - name: Restore dotnet tools (dotnet-ef)
         run: dotnet tool restore
@@ -46,7 +48,7 @@ jobs:
           test -f ./publish/Api.dll
 
       - name: Stop API service (for migration)
-        run: sudo systemctl stop citizenship-api
+        run: sudo -n systemctl stop citizenship-api
 
       - name: Run database migrations
         run: |
@@ -58,7 +60,7 @@ jobs:
 
       - name: Deploy (release/current + restart service)
         run: |
-          sudo bash ./scripts/deploy-citizenship-api.sh "$(pwd)/publish"
+          sudo -n bash ./scripts/deploy-citizenship-api.sh "$(pwd)/publish"
 
       - name: Health check (local via nginx)
         run: |
