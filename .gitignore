@@ -2,6 +2,16 @@
 **/bin/
 **/obj/
 
+# Local environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Editor swap/temporary files
+*.swp
+*.swo
+*.tmp
+
 # User-specific files
 *.user
 *.suo

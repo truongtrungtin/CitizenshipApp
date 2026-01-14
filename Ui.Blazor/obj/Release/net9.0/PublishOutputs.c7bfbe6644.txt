@@ -1,1 +1,0 @@
-/var/www/sixtyslash-blazor/web.config
