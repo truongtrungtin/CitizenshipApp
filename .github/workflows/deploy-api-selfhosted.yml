@@ -65,7 +65,7 @@ jobs:
 
       - name: Deploy (release/current + restart service)
         run: |
-          sudo -n bash ./scripts/deploy-citizenship-api.sh "$(pwd)/publish"
+          sudo -n /usr/bin/bash ./scripts/deploy-citizenship-api.sh "$(pwd)/publish"
 
       - name: Health check (local via nginx)
         run: |
