@@ -127,6 +127,9 @@ dotnet ef migrations add <Name> --project Infrastructure --startup-project Api
 dotnet ef database update --project Infrastructure --startup-project Api
 ```
 
+## Deploy (Ubuntu)
+See [docs/DEPLOY-UBUNTU.md](docs/DEPLOY-UBUNTU.md).
+
 ## Troubleshooting
 - "Missing ConnectionStrings:DefaultConnection": set user-secrets for Api (see Local run step 2).
 - SQL Server in Docker not ready: API retries migrations in Development; wait a few seconds and retry.

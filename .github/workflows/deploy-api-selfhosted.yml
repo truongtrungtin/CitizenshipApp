@@ -1,0 +1,58 @@
+name: Deploy API (Self-hosted)
+
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted, api, citizenship]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show dotnet info (server)
+        run: |
+          whoami
+          which dotnet
+          dotnet --info
+          dotnet --list-sdks
+
+      - name: Restore
+        run: dotnet restore CitizenshipApp.sln
+
+      - name: Publish API
+        run: |
+          rm -rf ./publish
+          dotnet publish ./Api/Api.csproj -c Release -o ./publish
+          test -f ./publish/Api.dll
+
+      - name: Deploy (release/current + restart service)
+        run: |
+          sudo bash ./scripts/deploy-citizenship-api.sh "$(pwd)/publish"
+
+      - name: Health check (local via nginx)
+        run: |
+          curl -fsS -I -H "Host: api.sixtyslash.store" http://127.0.0.1/health/live | head
+
+          # Retry readiness for up to 60s (DB might take time to come up)
+          for i in $(seq 1 30); do
+            if curl -fsS -I -H "Host: api.sixtyslash.store" http://127.0.0.1/health/ready >/dev/null; then
+              echo "Ready OK"
+              break
+            fi
+            echo "Waiting for readiness ($i/30)..."
+            sleep 2
+          done
+
+          curl -fsS -I -H "Host: api.sixtyslash.store" http://127.0.0.1/health/ready | head
+          curl -fsS -I -H "Host: api.sixtyslash.store" http://127.0.0.1/swagger/v1/swagger.json | head

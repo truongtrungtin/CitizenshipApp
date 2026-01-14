@@ -23,16 +23,14 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Lấy connection string từ Api/appsettings*.json
+        // Lấy connection string từ configuration.
+        // IMPORTANT: Không log raw connection string / user / host trong production logs.
         string? connectionString = configuration.GetConnectionString("DefaultConnection");
-        var builderCs = new SqlConnectionStringBuilder(connectionString);
-        Console.WriteLine(
-            $"[DEV] SQL Target: {builderCs.DataSource}, DB: {builderCs.InitialCatalog}, User: {builderCs.UserID}");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
                 "Missing ConnectionStrings:DefaultConnection. " +
-                "Please set it in Api/appsettings.Development.json");
+                "Please configure it via user-secrets (Development) or environment variables / secret store (non-dev).");
         }
 
         // Đăng ký DbContext dùng SQL Server

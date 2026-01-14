@@ -10,9 +10,12 @@ using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
@@ -30,6 +33,14 @@ if (builder.Environment.IsDevelopment())
 const string corsPolicyName = "UiCors";
 
 builder.Services.AddControllers();
+
+// Health checks
+// - /health/live: process is up
+// - /health/ready: app is ready to serve traffic (includes DB)
+builder.Services
+    .AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy())
+    .AddDbContextCheck<AppDbContext>("db");
 
 // Bind + validate JWT options (strongly typed)
 // - Issuer/Audience có default trong JwtOptions
@@ -94,6 +105,16 @@ builder.Services.AddCors(options =>
                 .GetSection("Cors:AllowedOrigins")
                 .Get<string[]>() ?? Array.Empty<string>();
 
+            // Safer default: if non-dev origins aren't configured, deny cross-origin requests
+            // (instead of crashing or accidentally allowing any origin).
+            if (allowedOrigins.Length == 0)
+            {
+                policy.SetIsOriginAllowed(_ => false)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                return;
+            }
+
             policy.WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod();
@@ -104,27 +125,48 @@ builder.Services.AddCors(options =>
 // DI Infrastructure (DbContext, repositories, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// ---------------------------
-// Authentication / Authorization (JWT)
-// ---------------------------
+// Reverse proxy support (nginx / cloudflared / etc)
+// Disabled by default for safety; enable via `Proxy:Enabled=true`.
+if (builder.Configuration.GetValue<bool>("Proxy:Enabled"))
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = builder.Configuration.GetValue<int?>("Proxy:ForwardLimit") ?? 2;
 
-string jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
-string jwtAudience = builder.Configuration["Jwt:Audience"]!;
-string jwtKey = builder.Configuration["Jwt:Key"]!;
+        // When you enable this, the app is expected to run *behind* a trusted reverse proxy.
+        // If you want stricter trust boundaries, configure KnownNetworks/KnownProxies.
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
 
-byte[] keyBytes = Encoding.UTF8.GetBytes(jwtKey);
-var signingKey = new SymmetricSecurityKey(keyBytes);
+// Non-dev: avoid noisy warnings and make redirects deterministic behind a reverse proxy.
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHttpsRedirection(options =>
+    {
+        options.HttpsPort = builder.Configuration.GetValue<int?>("HttpsRedirection:HttpsPort") ?? 443;
+    });
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Read from configuration once at startup.
+        // Defaults from JwtOptions (Issuer/Audience) are preserved when values are not provided.
+        JwtOptions jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+
+        byte[] keyBytes = Encoding.UTF8.GetBytes(jwt.Key);
+        var signingKey = new SymmetricSecurityKey(keyBytes);
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtIssuer,
+            ValidIssuer = jwt.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtAudience,
+            ValidAudience = jwt.Audience,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = signingKey,
             ValidateLifetime = true,
@@ -135,6 +177,12 @@ builder.Services
 builder.Services.AddAuthorization();
 
 WebApplication app = builder.Build();
+
+// IMPORTANT: Forwarded headers must run very early in the pipeline.
+if (builder.Configuration.GetValue<bool>("Proxy:Enabled"))
+{
+    app.UseForwardedHeaders();
+}
 
 // Global exception handling -> ProblemDetails (RFC 7807)
 // Why: standardize error responses and avoid leaking stack traces.
@@ -188,7 +236,11 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-if (app.Environment.IsDevelopment())
+bool swaggerEnabled =
+    app.Environment.IsDevelopment() ||
+    app.Configuration.GetValue<bool>("Swagger:Enabled");
+
+if (swaggerEnabled)
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
@@ -196,6 +248,14 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "CitizenshipApp API v1");
         options.RoutePrefix = "swagger";
     });
+}
+
+if (app.Environment.IsDevelopment())
+{
+
+    // Convenience for local dev: opening http://localhost:<port>/ should land on Swagger.
+    app.MapMethods("/", new[] { HttpMethods.Get, HttpMethods.Head }, () => Results.Redirect("/swagger"))
+        .ExcludeFromDescription();
 
     // Auto migrate on startup (dev)
     const int maxAttempts = 15;
@@ -216,11 +276,14 @@ if (app.Environment.IsDevelopment())
 // Why: Confirm the actual resolved connection EF Core is using at runtime.
 // This helps detect cases where AddInfrastructure() config differs from what we think.
             DbConnection dbConn = db.Database.GetDbConnection();
-            Console.WriteLine($"[DEV] EF DbConnection: DataSource={dbConn.DataSource}, Database={dbConn.Database}");
+            app.Logger.LogInformation(
+                "[DEV] EF DbConnection: DataSource={DataSource}, Database={Database}",
+                dbConn.DataSource,
+                dbConn.Database);
 
             await SeedData.SeedAsync(scope.ServiceProvider, builder.Configuration);
 
-            Console.WriteLine("[DEV] Database migration + seed completed.");
+            app.Logger.LogInformation("[DEV] Database migration + seed completed.");
             lastError = null;
             break;
         }
@@ -228,9 +291,12 @@ if (app.Environment.IsDevelopment())
         {
             lastError = ex;
 
-            Console.WriteLine(
-                $"[DEV] DB not ready (attempt {attempt}/{maxAttempts}). " +
-                $"Retrying in {delaySeconds}s. Root: {GetRootCauseMessage(ex)}");
+            app.Logger.LogWarning(
+                "[DEV] DB not ready (attempt {Attempt}/{MaxAttempts}). Retrying in {DelaySeconds}s. Root: {RootCause}",
+                attempt,
+                maxAttempts,
+                delaySeconds,
+                GetRootCauseMessage(ex));
 
             await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
         }
@@ -277,12 +343,27 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseCors(corsPolicyName);
 
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = r => r.Name == "self"
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = r => r.Name == "self" || r.Name == "db"
+});
+
 app.MapControllers();
 
 app.Run();

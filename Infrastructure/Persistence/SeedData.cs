@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence;
 
@@ -148,6 +149,8 @@ public static class SeedData
         IConfiguration configuration,
         CancellationToken ct)
     {
+        ILogger logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("SeedData");
+
         // Always ensure the Admin role exists (safe even without an admin user).
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         var userManager = services.GetRequiredService<UserManager<AppUser>>();
@@ -160,7 +163,10 @@ public static class SeedData
             IdentityResult created = await roleManager.CreateAsync(role);
             if (!created.Succeeded)
             {
-                Console.WriteLine($"[DEV] Failed to create role '{adminRole}': {string.Join("; ", created.Errors.Select(e => e.Description))}");
+                logger.LogWarning(
+                    "[DEV] Failed to create role '{Role}': {Errors}",
+                    adminRole,
+                    string.Join("; ", created.Errors.Select(e => e.Description)));
                 return;
             }
         }
@@ -171,7 +177,7 @@ public static class SeedData
         // No secrets? Then we only create the role and stop.
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            Console.WriteLine("[DEV] Admin user seed skipped (Seed:AdminEmail / Seed:AdminPassword not set)." );
+            logger.LogInformation("[DEV] Admin user seed skipped (Seed:AdminEmail / Seed:AdminPassword not set).");
             return;
         }
 
@@ -191,7 +197,10 @@ public static class SeedData
             IdentityResult createUser = await userManager.CreateAsync(user, password);
             if (!createUser.Succeeded)
             {
-                Console.WriteLine($"[DEV] Failed to create admin user '{normalized}': {string.Join("; ", createUser.Errors.Select(e => e.Description))}");
+                logger.LogWarning(
+                    "[DEV] Failed to create admin user '{User}': {Errors}",
+                    normalized,
+                    string.Join("; ", createUser.Errors.Select(e => e.Description)));
                 return;
             }
         }
@@ -201,7 +210,11 @@ public static class SeedData
             IdentityResult addRole = await userManager.AddToRoleAsync(user, adminRole);
             if (!addRole.Succeeded)
             {
-                Console.WriteLine($"[DEV] Failed to add role '{adminRole}' to '{normalized}': {string.Join("; ", addRole.Errors.Select(e => e.Description))}");
+                logger.LogWarning(
+                    "[DEV] Failed to add role '{Role}' to '{User}': {Errors}",
+                    adminRole,
+                    normalized,
+                    string.Join("; ", addRole.Errors.Select(e => e.Description)));
             }
         }
     }

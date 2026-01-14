@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Api.Infrastructure;
 
 using Domain.Entities.Deck;
 
@@ -18,7 +18,7 @@ namespace Api.Controllers;
 [ApiController]
 [Route("api/study")]
 [Authorize]
-public sealed class StudyController : ControllerBase
+public sealed class StudyController : ApiControllerBase
 {
     private readonly AppDbContext _db;
 
@@ -65,7 +65,7 @@ public sealed class StudyController : ControllerBase
         var question = new Question(
             q.QuestionId,
             q.DeckId,
-            MapQuestionType(q.Type),
+            QuestionTypeMapper.FromRaw(q.Type),
             new QuestionText(
                 q.PromptEn,
                 q.PromptVi ?? string.Empty,
@@ -83,7 +83,10 @@ public sealed class StudyController : ControllerBase
     public async Task<ActionResult<SubmitAnswerResponse>> SubmitAnswer([FromBody] SubmitAnswerRequest req,
         CancellationToken ct)
     {
-        Guid userId = GetUserIdOrThrow();
+        if (!TryGetUserId(out Guid userId))
+        {
+            return Unauthorized();
+        }
 
         Domain.Entities.Deck.Question? question = await _db.Questions
             .AsNoTracking()
@@ -119,7 +122,10 @@ public sealed class StudyController : ControllerBase
     [HttpGet("today")]
     public async Task<ActionResult<TodayProgressResponse>> Today(CancellationToken ct)
     {
-        Guid userId = GetUserIdOrThrow();
+        if (!TryGetUserId(out Guid userId))
+        {
+            return Unauthorized();
+        }
 
         // MVP: UTC boundary
         DateTime startUtc = DateTime.UtcNow.Date;
@@ -148,28 +154,4 @@ public sealed class StudyController : ControllerBase
         });
     }
 
-    private static QuestionType MapQuestionType(string? raw)
-    {
-        // Bạn có thể chuẩn hoá thêm theo data thật trong DB của bạn
-        string? s = (raw ?? string.Empty).Trim().ToUpperInvariant();
-
-        return s switch
-        {
-            "TEXT" => QuestionType.Text,
-            "MCQ" => QuestionType.SingleChoice,
-            "SINGLE" => QuestionType.SingleChoice,
-            "SINGLECHOICE" => QuestionType.SingleChoice,
-            "MULTI" => QuestionType.MultiChoice,
-            "MULTICHOICE" => QuestionType.MultiChoice,
-            _ => QuestionType.Unknown
-        };
-    }
-
-    private Guid GetUserIdOrThrow()
-    {
-        string? raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(raw, out Guid id)
-            ? id
-            : throw new UnauthorizedAccessException("Invalid user id claim.");
-    }
 }

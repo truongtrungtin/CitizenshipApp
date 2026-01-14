@@ -10,7 +10,13 @@ builder.RootComponents.Add<App>("#app");
 
 // Config: ApiBaseUrl
 // appsettings.json (UI) nên có: { "Api": { "BaseUrl": "https://localhost:7070" } }
-string apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "https://0.0.0.0:7070";
+Uri uiBaseUri = new(builder.HostEnvironment.BaseAddress);
+string defaultApiBaseUrl = uiBaseUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase)
+    ? "https://localhost:7070"
+    : "http://localhost:5294";
+
+string apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? defaultApiBaseUrl;
+apiBaseUrl = apiBaseUrl.Replace("0.0.0.0", "localhost", StringComparison.OrdinalIgnoreCase);
 
 // Default HttpClient used by razor pages that @inject HttpClient.
 // Without this, calling HttpClient with relative URLs (e.g. "/api/auth/login") throws:

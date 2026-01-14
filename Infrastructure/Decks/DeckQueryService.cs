@@ -97,7 +97,7 @@ public sealed class DeckQueryService : IDeckQueryService
             .Select(q => new Question(
                 q.QuestionId,
                 q.DeckId,
-                MapQuestionType(q.Type),
+                QuestionTypeMapper.FromRaw(q.Type),
                 new QuestionText(
                     q.PromptEn,
                     q.PromptVi ?? string.Empty,
@@ -119,7 +119,7 @@ public sealed class DeckQueryService : IDeckQueryService
             .Select(q => new Question(
                 q.QuestionId,
                 q.DeckId,
-                MapQuestionType(q.Type),
+                QuestionTypeMapper.FromRaw(q.Type),
                 new QuestionText(
                     q.PromptEn,
                     q.PromptVi ?? string.Empty,
@@ -131,22 +131,6 @@ public sealed class DeckQueryService : IDeckQueryService
                     .Select(o => new AnswerOption(o.Key, o.TextEn, o.TextVi))
                     .ToList()))
             .SingleOrDefaultAsync(ct);
-    }
-
-    private static QuestionType MapQuestionType(string? raw)
-    {
-        string? s = (raw ?? string.Empty).Trim().ToUpperInvariant();
-
-        return s switch
-        {
-            "TEXT" => QuestionType.Text,
-            "MCQ" => QuestionType.SingleChoice,
-            "SINGLE" => QuestionType.SingleChoice,
-            "SINGLECHOICE" => QuestionType.SingleChoice,
-            "MULTI" => QuestionType.MultiChoice,
-            "MULTICHOICE" => QuestionType.MultiChoice,
-            _ => QuestionType.Unknown
-        };
     }
 
     private static void ValidatePaging(int page, int pageSize)

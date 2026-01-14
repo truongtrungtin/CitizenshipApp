@@ -2,6 +2,9 @@
 **/bin/
 **/obj/
 
+# Local publish outputs
+publish-api/
+
 # Local environment files (secrets)
 .env
 .env.*

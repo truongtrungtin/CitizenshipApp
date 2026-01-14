@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Api.Infrastructure;
 
 using Domain.Entities.Users;
 using Domain.Enums;
@@ -25,7 +25,7 @@ namespace Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public sealed class MeController(AppDbContext db) : ControllerBase
+public sealed class MeController(AppDbContext db) : ApiControllerBase
 {
     /// <summary>
     ///     GET /api/me/profile
@@ -33,7 +33,10 @@ public sealed class MeController(AppDbContext db) : ControllerBase
     [HttpGet("profile")]
     public async Task<ActionResult<MeProfileResponse>> GetProfile()
     {
-        Guid userId = GetUserIdOrThrow();
+        if (!TryGetUserId(out Guid userId))
+        {
+            return Unauthorized();
+        }
 
         UserProfile? profile = await db.UserProfiles
             .AsNoTracking()
@@ -62,7 +65,10 @@ public sealed class MeController(AppDbContext db) : ControllerBase
     [HttpGet("settings")]
     public async Task<ActionResult<MeSettingsResponse>> GetSettings(CancellationToken ct)
     {
-        Guid userId = GetUserIdOrThrow();
+        if (!TryGetUserId(out Guid userId))
+        {
+            return Unauthorized();
+        }
 
         UserSettings? settings = await db.UserSettings
             .AsNoTracking()
@@ -88,7 +94,10 @@ public sealed class MeController(AppDbContext db) : ControllerBase
     [HttpPut("settings")]
     public async Task<IActionResult> UpdateSettings([FromBody] UpdateMeSettingsRequest req, CancellationToken ct)
     {
-        Guid userId = GetUserIdOrThrow();
+        if (!TryGetUserId(out Guid userId))
+        {
+            return Unauthorized();
+        }
 
         // Validate nhẹ cho MVP
         int goal = req.DailyGoalMinutes <= 0 ? 10 : req.DailyGoalMinutes;
@@ -135,7 +144,10 @@ public sealed class MeController(AppDbContext db) : ControllerBase
     [HttpPut("onboarding/complete")]
     public async Task<IActionResult> CompleteOnboarding()
     {
-        Guid userId = GetUserIdOrThrow();
+        if (!TryGetUserId(out Guid userId))
+        {
+            return Unauthorized();
+        }
         UserProfile? profile = await db.UserProfiles
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
@@ -150,21 +162,4 @@ public sealed class MeController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    ///     Lấy Guid userId từ JWT claim (sub).
-    /// </summary>
-    private Guid GetUserIdOrThrow()
-    {
-        string? sub = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                      ?? User.FindFirstValue(ClaimTypes.Name)
-                      ?? User.FindFirstValue("sub");
-
-        if (sub is null || !Guid.TryParse(sub, out Guid userId))
-        {
-            // Nếu token không có sub hoặc parse fail => token invalid.
-            throw new InvalidOperationException("Invalid JWT: missing/invalid user id.");
-        }
-
-        return userId;
-    }
 }

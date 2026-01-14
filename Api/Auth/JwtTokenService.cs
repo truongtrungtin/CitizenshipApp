@@ -59,6 +59,9 @@ public sealed class JwtTokenService
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            // Why: nhiều chỗ trong API dùng ClaimTypes.NameIdentifier để lấy userId.
+            // Đặt claim này explicit giúp tránh phụ thuộc vào "inbound claim mapping" của JwtBearer.
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
 
