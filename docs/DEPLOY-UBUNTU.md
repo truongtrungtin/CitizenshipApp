@@ -68,6 +68,64 @@ HttpsRedirection__HttpsPort=443
 
 ## 3) systemd unit files
 
+## Database migrations (production)
+
+This solution stores EF Core migrations in `Infrastructure` (see `Infrastructure/Persistence/Migrations`).
+
+Recommended safe flow:
+1) **Backup the database**.
+2) Run migrations during a maintenance window (some schema changes may lock tables).
+
+### Option A (recommended): run EF migrations from the repo (requires .NET SDK)
+
+This repo uses a local tool manifest at `.config/dotnet-tools.json` (so you don't need to install `dotnet-ef` globally).
+
+```bash
+cd /home/dev/projects/CitizenshipApp
+
+# Load production env vars (ConnectionStrings__DefaultConnection, Jwt__*, etc.)
+set -a
+source /etc/citizenship/api.env
+set +a
+
+# Restore local dotnet tools (dotnet-ef)
+dotnet tool restore
+
+# Preview migrations
+dotnet tool run dotnet-ef migrations list \
+    --project Infrastructure/Infrastructure.csproj \
+    --startup-project Api/Api.csproj
+
+# Apply migrations
+dotnet tool run dotnet-ef database update \
+    --project Infrastructure/Infrastructure.csproj \
+    --startup-project Api/Api.csproj \
+    --no-build
+```
+
+Rollback to a previous migration (example):
+
+```bash
+dotnet tool run dotnet-ef database update <PreviousMigrationNameOrId> \
+    --project Infrastructure/Infrastructure.csproj \
+    --startup-project Api/Api.csproj
+```
+
+### Option B: generate an idempotent SQL script (DBA-friendly)
+
+```bash
+cd /home/dev/projects/CitizenshipApp
+dotnet tool restore
+
+dotnet tool run dotnet-ef migrations script \
+    --idempotent \
+    --project Infrastructure/Infrastructure.csproj \
+    --startup-project Api/Api.csproj \
+    -o /tmp/citizenship-migrate.sql
+```
+
+Then apply `/tmp/citizenship-migrate.sql` using your preferred SQL Server tooling.
+
 ### API service
 
 `/etc/systemd/system/citizenship-api.service`
