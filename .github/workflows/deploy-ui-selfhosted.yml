@@ -1,8 +1,9 @@
 name: Deploy UI (Self-hosted)
 
 on:
-  push:
-    branches: ["main"]
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
   workflow_dispatch:
 
 concurrency:
@@ -11,6 +12,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, ui, citizenship]
     timeout-minutes: 20
 
