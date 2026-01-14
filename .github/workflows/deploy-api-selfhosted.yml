@@ -34,9 +34,14 @@ jobs:
         run: |
           # Avoid interactive sudo prompts in GitHub Actions.
           # Provide the DB connection string via GitHub Secrets.
-          # Required secret: PROD_CONNECTION_STRING
+          # Required secret: PROD_CONNECTION_STRING (raw connection string, no key prefix)
           echo "ASPNETCORE_ENVIRONMENT=Production" >> "$GITHUB_ENV"
-          echo "ConnectionStrings__DefaultConnection=${{ secrets.PROD_CONNECTION_STRING }}" >> "$GITHUB_ENV"
+          if [[ "${{ secrets.PROD_CONNECTION_STRING }}" == *"ConnectionStrings__DefaultConnection="* ]]; then
+            # If the secret already includes the key prefix, pass it through as-is.
+            echo "${{ secrets.PROD_CONNECTION_STRING }}" >> "$GITHUB_ENV"
+          else
+            echo "ConnectionStrings__DefaultConnection=${{ secrets.PROD_CONNECTION_STRING }}" >> "$GITHUB_ENV"
+          fi
 
       - name: Restore dotnet tools (dotnet-ef)
         run: dotnet tool restore
