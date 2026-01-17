@@ -39,12 +39,7 @@ public sealed class AuthController(
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
     {
-        // Basic validation (MVP)
-        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
-        {
-            return BadRequest("Username và Password là bắt buộc.");
-        }
-
+        
         string normalized = req.Email.Trim();
 
         // Tránh trùng username
@@ -147,11 +142,6 @@ public sealed class AuthController(
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
-        {
-            return BadRequest("Username và Password là bắt buộc.");
-        }
-
         string normalized = req.Email.Trim();
         AppUser? user = await userManager.FindByNameAsync(normalized);
         if (user is null)

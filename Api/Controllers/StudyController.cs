@@ -16,7 +16,7 @@ using Question = Shared.Contracts.Deck.Question;
 namespace Api.Controllers;
 
 [ApiController]
-[Route("api/study")]
+[Route("api/[controller]")]
 [Authorize]
 public sealed class StudyController : ApiControllerBase
 {
@@ -28,10 +28,10 @@ public sealed class StudyController : ApiControllerBase
     }
 
     [HttpGet("next")]
-    public async Task<ActionResult<NextQuestionResponse>> GetNext([FromQuery] Guid deckId, CancellationToken ct)
+public async Task<ActionResult<NextQuestionResponse>> GetNext([FromQuery] GetNextQuestionRequest req, CancellationToken ct)
     {
         // MVP: random 1 câu trong deck
-        int total = await _db.Questions.Where(q => q.DeckId == deckId).CountAsync(ct);
+        int total = await _db.Questions.Where(q => q.DeckId == req.DeckId).CountAsync(ct);
         if (total == 0)
         {
             return NotFound("Deck has no questions.");
@@ -41,7 +41,7 @@ public sealed class StudyController : ApiControllerBase
 
         var q = await _db.Questions
             .AsNoTracking()
-            .Where(x => x.DeckId == deckId)
+            .Where(x => x.DeckId == req.DeckId)
             .OrderBy(x => x.QuestionId) // stable order để Skip hoạt động ổn
             .Skip(skip)
             .Select(x => new

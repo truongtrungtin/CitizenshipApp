@@ -3,21 +3,23 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-using Api.Auth;
-
-using Infrastructure;
-using Infrastructure.Persistence;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+
+using Api.Auth;
+using Infrastructure;
+using Infrastructure.Persistence;
+
+const string corsPolicyName = "UiCors";
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -30,17 +32,44 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>(true);
 }
 
-const string corsPolicyName = "UiCors";
-
-builder.Services.AddControllers();
-
-// Health checks
-// - /health/live: process is up
-// - /health/ready: app is ready to serve traffic (includes DB)
 builder.Services
-    .AddHealthChecks()
-    .AddCheck("self", () => HealthCheckResult.Healthy())
-    .AddDbContextCheck<AppDbContext>("db");
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            // Create ValidationProblemDetails (RFC 7807 style)
+            var problemDetailsFactory = context.HttpContext.RequestServices
+                .GetRequiredService<ProblemDetailsFactory>();
+
+            var validationProblem = problemDetailsFactory.CreateValidationProblemDetails(
+                context.HttpContext,
+                context.ModelState,
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "One or more validation errors occurred.",
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            );
+
+            // Add traceId for easier debugging
+            validationProblem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+            // Ensure consistent instance (path)
+            validationProblem.Instance = context.HttpContext.Request.Path;
+
+            return new BadRequestObjectResult(validationProblem)
+            {
+                ContentTypes = { "application/problem+json" }
+            };
+        };
+    });
+
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = ctx =>
+    {
+        ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
+    };
+});
 
 // Bind + validate JWT options (strongly typed)
 // - Issuer/Audience có default trong JwtOptions
@@ -52,6 +81,14 @@ builder.Services
     .Validate(o => o.Key.Length >= 32, "Jwt:Key must be at least 32 characters.")
     .ValidateOnStart();
 builder.Services.AddSingleton<JwtTokenService>();
+
+// Health checks
+// - /health/live: process is up
+// - /health/ready: app is ready to serve traffic (includes DB)
+builder.Services
+    .AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy())
+    .AddDbContextCheck<AppDbContext>("db");
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -178,6 +215,11 @@ builder.Services.AddAuthorization();
 
 WebApplication app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    await EnsureDatabaseReadyAsync(app, builder.Configuration);
+}
+
 // IMPORTANT: Forwarded headers must run very early in the pipeline.
 if (builder.Configuration.GetValue<bool>("Proxy:Enabled"))
 {
@@ -207,7 +249,7 @@ app.UseExceptionHandler(errorApp =>
         };
 
         context.Response.StatusCode = statusCode;
-    context.Response.ContentType = "application/problem+json";
+        context.Response.ContentType = "application/problem+json";
 
         var problem = new ProblemDetails
         {
@@ -252,11 +294,40 @@ if (swaggerEnabled)
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseHttpsRedirection();
+}
 
+app.UseCors(corsPolicyName);
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = r => r.Name == "self"
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = r => r.Name == "self" || r.Name == "db"
+});
+
+if (app.Environment.IsDevelopment())
+{
     // Convenience for local dev: opening http://localhost:<port>/ should land on Swagger.
     app.MapMethods("/", new[] { HttpMethods.Get, HttpMethods.Head }, () => Results.Redirect("/swagger"))
         .ExcludeFromDescription();
+}
 
+app.MapControllers();
+
+app.Run();
+
+// -------------------------
+// Local helper methods
+// -------------------------
+
+static async Task EnsureDatabaseReadyAsync(WebApplication app, IConfiguration configuration)
+{
     // Auto migrate on startup (dev)
     const int maxAttempts = 15;
     const int delaySeconds = 2;
@@ -273,15 +344,15 @@ if (app.Environment.IsDevelopment())
             // If the connection fails, reusing the same DbContext can keep a broken state.
             using IServiceScope scope = app.Services.CreateScope();
             AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-// Why: Confirm the actual resolved connection EF Core is using at runtime.
-// This helps detect cases where AddInfrastructure() config differs from what we think.
+            // Why: Confirm the actual resolved connection EF Core is using at runtime.
+            // This helps detect cases where AddInfrastructure() config differs from what we think.
             DbConnection dbConn = db.Database.GetDbConnection();
             app.Logger.LogInformation(
                 "[DEV] EF DbConnection: DataSource={DataSource}, Database={Database}",
                 dbConn.DataSource,
                 dbConn.Database);
 
-            await SeedData.SeedAsync(scope.ServiceProvider, builder.Configuration);
+            await SeedData.SeedAsync(scope.ServiceProvider, configuration);
 
             app.Logger.LogInformation("[DEV] Database migration + seed completed.");
             lastError = null;
@@ -310,63 +381,34 @@ if (app.Environment.IsDevelopment())
             "Make sure SQL Server Docker is running and your connection string is correct.",
             lastError);
     }
-
-    // -------------------------
-    // Local helper methods
-    // -------------------------
-
-    static bool IsTransientDbStartupError(Exception ex)
-    {
-        // Why:
-        // EF Core often wraps SqlException inside InvalidOperationException, DbUpdateException,
-        // or other exceptions. We treat these as transient during container warm-up.
-        Exception? root = ex;
-        while (root.InnerException is not null)
-        {
-            root = root.InnerException;
-        }
-
-        return root is SqlException
-               || root is TimeoutException
-               || root is SocketException;
-    }
-
-    static string GetRootCauseMessage(Exception ex)
-    {
-        Exception? root = ex;
-        while (root.InnerException is not null)
-        {
-            root = root.InnerException;
-        }
-
-        return root.Message;
-    }
 }
 
-if (app.Environment.IsDevelopment())
+static bool IsTransientDbStartupError(Exception ex)
 {
-    app.UseHttpsRedirection();
+    // Why:
+    // EF Core often wraps SqlException inside InvalidOperationException, DbUpdateException,
+    // or other exceptions. We treat these as transient during container warm-up.
+    Exception? root = ex;
+    while (root.InnerException is not null)
+    {
+        root = root.InnerException;
+    }
+
+    return root is SqlException
+           || root is TimeoutException
+           || root is SocketException;
 }
 
-app.UseCors(corsPolicyName);
-
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapHealthChecks("/health/live", new HealthCheckOptions
+static string GetRootCauseMessage(Exception ex)
 {
-    Predicate = r => r.Name == "self"
-});
+    Exception? root = ex;
+    while (root.InnerException is not null)
+    {
+        root = root.InnerException;
+    }
 
-app.MapHealthChecks("/health/ready", new HealthCheckOptions
-{
-    Predicate = r => r.Name == "self" || r.Name == "db"
-});
-
-app.MapControllers();
-
-app.Run();
+    return root.Message;
+}
 
 // Expose Program for integration testing (WebApplicationFactory).
 public partial class Program

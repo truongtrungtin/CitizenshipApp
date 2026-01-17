@@ -99,9 +99,6 @@ public sealed class MeController(AppDbContext db) : ApiControllerBase
             return Unauthorized();
         }
 
-        // Validate nhẹ cho MVP
-        int goal = req.DailyGoalMinutes <= 0 ? 10 : req.DailyGoalMinutes;
-
         UserSettings? settings = await db.UserSettings
             .FirstOrDefaultAsync(x => x.UserId == userId, ct);
 
@@ -114,7 +111,7 @@ public sealed class MeController(AppDbContext db) : ApiControllerBase
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 Language = req.Language,
-                DailyGoalMinutes = goal,
+                DailyGoalMinutes = req.DailyGoalMinutes,
                 CreatedUtc = now,
                 UpdatedUtc = now
             };
@@ -123,7 +120,7 @@ public sealed class MeController(AppDbContext db) : ApiControllerBase
         else
         {
             settings.Language = req.Language;
-            settings.DailyGoalMinutes = goal;
+            settings.DailyGoalMinutes = req.DailyGoalMinutes;
             settings.UpdatedUtc = DateTime.UtcNow;
         }
 

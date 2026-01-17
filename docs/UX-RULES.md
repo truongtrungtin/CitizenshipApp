@@ -4,7 +4,6 @@
 ## 3) Tạo folder `docs/` + UX rules
 **Path:** `CitizenshipApp/docs/UX-RULES.md`
 
-```md
 # UX Rules (Elderly-first)
 
 ## Mục tiêu

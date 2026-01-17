@@ -45,10 +45,7 @@ public class AppSettingsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<AppSettingDto>> Create([FromBody] CreateAppSettingRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Key))
-        {
-            return BadRequest("Key is required.");
-        }
+
 
         bool exists = await _db.AppSettings.AsNoTracking().AnyAsync(x => x.Key == req.Key);
         if (exists)
@@ -71,11 +68,6 @@ public class AppSettingsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateAppSettingRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Key))
-        {
-            return BadRequest("Key is required.");
-        }
-
         Domain.Entities.AppSetting? item = await _db.AppSettings.FindAsync(id);
         if (item is null)
         {

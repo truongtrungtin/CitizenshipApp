@@ -15,8 +15,27 @@ string defaultApiBaseUrl = uiBaseUri.Scheme.Equals("https", StringComparison.Ord
     ? "https://localhost:7070"
     : "http://localhost:5294";
 
-string apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? defaultApiBaseUrl;
+string apiBaseUrl = builder.HostEnvironment.IsDevelopment()
+    ? defaultApiBaseUrl
+    : (builder.Configuration["Api:BaseUrl"] ?? defaultApiBaseUrl);
+
 apiBaseUrl = apiBaseUrl.Replace("0.0.0.0", "localhost", StringComparison.OrdinalIgnoreCase);
+
+if (builder.HostEnvironment.IsDevelopment() && Uri.TryCreate(apiBaseUrl, UriKind.Absolute, out Uri? devApiUri))
+{
+    HashSet<string> allowedDevHosts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "localhost",
+        "0.0.0.0",
+        "127.0.0.1"
+    };
+
+    if (!allowedDevHosts.Contains(devApiUri.Host))
+    {
+        UriBuilder fallback = new(devApiUri) { Host = "localhost" };
+        apiBaseUrl = fallback.Uri.ToString().TrimEnd('/');
+    }
+}
 
 // Default HttpClient used by razor pages that @inject HttpClient.
 // Without this, calling HttpClient with relative URLs (e.g. "/api/auth/login") throws:
