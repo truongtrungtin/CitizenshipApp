@@ -7,23 +7,30 @@ public sealed class AppState
     private const string IsOnboardedKey = "auth.isOnboarded";
 
     private readonly StorageInterop _storage;
+    private readonly AuthSession _session;
 
-    public AppState(StorageInterop storage)
+    public AppState(StorageInterop storage, AuthSession session)
     {
         _storage = storage;
+        _session = session;
     }
 
-    public string? AccessToken { get; private set; }
+    // Source of truth for token is AuthSession (singleton)
+    public string? AccessToken => _session.AccessToken;
+
     public string? UserId { get; private set; }
 
-    public bool IsAuthenticated => !string.IsNullOrWhiteSpace(AccessToken);
+    public bool IsAuthenticated => _session.IsAuthenticated;
+
     public bool IsOnboarded { get; private set; }
 
     public event Action? OnChange;
 
     public async Task InitializeAsync()
     {
-        AccessToken = await _storage.GetItemAsync(AccessTokenKey);
+        var token = await _storage.GetItemAsync(AccessTokenKey);
+        _session.SetToken(string.IsNullOrWhiteSpace(token) ? null : token);
+
         UserId = await _storage.GetItemAsync(UserIdKey);
 
         string? onboardedRaw = await _storage.GetItemAsync(IsOnboardedKey);
@@ -34,7 +41,8 @@ public sealed class AppState
 
     public async Task SetAuthAsync(string accessToken, string? userId, bool isOnboarded)
     {
-        AccessToken = accessToken;
+        _session.SetToken(accessToken);
+
         UserId = userId;
         IsOnboarded = isOnboarded;
 
@@ -54,7 +62,8 @@ public sealed class AppState
 
     public async Task LogoutAsync()
     {
-        AccessToken = null;
+        _session.Clear();
+
         UserId = null;
         IsOnboarded = false;
 

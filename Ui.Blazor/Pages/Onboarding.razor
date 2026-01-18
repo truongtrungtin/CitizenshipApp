@@ -1,14 +1,11 @@
 @page "/onboarding"
 
-@inject ApiClient Api
-@inject AppState State
-@inject NavigationManager Nav
 
 <h1>Onboarding</h1>
 
 <p>Complete onboarding to unlock the app.</p>
 
-@if (!State.IsAuthenticated)
+@if (!AppState.IsAuthenticated)
 {
   <div class="alert alert-warning">
     You must login first.
@@ -37,7 +34,7 @@ else
     try
     {
       await Api.CompleteOnboardingAsync();
-      await State.SetOnboardedAsync(true);
+      await AppState.SetOnboardedAsync(true);
 
       Message = "Done! Redirecting...";
       Nav.NavigateTo("/", replace: true);

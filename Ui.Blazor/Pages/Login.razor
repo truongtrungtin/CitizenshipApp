@@ -2,45 +2,101 @@
 
 <h1>Login</h1>
 
-<div class="mb-3">
-  <label class="form-label">Username (email)</label>
-  <input class="form-control" @bind="Username" />
-</div>
-
-<div class="mb-3">
-  <label class="form-label">Password</label>
-  <input class="form-control" type="password" @bind="Password" />
-</div>
-
-<button class="btn btn-primary" @onclick="OnLogin" disabled="@Busy">Login</button>
-<button class="btn btn-link" @onclick="GoRegister" disabled="@Busy">Register</button>
-
 @if (!string.IsNullOrWhiteSpace(Error))
 {
   <div class="alert alert-danger mt-3">@Error</div>
 }
 
+<div class="mb-3">
+  <label class="form-label">Username (email / phone)</label>
+  <input class="form-control" @bind="Username" disabled="@Busy" />
+  @if (GetFieldError("Email") is string emailErr)
+  {
+    <div class="text-danger small mt-1">@emailErr</div>
+  }
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Password</label>
+  <input class="form-control" type="password" @bind="Password" disabled="@Busy" />
+  @if (GetFieldError("Password") is string passErr)
+  {
+    <div class="text-danger small mt-1">@passErr</div>
+  }
+</div>
+
+<button class="btn btn-primary" @onclick="OnLogin" disabled="@Busy">Login</button>
+<button class="btn btn-link" @onclick="GoRegister" disabled="@Busy">Register</button>
+
 @code {
   private string Username { get; set; } = "";
   private string Password { get; set; } = "";
+
+  /// <summary>
+  /// General (non-field) error message displayed at top.
+  /// </summary>
   private string? Error { get; set; }
+
+  /// <summary>
+  /// Field-level validation errors returned from API (ValidationProblemDetails).
+  /// Keys are case-insensitive (Email, Password, DailyGoalMinutes, etc.).
+  /// </summary>
+  private Dictionary<string, string[]> FieldErrors { get; set; }
+    = new(StringComparer.OrdinalIgnoreCase);
+
   private bool Busy { get; set; }
+
+  /// <summary>
+  /// Returns a combined error string for a given field name (e.g. "Email", "Password").
+  /// </summary>
+  private string? GetFieldError(string field)
+  {
+    return FieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
+      ? string.Join(" ", msgs)
+      : null;
+  }
+
+  /// <summary>
+  /// Clear both general and field errors before a new request.
+  /// </summary>
+  private void ClearErrors()
+  {
+    Error = null;
+    FieldErrors.Clear();
+  }
 
   private async Task OnLogin()
   {
-    Error = null;
+    ClearErrors();
     Busy = true;
 
     try
     {
+      // Keep request contract stable: API expects LoginRequest.Email + Password.
       var req = new LoginRequest { Email = Username, Password = Password };
+
       var auth = await Api.LoginAsync(req);
 
-      await AppState.SetAuthAsync(auth.AccessToken, userId: auth.UserId.ToString(), isOnboarded: auth.IsOnboarded);
+      await AppState.SetAuthAsync(
+        auth.AccessToken,
+        userId: auth.UserId.ToString(),
+        isOnboarded: auth.IsOnboarded
+      );
+
+      Console.WriteLine($"AFTER SetAuthAsync: IsAuth={AppState.IsAuthenticated}, TokenLen={(AppState.AccessToken?.Length ?? 0)}");
+
+      // NOTE: "/" may later redirect to /home via RouteGuard/index page.
       Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
+    }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      // Field-level errors (e.g., Email/Password required) come here.
+      Error = ex.Detail ?? ex.Title ?? ex.Message;
+      FieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
     }
     catch (Exception ex)
     {
+      // Fallback: unexpected errors.
       Error = ex.Message;
     }
     finally

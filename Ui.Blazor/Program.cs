@@ -43,13 +43,14 @@ if (builder.HostEnvironment.IsDevelopment() && Uri.TryCreate(apiBaseUrl, UriKind
 builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
 builder.Services.AddAuthorizationCore();
+builder.Services.AddSingleton<AuthSession>();
 
 builder.Services.AddScoped<ITokenStore, BrowserTokenStore>();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<StorageInterop>();
 
-builder.Services.AddScoped<AuthHeaderHandler>();
+builder.Services.AddTransient<AuthHeaderHandler>();
 
 builder.Services.AddHttpClient<ApiClient>(client => { client.BaseAddress = new Uri(apiBaseUrl); })
     .AddHttpMessageHandler<AuthHeaderHandler>();

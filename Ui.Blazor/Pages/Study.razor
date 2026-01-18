@@ -18,10 +18,10 @@
 
 <hr/>
 
-@if (!string.IsNullOrWhiteSpace(_error))
+@if (!string.IsNullOrWhiteSpace(_generalError))
 {
   <div class="alert alert-danger" role="alert">
-    <strong>Error:</strong> @_error
+    <strong>Error:</strong> @_generalError
   </div>
 }
 
@@ -44,6 +44,11 @@
       }
     }
   </select>
+
+  @if (GetFieldError("DeckId") is string deckErr)
+  {
+    <div class="text-danger small mt-1">@deckErr</div>
+  }
 
   <button class="btn btn-sm btn-outline-secondary" @onclick="ReloadAllAsync" disabled="@_busy">
     Reload
@@ -123,6 +128,17 @@
     else
     {
       <hr/>
+
+      @* Field errors close to the answer interaction *@
+      @if (GetFieldError("SelectedKey") is string selectedErr)
+      {
+        <div class="text-danger small mb-2">@selectedErr</div>
+      }
+      @if (GetFieldError("QuestionId") is string questionErr)
+      {
+        <div class="text-danger small mb-2">@questionErr</div>
+      }
+
       @if (_question.Options is null || _question.Options.Count == 0)
       {
         <div class="alert alert-warning mb-0">
@@ -155,7 +171,18 @@
 
   private AnswerResult? _lastAnswer;
   private bool _busy;
-  private string? _error;
+
+  /// <summary>
+  /// General (non-field) error shown as a top alert.
+  /// This is used for business errors (401/403/404/etc.) or unexpected failures.
+  /// </summary>
+  private string? _generalError;
+
+  /// <summary>
+  /// Field-level validation errors returned by API (ValidationProblemDetails).
+  /// Example keys: "DeckId", "QuestionId", "SelectedKey".
+  /// </summary>
+  private Dictionary<string, string[]> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
 
   private LanguageCode _language = LanguageCode.En;
   private bool IsVietnamese => _language == LanguageCode.Vi;
@@ -171,9 +198,22 @@
     StateHasChanged();
   }
 
+  private string? GetFieldError(string field)
+  {
+    return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
+      ? string.Join(" ", msgs)
+      : null;
+  }
+
+  private void ClearErrors()
+  {
+    _generalError = null;
+    _fieldErrors.Clear();
+  }
+
   private async Task ReloadAllAsync()
   {
-    _error = null;
+    ClearErrors();
     _busy = true;
 
     try
@@ -189,9 +229,14 @@
       await LoadTodayAsync();
       await LoadNextQuestionAsync();
     }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _generalError = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
+    }
     catch (Exception ex)
     {
-      _error = ex.Message;
+      _generalError = ex.Message;
     }
     finally
     {
@@ -201,7 +246,7 @@
 
   private async Task OnDeckChanged(ChangeEventArgs e)
   {
-    _error = null;
+    ClearErrors();
 
     var raw = e.Value?.ToString();
     if (!Guid.TryParse(raw, out var deckId))
@@ -221,13 +266,14 @@
     }
     catch
     {
-      _today = null; // optional UI
+      // Today progress is optional UI; ignore errors here to avoid blocking study.
+      _today = null;
     }
   }
 
   private async Task LoadNextQuestionAsync()
   {
-    _error = null;
+    ClearErrors();
     _lastAnswer = null;
 
     if (!_selectedDeckId.HasValue)
@@ -240,10 +286,16 @@
       var res = await Api.GetNextQuestionAsync(_selectedDeckId.Value);
       _question = res.Question;
     }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _question = null;
+      _generalError = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
+    }
     catch (Exception ex)
     {
       _question = null;
-      _error = ex.Message;
+      _generalError = ex.Message;
     }
     finally
     {
@@ -256,7 +308,7 @@
     if (!_selectedDeckId.HasValue || _question is null)
       return;
 
-    _error = null;
+    ClearErrors();
     _busy = true;
 
     try
@@ -278,9 +330,14 @@
 
       await LoadTodayAsync();
     }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _generalError = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
+    }
     catch (Exception ex)
     {
-      _error = ex.Message;
+      _generalError = ex.Message;
     }
     finally
     {

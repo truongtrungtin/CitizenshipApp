@@ -13,29 +13,46 @@ else if (_loading)
 }
 else
 {
+  @if (!string.IsNullOrWhiteSpace(_message))
+  {
+    <div class="alert alert-info mt-3">@_message</div>
+  }
+
+  @if (!string.IsNullOrWhiteSpace(_error))
+  {
+    <div class="alert alert-danger mt-3">@_error</div>
+  }
+
   <div class="mb-3">
     <label class="form-label">Language</label>
 
-    <!-- Bind trực tiếp vào _edit.Language (enum) -->
-    <select class="form-select" @bind="_edit.Language">
+    <select class="form-select" @bind="_edit.Language" disabled="@_saving">
       <option value="@LanguageCode.Vi">Vietnamese</option>
       <option value="@LanguageCode.En">English</option>
     </select>
+
+    @if (GetFieldError("Language") is string langErr)
+    {
+      <div class="text-danger small mt-1">@langErr</div>
+    }
   </div>
 
   <div class="mb-3">
     <label class="form-label">Daily study goal</label>
 
-    <!-- Bind trực tiếp vào _edit.DailyGoalMinutes -->
-    <input class="form-control" type="number" @bind="_edit.DailyGoalMinutes" min="1" max="200"/>
+    <input class="form-control"
+           type="number"
+           @bind="_edit.DailyGoalMinutes"
+           min="1" max="200"
+           disabled="@_saving" />
+
+    @if (GetFieldError("DailyGoalMinutes") is string goalErr)
+    {
+      <div class="text-danger small mt-1">@goalErr</div>
+    }
   </div>
 
   <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">Save</button>
-
-  @if (!string.IsNullOrWhiteSpace(_message))
-  {
-    <div class="alert alert-info mt-3">@_message</div>
-  }
 }
 
 @code {
@@ -44,12 +61,36 @@ else
 
   private bool _loading = true;
   private bool _saving;
+
+  // Info/success message (ex: "Saved.")
   private string? _message;
+
+  // General error (non-field)
+  private string? _error;
+
+  // Field-level errors: Language, DailyGoalMinutes, ...
+  private Dictionary<string, string[]> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
+
+  private string? GetFieldError(string field)
+  {
+    return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
+      ? string.Join(" ", msgs)
+      : null;
+  }
+
+  private void ClearErrors()
+  {
+    _error = null;
+    _fieldErrors.Clear();
+  }
 
   protected override async Task OnInitializedAsync()
   {
     try
     {
+      ClearErrors();
+      _message = null;
+
       _current = await Api.GetMeSettingsAsync();
 
       _edit = new UpdateMeSettingsRequest
@@ -58,9 +99,14 @@ else
         DailyGoalMinutes = _current.DailyGoalMinutes
       };
     }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _error = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
+    }
     catch (Exception ex)
     {
-      _message = ex.Message;
+      _error = ex.Message;
     }
     finally
     {
@@ -71,20 +117,25 @@ else
   private async Task SaveAsync()
   {
     _message = null;
+    ClearErrors();
     _saving = true;
 
     try
     {
       await Api.UpdateMeSettingsAsync(_edit);
 
-      // (Optional) update state nếu bạn có lưu settings trong AppState
-      // State.MeSettings = new MeSettingsResponse { Language = _edit.Language, DailyGoalMinutes = _edit.DailyGoalMinutes };
+      // Optional: update any cached state if you store settings in AppState.
 
       _message = "Saved.";
     }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _error = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
+    }
     catch (Exception ex)
     {
-      _message = ex.Message;
+      _error = ex.Message;
     }
     finally
     {
@@ -92,9 +143,5 @@ else
     }
   }
 
-  private void GoLogin()
-  {
-    Nav.NavigateTo("/login");
-  }
-
+  private void GoLogin() => Nav.NavigateTo("/login");
 }

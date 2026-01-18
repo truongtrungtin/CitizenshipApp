@@ -28,7 +28,7 @@ namespace Api.Controllers;
 public sealed class MeController(AppDbContext db) : ApiControllerBase
 {
     /// <summary>
-    ///     GET /api/me/profile
+    ///     GET /api/Me/profile
     /// </summary>
     [HttpGet("profile")]
     public async Task<ActionResult<MeProfileResponse>> GetProfile()

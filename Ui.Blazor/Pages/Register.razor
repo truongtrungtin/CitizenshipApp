@@ -2,33 +2,61 @@
 
 <h1>Register</h1>
 
-<div class="mb-3">
-  <label class="form-label">Username (email)</label>
-  <input class="form-control" @bind="Username" />
-</div>
-
-<div class="mb-3">
-  <label class="form-label">Password</label>
-  <input class="form-control" type="password" @bind="Password" />
-</div>
-
-<button class="btn btn-primary" @onclick="OnRegister" disabled="@Busy">Create account</button>
-<button class="btn btn-link" @onclick="GoLogin" disabled="@Busy">Back to login</button>
-
 @if (!string.IsNullOrWhiteSpace(Error))
 {
   <div class="alert alert-danger mt-3">@Error</div>
 }
 
+<div class="mb-3">
+  <label class="form-label">Username (email / phone)</label>
+  <input class="form-control" @bind="Username" disabled="@Busy" />
+  @if (GetFieldError("Email") is string emailErr)
+  {
+    <div class="text-danger small mt-1">@emailErr</div>
+  }
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Password</label>
+  <input class="form-control" type="password" @bind="Password" disabled="@Busy" />
+  @if (GetFieldError("Password") is string passErr)
+  {
+    <div class="text-danger small mt-1">@passErr</div>
+  }
+</div>
+
+<button class="btn btn-primary" @onclick="OnRegister" disabled="@Busy">Create account</button>
+<button class="btn btn-link" @onclick="GoLogin" disabled="@Busy">Back to login</button>
+
 @code {
   private string Username { get; set; } = "";
   private string Password { get; set; } = "";
+
+  // General error
   private string? Error { get; set; }
+
+  // Field-level errors
+  private Dictionary<string, string[]> FieldErrors { get; set; }
+    = new(StringComparer.OrdinalIgnoreCase);
+
   private bool Busy { get; set; }
+
+  private string? GetFieldError(string field)
+  {
+    return FieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
+      ? string.Join(" ", msgs)
+      : null;
+  }
+
+  private void ClearErrors()
+  {
+    Error = null;
+    FieldErrors.Clear();
+  }
 
   private async Task OnRegister()
   {
-    Error = null;
+    ClearErrors();
     Busy = true;
 
     try
@@ -36,8 +64,18 @@
       var req = new RegisterRequest { Email = Username, Password = Password };
       var auth = await Api.RegisterAsync(req);
 
-      await AppState.SetAuthAsync(auth.AccessToken, userId: auth.UserId.ToString(), isOnboarded: auth.IsOnboarded);
+      await AppState.SetAuthAsync(
+        auth.AccessToken,
+        userId: auth.UserId.ToString(),
+        isOnboarded: auth.IsOnboarded
+      );
+
       Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
+    }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      Error = ex.Detail ?? ex.Title ?? ex.Message;
+      FieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
     }
     catch (Exception ex)
     {

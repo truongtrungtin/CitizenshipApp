@@ -4,7 +4,7 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\trung\.nuget\packages\microsoft.openapi\3.1.1\lib\net8.0\Microsoft.OpenApi.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1452f139_002D3440_002D467d_002D9ea9_002D7b514e2a12b4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;Api.Tests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Project Location="G:\Work\CitizenshipTutor\CitizenshipApp\Tests\Api.IntegrationTests" Presentation="&amp;lt;Api.IntegrationTests&amp;gt;" /&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1452f139_002D3440_002D467d_002D9ea9_002D7b514e2a12b4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;Api.Tests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Project Location="G:\Work\CitizenshipTutor\CitizenshipApp\Tests\Api.IntegrationTests" Presentation="&amp;lt;Api.IntegrationTests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
 	</wpf:ResourceDictionary>
