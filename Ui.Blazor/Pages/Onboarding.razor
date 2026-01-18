@@ -1,57 +1,223 @@
 @page "/onboarding"
 
-
 <h1>Onboarding</h1>
 
-<p>Complete onboarding to unlock the app.</p>
-
-@if (!AppState.IsAuthenticated)
+@if (!string.IsNullOrWhiteSpace(_error))
 {
-  <div class="alert alert-warning">
-    You must login first.
-  </div>
-  <button class="btn btn-primary" @onclick="GoLogin">Go to login</button>
+  <div class="alert alert-danger mt-3">@_error</div>
+}
+
+@if (_loading)
+{
+  <div class="alert alert-info mt-3">Loading…</div>
 }
 else
 {
-  <button class="btn btn-success" @onclick="Complete" disabled="@Busy">Complete onboarding</button>
+  <div class="mt-3">
 
-  @if (!string.IsNullOrWhiteSpace(Message))
-  {
-    <div class="alert alert-info mt-3">@Message</div>
-  }
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Language</label>
+      <div class="btn-group" role="group">
+        <button class="btn @(_settings.Language == LanguageCode.Vi ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { Language = LanguageCode.Vi }" disabled="@_saving">
+          Vietnamese
+        </button>
+        <button class="btn @(_settings.Language == LanguageCode.En ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { Language = LanguageCode.En }" disabled="@_saving">
+          English
+        </button>
+      </div>
+      @if (GetFieldError("Language") is string e1)
+      {
+        <div class="text-danger small mt-1">@e1</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Font size</label>
+      <div class="btn-group" role="group">
+        <button class="btn @(_settings.FontScale == FontScale.Medium ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { FontScale = FontScale.Medium }" disabled="@_saving">Medium</button>
+
+        <button class="btn @(_settings.FontScale == FontScale.Large ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { FontScale = FontScale.Large }" disabled="@_saving">Large</button>
+
+        <button class="btn @(_settings.FontScale == FontScale.XLarge ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { FontScale = FontScale.XLarge }" disabled="@_saving">XLarge</button>
+      </div>
+      @if (GetFieldError("FontScale") is string e2)
+      {
+        <div class="text-danger small mt-1">@e2</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Audio speed</label>
+      <div class="btn-group" role="group">
+        <button class="btn @(_settings.AudioSpeed == AudioSpeed.Slow ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { AudioSpeed = AudioSpeed.Slow }" disabled="@_saving">Slow</button>
+
+        <button class="btn @(_settings.AudioSpeed == AudioSpeed.Normal ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { AudioSpeed = AudioSpeed.Normal }"
+          disabled="@_saving">Normal</button>
+      </div>
+      @if (GetFieldError("AudioSpeed") is string e3)
+      {
+        <div class="text-danger small mt-1">@e3</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Daily goal</label>
+      <div class="btn-group" role="group">
+        <button class="btn @(_settings.DailyGoalMinutes == 15 ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { DailyGoalMinutes = 15 }" disabled="@_saving">15 min</button>
+
+        <button class="btn @(_settings.DailyGoalMinutes == 30 ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { DailyGoalMinutes = 30 }" disabled="@_saving">30 min</button>
+
+        <button class="btn @(_settings.DailyGoalMinutes == 45 ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { DailyGoalMinutes = 45 }" disabled="@_saving">45 min</button>
+      </div>
+      @if (GetFieldError("DailyGoalMinutes") is string e4)
+      {
+        <div class="text-danger small mt-1">@e4</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Focus</label>
+      <div class="btn-group" role="group">
+        <button class="btn @(_settings.Focus == StudyFocus.Civics ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { Focus = StudyFocus.Civics }" disabled="@_saving">Civics</button>
+
+        <button class="btn @(_settings.Focus == StudyFocus.Reading ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { Focus = StudyFocus.Reading }" disabled="@_saving">Reading</button>
+
+        <button class="btn @(_settings.Focus == StudyFocus.Writing ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { Focus = StudyFocus.Writing }" disabled="@_saving">Writing</button>
+      </div>
+      @if (GetFieldError("Focus") is string e5)
+      {
+        <div class="text-danger small mt-1">@e5</div>
+      }
+    </div>
+
+    <div class="form-check mb-4">
+      <input class="form-check-input" type="checkbox" id="silent" checked="@_settings.SilentMode"
+        @onchange="OnSilentChanged" disabled="@_saving" />
+      <label class="form-check-label" for="silent">Silent mode</label>
+      @if (GetFieldError("SilentMode") is string e6)
+      {
+        <div class="text-danger small mt-1">@e6</div>
+      }
+    </div>
+
+    <button class="btn btn-primary" @onclick="SaveAndContinueAsync" disabled="@_saving">
+      Start studying
+    </button>
+  </div>
 }
 
 @code {
-  private bool Busy { get; set; }
-  private string? Message { get; set; }
+  private bool _loading = true;
+  private bool _saving;
 
-  private async Task Complete()
+  private string? _error;
+  private Dictionary<string, string[]> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
+
+  private UserSettingContracts _settings = new(
+  LanguageCode.En,
+  FontScale.Medium,
+  AudioSpeed.Normal,
+  15,
+  StudyFocus.Civics,
+  false
+  );
+
+  protected override async Task OnInitializedAsync()
   {
-    Busy = true;
-    Message = null;
+    // Must be authenticated to do onboarding
+    if (!AppState.IsAuthenticated)
+    {
+      Nav.NavigateTo("/login", replace: true);
+      return;
+    }
 
     try
     {
-      await Api.CompleteOnboardingAsync();
-      await AppState.SetOnboardedAsync(true);
-
-      Message = "Done! Redirecting...";
-      Nav.NavigateTo("/", replace: true);
+      ClearErrors();
+      _settings = await Api.GetMeSettingsFullAsync();
+    }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _error = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
     }
     catch (Exception ex)
     {
-      Message = $"Error: {ex.Message}";
+      _error = ex.Message;
     }
     finally
     {
-      Busy = false;
+      _loading = false;
     }
   }
 
-  private void GoLogin()
+  private void OnSilentChanged(ChangeEventArgs e)
+{
+  // Blazor checkbox value is usually bool, but can be string in some cases.
+  bool value =
+      e.Value is bool b ? b
+    : bool.TryParse(e.Value?.ToString(), out var parsed) && parsed;
+
+  _settings = _settings with { SilentMode = value };
+}
+
+  private string? GetFieldError(string field)
   {
-    Nav.NavigateTo("/login");
+    return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
+    ? string.Join(" ", msgs)
+    : null;
   }
 
+  private void ClearErrors()
+  {
+    _error = null;
+    _fieldErrors.Clear();
+  }
+
+  private async Task SaveAndContinueAsync()
+  {
+    ClearErrors();
+    _saving = true;
+
+    try
+    {
+      // 1) Save full settings
+      await Api.UpdateMeSettingsFullAsync(_settings);
+
+      // 2) Mark onboarding complete on server
+      await Api.CompleteOnboardingAsync();
+
+      // 3) Update local state so RouteGuard stops forcing /onboarding
+      await AppState.SetOnboardedAsync(true);
+
+      // 4) Go home
+      Nav.NavigateTo("/home", replace: true);
+    }
+    catch (Ui.Blazor.Services.ApiException ex)
+    {
+      _error = ex.Detail ?? ex.Title ?? ex.Message;
+      _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
 }

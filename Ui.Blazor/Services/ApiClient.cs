@@ -187,6 +187,24 @@ public sealed class ApiClient
         // No body expected.
     }
 
+    public async Task<UserSettingContracts> GetMeSettingsFullAsync(CancellationToken ct = default)
+    {
+        var res = await _http.GetAsync("api/Me/settings/full", ct);
+        if (!res.IsSuccessStatusCode)
+            throw await CreateApiExceptionAsync(res);
+
+        var payload = await res.Content.ReadFromJsonAsync<UserSettingContracts>(cancellationToken: ct);
+        return payload!;
+    }
+
+    public async Task UpdateMeSettingsFullAsync(UserSettingContracts req, CancellationToken ct = default)
+    {
+        var res = await _http.PutAsJsonAsync("api/Me/settings/full", req, ct);
+        if (!res.IsSuccessStatusCode)
+            throw await CreateApiExceptionAsync(res);
+    }
+
+
     // -------------------------
     // Decks
     // -------------------------

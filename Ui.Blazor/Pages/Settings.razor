@@ -24,8 +24,7 @@ else
   }
 
   <div class="mb-3">
-    <label class="form-label">Language</label>
-
+    <label class="form-label fw-semibold">Language</label>
     <select class="form-select" @bind="_edit.Language" disabled="@_saving">
       <option value="@LanguageCode.Vi">Vietnamese</option>
       <option value="@LanguageCode.En">English</option>
@@ -38,9 +37,39 @@ else
   </div>
 
   <div class="mb-3">
-    <label class="form-label">Daily study goal</label>
+    <label class="form-label fw-semibold">Font size</label>
+    <select class="form-select" @bind="_edit.FontScale" disabled="@_saving">
+      <option value="@FontScale.Medium">Medium</option>
+      <option value="@FontScale.Large">Large</option>
+      <option value="@FontScale.XLarge">X-Large</option>
+    </select>
 
-    <input class="form-control" type="number" @bind="_edit.DailyGoalMinutes" min="1" max="200" disabled="@_saving" />
+    @if (GetFieldError("FontScale") is string fontErr)
+    {
+      <div class="text-danger small mt-1">@fontErr</div>
+    }
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Audio speed</label>
+    <select class="form-select" @bind="_edit.AudioSpeed" disabled="@_saving">
+      <option value="@AudioSpeed.Slow">Slow</option>
+      <option value="@AudioSpeed.Normal">Normal</option>
+    </select>
+
+    @if (GetFieldError("AudioSpeed") is string audioErr)
+    {
+      <div class="text-danger small mt-1">@audioErr</div>
+    }
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Daily study goal (minutes)</label>
+    <input class="form-control"
+           type="number"
+           @bind="_edit.DailyGoalMinutes"
+           min="1" max="200"
+           disabled="@_saving" />
 
     @if (GetFieldError("DailyGoalMinutes") is string goalErr)
     {
@@ -48,30 +77,53 @@ else
     }
   </div>
 
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Study focus</label>
+    <select class="form-select" @bind="_edit.Focus" disabled="@_saving">
+      <option value="@StudyFocus.Civics">Civics</option>
+      <option value="@StudyFocus.Reading">Reading</option>
+      <option value="@StudyFocus.Writing">Writing</option>
+    </select>
+
+    @if (GetFieldError("Focus") is string focusErr)
+    {
+      <div class="text-danger small mt-1">@focusErr</div>
+    }
+  </div>
+
+  <div class="form-check mb-4">
+    <input class="form-check-input" type="checkbox" id="silentMode"
+           checked="@_edit.SilentMode"
+           @onchange="OnSilentChanged"
+           disabled="@_saving" />
+    <label class="form-check-label" for="silentMode">Silent mode</label>
+
+    @if (GetFieldError("SilentMode") is string silentErr)
+    {
+      <div class="text-danger small mt-1">@silentErr</div>
+    }
+  </div>
+
   <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">Save</button>
 }
 
 @code {
-  private MeSettingsResponse? _current;
-  private UpdateMeSettingsRequest _edit = new();
-
   private bool _loading = true;
   private bool _saving;
 
-  // Info/success message (ex: "Saved.")
   private string? _message;
-
-  // General error (non-field)
   private string? _error;
 
-  // Field-level errors: Language, DailyGoalMinutes, ...
   private Dictionary<string, string[]> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
+
+  // Full settings edit model
+  private UserSettingContracts _edit = new(); // uses defaults
 
   private string? GetFieldError(string field)
   {
     return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
-    ? string.Join(" ", msgs)
-    : null;
+      ? string.Join(" ", msgs)
+      : null;
   }
 
   private void ClearErrors()
@@ -93,13 +145,7 @@ else
       ClearErrors();
       _message = null;
 
-      _current = await Api.GetMeSettingsAsync();
-
-      _edit = new UpdateMeSettingsRequest
-      {
-        Language = _current.Language,
-        DailyGoalMinutes = _current.DailyGoalMinutes
-      };
+      _edit = await Api.GetMeSettingsFullAsync();
     }
     catch (Ui.Blazor.Services.ApiException ex)
     {
@@ -116,6 +162,15 @@ else
     }
   }
 
+  private void OnSilentChanged(ChangeEventArgs e)
+  {
+    bool value =
+        e.Value is bool b ? b
+      : bool.TryParse(e.Value?.ToString(), out var parsed) && parsed;
+
+    _edit = _edit with { SilentMode = value };
+  }
+
   private async Task SaveAsync()
   {
     _message = null;
@@ -124,10 +179,7 @@ else
 
     try
     {
-      await Api.UpdateMeSettingsAsync(_edit);
-
-      // Optional: update any cached state if you store settings in AppState.
-
+      await Api.UpdateMeSettingsFullAsync(_edit);
       _message = "Saved.";
     }
     catch (Ui.Blazor.Services.ApiException ex)
