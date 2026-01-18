@@ -1,0 +1,26 @@
+@page "/"
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // If AppState is not initialized yet, wait for it
+        if (!AppState.IsInitialized)
+        {
+            await AppState.InitializeAsync();
+        }
+
+        if (!AppState.IsAuthenticated)
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
+
+        if (!AppState.IsOnboarded)
+        {
+            Nav.NavigateTo("/onboarding", forceLoad: false);
+            return;
+        }
+
+        Nav.NavigateTo("/home", forceLoad: false);
+    }
+}

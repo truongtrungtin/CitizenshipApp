@@ -1,75 +1,89 @@
 @implements IDisposable
+@using Microsoft.AspNetCore.Components.Routing
 
-@if (!_isReady)
-{
-  <div class="p-4">Loading...</div>
-}
-else
-{
-  @ChildContent
-}
+<Router AppAssembly="@typeof(Program).Assembly">
+  <Found Context="routeData">
+    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+  </Found>
+  <NotFound>
+    <LayoutView Layout="@typeof(MainLayout)">
+      <p>Page not found.</p>
+    </LayoutView>
+  </NotFound>
+</Router>
 
 @code {
-  [Parameter] public RenderFragment? ChildContent { get; set; }
+  // Public pages that do not require authentication.
+  // IMPORTANT: "/" is no longer public because Index.razor handles redirect.
+  private static readonly HashSet<string> PublicPaths = new(StringComparer.OrdinalIgnoreCase)
+{
+"/login",
+"/register"
+};
 
-  private bool _isReady;
+  // Paths allowed even if user is authenticated but NOT onboarded.
+  private static readonly HashSet<string> AllowedWhenNotOnboarded = new(StringComparer.OrdinalIgnoreCase)
+{
+"/onboarding",
+"/logout"
+};
 
-  protected override async Task OnInitializedAsync()
+  protected override void OnInitialized()
   {
-    // Ensure state is loaded exactly once when app starts
-    await AppState.InitializeAsync();
-
-    // Re-check guard when navigation occurs
+    // Re-run guard logic on every navigation.
     Nav.LocationChanged += OnLocationChanged;
-
-    _isReady = true;
-
-    // First guard pass
-    GuardCurrentRoute();
   }
 
   private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
   {
-    GuardCurrentRoute();
-    StateHasChanged();
+    ApplyGuards();
   }
 
-  private void GuardCurrentRoute()
+  protected override void OnAfterRender(bool firstRender)
   {
-    var relativePath = Nav.ToBaseRelativePath(Nav.Uri);
-    var path = "/" + relativePath.TrimStart('/');
+    if (firstRender)
+    {
+      ApplyGuards();
+    }
+  }
 
-    // Public pages (allowed without auth)
-    if (IsPublicPath(path))
+  private void ApplyGuards()
+  {
+    if (!AppState.IsInitialized)
       return;
 
+    var path = "/" + Nav.ToBaseRelativePath(Nav.Uri);
+    path = path.Split('?', '#')[0]; // normalize
+
+    // 1) Not authenticated: only allow public routes
     if (!AppState.IsAuthenticated)
     {
-      Nav.NavigateTo("/login", replace: true);
+      if (!PublicPaths.Contains(path) && path != "/")
+      {
+        Nav.NavigateTo("/login", replace: true);
+      }
       return;
     }
 
-    // Onboarding gate: only allow onboarding page until completed
-    if (!AppState.IsOnboarded && !path.StartsWith("/onboarding", StringComparison.OrdinalIgnoreCase))
+    // 2) Authenticated but NOT onboarded: force onboarding
+    if (!AppState.IsOnboarded)
     {
-      Nav.NavigateTo("/onboarding", replace: true);
+      if (!AllowedWhenNotOnboarded.Contains(path))
+      {
+        Nav.NavigateTo("/onboarding", replace: true);
+      }
+      return;
     }
-  }
 
-  private static bool IsPublicPath(string path)
-  {
-    // Normalize "/" edge cases
-    if (string.IsNullOrWhiteSpace(path) || path == "/")
-      return true;
-
-    // Auth/public screens
-    return path.StartsWith("/login", StringComparison.OrdinalIgnoreCase)
-           || path.StartsWith("/register", StringComparison.OrdinalIgnoreCase);
+    // 3) Authenticated and onboarded: do not allow going back to login/register
+    if (PublicPaths.Contains(path))
+    {
+      Nav.NavigateTo("/home", replace: true);
+    }
   }
 
   public void Dispose()
   {
     Nav.LocationChanged -= OnLocationChanged;
   }
-
 }

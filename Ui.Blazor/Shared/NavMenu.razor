@@ -8,17 +8,17 @@
   Hiện tại app đã có các nút điều hướng ở top bar (MainLayout.razor),
   nên sidebar để trống để tránh thay đổi UX ngoài ý muốn.
 *@
-@inject AppState State
 
 <nav class="nav flex-column">
-  <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Home</NavLink>
-
-  @if (State.IsAuthenticated)
+  <NavLink href="/home" Match="NavLinkMatch.All">
+    Home
+  </NavLink>
+  @if (AppState.IsAuthenticated)
   {
     <NavLink class="nav-link" href="/study">Study</NavLink>
     <NavLink class="nav-link" href="/settings">Settings</NavLink>
 
-    @if (!State.IsOnboarded)
+    @if (!AppState.IsOnboarded)
     {
       <NavLink class="nav-link" href="/onboarding">Onboarding</NavLink>
     }

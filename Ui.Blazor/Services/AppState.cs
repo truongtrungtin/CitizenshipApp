@@ -25,6 +25,8 @@ public sealed class AppState
     public bool IsOnboarded { get; private set; }
 
     public event Action? OnChange;
+    public bool IsInitialized { get; private set; }
+
 
     public async Task InitializeAsync()
     {
@@ -35,6 +37,8 @@ public sealed class AppState
 
         string? onboardedRaw = await _storage.GetItemAsync(IsOnboardedKey);
         IsOnboarded = string.Equals(onboardedRaw, "true", StringComparison.OrdinalIgnoreCase);
+
+        IsInitialized = true;
 
         NotifyStateChanged();
     }

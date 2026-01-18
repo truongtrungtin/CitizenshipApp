@@ -40,11 +40,7 @@ else
   <div class="mb-3">
     <label class="form-label">Daily study goal</label>
 
-    <input class="form-control"
-           type="number"
-           @bind="_edit.DailyGoalMinutes"
-           min="1" max="200"
-           disabled="@_saving" />
+    <input class="form-control" type="number" @bind="_edit.DailyGoalMinutes" min="1" max="200" disabled="@_saving" />
 
     @if (GetFieldError("DailyGoalMinutes") is string goalErr)
     {
@@ -74,8 +70,8 @@ else
   private string? GetFieldError(string field)
   {
     return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
-      ? string.Join(" ", msgs)
-      : null;
+    ? string.Join(" ", msgs)
+    : null;
   }
 
   private void ClearErrors()
@@ -86,6 +82,12 @@ else
 
   protected override async Task OnInitializedAsync()
   {
+    if (!AppState.IsAuthenticated)
+    {
+      _loading = false;
+      return;
+    }
+
     try
     {
       ClearErrors();

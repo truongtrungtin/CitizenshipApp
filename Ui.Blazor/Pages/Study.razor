@@ -5,18 +5,18 @@
 
   <div class="btn-group" role="group" aria-label="Language">
     <button type="button" class="btn btn-sm @(_language == LanguageCode.Vi ? "btn-primary" : "btn-outline-primary")"
-            @onclick="() => SetLanguage(LanguageCode.Vi)">
+      @onclick="() => SetLanguage(LanguageCode.Vi)">
       VI
     </button>
 
     <button type="button" class="btn btn-sm @(_language == LanguageCode.En ? "btn-primary" : "btn-outline-primary")"
-            @onclick="() => SetLanguage(LanguageCode.En)">
+      @onclick="() => SetLanguage(LanguageCode.En)">
       EN
     </button>
   </div>
 </div>
 
-<hr/>
+<hr />
 
 @if (!string.IsNullOrWhiteSpace(_generalError))
 {
@@ -28,8 +28,8 @@
 <div class="d-flex align-items-center gap-2 flex-wrap">
   <label class="form-label mb-0"><strong>Deck</strong></label>
 
-  <select class="form-select form-select-sm" style="min-width: 260px"
-          @onchange="OnDeckChanged" disabled="@(_busy || _decks.Count == 0)">
+  <select class="form-select form-select-sm" style="min-width: 260px" @onchange="OnDeckChanged"
+    disabled="@(_busy || _decks.Count == 0)">
     @if (_decks.Count == 0)
     {
       <option selected>— No decks —</option>
@@ -55,7 +55,7 @@
   </button>
 
   <button class="btn btn-sm btn-primary" @onclick="LoadNextQuestionAsync"
-          disabled="@(!_selectedDeckId.HasValue || _busy)">
+    disabled="@(!_selectedDeckId.HasValue || _busy)">
     Next
   </button>
 </div>
@@ -102,7 +102,7 @@
 
     @if (_lastAnswer is not null)
     {
-      <hr/>
+      <hr />
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <span class="badge @(_lastAnswer.IsCorrect ? "bg-success" : "bg-danger")">
           @(_lastAnswer.IsCorrect ? "Correct" : "Incorrect")
@@ -127,7 +127,7 @@
     }
     else
     {
-      <hr/>
+      <hr />
 
       @* Field errors close to the answer interaction *@
       @if (GetFieldError("SelectedKey") is string selectedErr)
@@ -150,9 +150,7 @@
         <div class="d-grid gap-2">
           @foreach (var opt in _question.Options)
           {
-            <button class="btn btn-outline-primary text-start"
-                    disabled="@_busy"
-                    @onclick="() => SubmitAnswerAsync(opt.Key)">
+            <button class="btn btn-outline-primary text-start" disabled="@_busy" @onclick="() => SubmitAnswerAsync(opt.Key)">
               <strong>@opt.Key</strong>. @GetOptionText(opt)
             </button>
           }
@@ -201,8 +199,8 @@
   private string? GetFieldError(string field)
   {
     return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
-      ? string.Join(" ", msgs)
-      : null;
+    ? string.Join(" ", msgs)
+    : null;
   }
 
   private void ClearErrors()
@@ -323,9 +321,9 @@
       var res = await Api.SubmitAnswerAsync(req);
 
       _lastAnswer = new AnswerResult(
-        selectedKey,
-        res.CorrectKey ?? string.Empty,
-        res.IsCorrect
+      selectedKey,
+      res.CorrectKey ?? string.Empty,
+      res.IsCorrect
       );
 
       await LoadTodayAsync();
@@ -348,20 +346,20 @@
   private void ClearAnswer() => _lastAnswer = null;
 
   private string GetPrompt(QuestionText t) =>
-    IsVietnamese ? (t.TextVi ?? t.TextEn ?? "") : (t.TextEn ?? t.TextVi ?? "");
+  IsVietnamese ? (t.TextVi ?? t.TextEn ?? "") : (t.TextEn ?? t.TextVi ?? "");
 
   private string GetExplain(QuestionText t) =>
-    IsVietnamese ? (t.ExplainVi ?? t.ExplainEn ?? "") : (t.ExplainEn ?? t.ExplainVi ?? "");
+  IsVietnamese ? (t.ExplainVi ?? t.ExplainEn ?? "") : (t.ExplainEn ?? t.ExplainVi ?? "");
 
   private string GetOptionText(AnswerOption o) =>
-    IsVietnamese ? (o.TextVi ?? o.TextEn ?? "") : (o.TextEn ?? o.TextVi ?? "");
+  IsVietnamese ? (o.TextVi ?? o.TextEn ?? "") : (o.TextEn ?? o.TextVi ?? "");
 
   private string GetOptionLabel(string key)
   {
     if (_question?.Options is null) return key;
 
     var opt = _question.Options.FirstOrDefault(o =>
-      string.Equals(o.Key, key, StringComparison.OrdinalIgnoreCase));
+    string.Equals(o.Key, key, StringComparison.OrdinalIgnoreCase));
 
     return opt is null ? key : $"{opt.Key}. {GetOptionText(opt)}";
   }

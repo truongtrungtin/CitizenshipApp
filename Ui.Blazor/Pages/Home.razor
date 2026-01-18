@@ -1,4 +1,6 @@
-﻿@code {
+﻿@page "/home"
+
+@code {
   private TodayProgressResponse? _today;
 
   protected override async Task OnInitializedAsync()
@@ -13,7 +15,7 @@
 
 @if (_today is not null)
 {
-  <hr/>
+  <hr />
   <p><b>Today:</b> @_today.TotalAnswered / @_today.DailyGoalMinutes (Correct: @_today.CorrectAnswered)</p>
   <p><a href="/study">Go to Study</a></p>
 }

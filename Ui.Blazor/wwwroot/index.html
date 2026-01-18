@@ -6,7 +6,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Ui.Blazor</title>
     <base href="/"/>
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet"/>
+    <link href="lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="css/app.css" rel="stylesheet"/>
     <link href="favicon.png" rel="icon" type="image/png"/>
     <link href="Ui.Blazor.styles.css" rel="stylesheet"/>
@@ -26,6 +26,8 @@
   NOTE: Some users reported stale caching causing window.__storage undefined.
   This inline fallback guarantees the object exists even if storage.js fails to load.
 -->
+<script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="js/storage.js"></script>
 <script>
     window.__storage = window.__storage || {

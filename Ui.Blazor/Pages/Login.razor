@@ -42,7 +42,7 @@
   /// Keys are case-insensitive (Email, Password, DailyGoalMinutes, etc.).
   /// </summary>
   private Dictionary<string, string[]> FieldErrors { get; set; }
-    = new(StringComparer.OrdinalIgnoreCase);
+  = new(StringComparer.OrdinalIgnoreCase);
 
   private bool Busy { get; set; }
 
@@ -52,8 +52,8 @@
   private string? GetFieldError(string field)
   {
     return FieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
-      ? string.Join(" ", msgs)
-      : null;
+    ? string.Join(" ", msgs)
+    : null;
   }
 
   /// <summary>
@@ -78,16 +78,14 @@
       var auth = await Api.LoginAsync(req);
 
       await AppState.SetAuthAsync(
-        auth.AccessToken,
-        userId: auth.UserId.ToString(),
-        isOnboarded: auth.IsOnboarded
+      auth.AccessToken,
+      userId: auth.UserId.ToString(),
+      isOnboarded: auth.IsOnboarded
       );
 
-      Console.WriteLine($"AFTER SetAuthAsync: IsAuth={AppState.IsAuthenticated}, TokenLen={(AppState.AccessToken?.Length ?? 0)}");
-
-      // NOTE: "/" may later redirect to /home via RouteGuard/index page.
-      Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
+      Nav.NavigateTo(auth.IsOnboarded ? "/home" : "/onboarding", replace: true);
     }
+
     catch (Ui.Blazor.Services.ApiException ex)
     {
       // Field-level errors (e.g., Email/Password required) come here.

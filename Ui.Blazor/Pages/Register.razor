@@ -37,15 +37,15 @@
 
   // Field-level errors
   private Dictionary<string, string[]> FieldErrors { get; set; }
-    = new(StringComparer.OrdinalIgnoreCase);
+  = new(StringComparer.OrdinalIgnoreCase);
 
   private bool Busy { get; set; }
 
   private string? GetFieldError(string field)
   {
     return FieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
-      ? string.Join(" ", msgs)
-      : null;
+    ? string.Join(" ", msgs)
+    : null;
   }
 
   private void ClearErrors()
@@ -65,12 +65,13 @@
       var auth = await Api.RegisterAsync(req);
 
       await AppState.SetAuthAsync(
-        auth.AccessToken,
-        userId: auth.UserId.ToString(),
-        isOnboarded: auth.IsOnboarded
+      auth.AccessToken,
+      userId: auth.UserId.ToString(),
+      isOnboarded: auth.IsOnboarded
       );
 
-      Nav.NavigateTo(auth.IsOnboarded ? "/" : "/onboarding", replace: true);
+      Nav.NavigateTo(auth.IsOnboarded ? "/home" : "/onboarding", replace: true);
+
     }
     catch (Ui.Blazor.Services.ApiException ex)
     {
