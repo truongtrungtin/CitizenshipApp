@@ -1,6 +1,6 @@
 # CitizenshipApp – Summary of Changes
 
-> Date: 2026-01-14
+> Date: 2026-01-18
 >
 > This document summarizes all code + config changes made during this refactor/hardening pass. It intentionally **does not include any real secrets** (passwords, JWT keys, etc.).
 
@@ -17,11 +17,32 @@
 - **JWT consistency**: made user-id claim parsing reliable by adding a standard claim and centralizing parsing.
 - **Noise reduction**: controllers now return clean `401` (instead of throwing) when user-id is missing/invalid.
 - **Ops readiness**: health endpoints + optional forwarded headers support; Ubuntu + systemd deployment doc; Docker SQL Server compose.
-- **Maintainability**: added shared helpers to eliminate duplicated logic (controller base + question type mapping).
+
+### 2026-01-18 — Step 5: Full settings + onboarding + validation UX
+
+- **Shared contract update**
+  - Full settings DTO is `Shared.Contracts.Me.UserSettingContracts`.
+  - Uses DataAnnotations for validation.
+  - Implemented as a property-based record with **settable properties** (`get; set;`) so Blazor `@bind` works with selects/inputs.
+
+- **API**
+  - Added full settings endpoints:
+    - `GET /api/me/settings/full`
+    - `PUT /api/me/settings/full`
+  - Keeps existing MVP endpoint (`/api/me/settings`) for backward compatibility.
+  - Fixed the shared primary-key rule when creating missing settings rows:
+    - `UserSettings.Id` must equal `UserProfile.Id` (no `Guid.NewGuid()`)
+
+- **UI (Blazor WASM)**
+  - Onboarding now collects and saves full settings (Language/FontScale/AudioSpeed/DailyGoalMinutes/Focus/SilentMode), then completes onboarding.
+  - Settings page now edits full settings (not only Language + DailyGoalMinutes).
+  - UI parses `ProblemDetails`/`ValidationProblemDetails` and shows:
+    - General error message
+    - Field-level errors close to the relevant controls
 
 ---
 
-## API changes
+## API changes (from earlier hardening pass)
 
 ### Health checks
 
@@ -146,43 +167,10 @@ IMPORTANT SECURITY NOTE:
 
 ---
 
-## Build artifacts & repo hygiene (observed)
+## Documentation consolidation
 
-The git working tree currently shows changes in build output folders (for example `obj/` under Blazor/Worker projects). Those are **build artifacts** and should not be tracked in source control.
+- Standardized project documentation under `docs/` as the single source of truth.
+- Root-level duplicates (when present) should be replaced by stubs pointing to `docs/*` to prevent drift.
 
-Recommended follow-ups:
-- Ensure `bin/` and `obj/` are in `.gitignore`.
-- If `obj/` is already tracked, remove it from git index going forward (e.g., `git rm -r --cached **/obj **/bin`) and keep the directories locally.
-
-Also observed:
-- A stray editor swap file like `..env.swp` may appear; it should not be committed.
-
----
-
-## Tests / verification
-
-- Verified with:
-
-```bash
-dotnet test CitizenshipApp.sln -c Release
-```
-
-- Result: tests pass (10 passed, 0 failed at last run).
-
----
-
-## Files touched (high-signal)
-
-New:
-- Api/Infrastructure/ApiControllerBase.cs
-- Api/Infrastructure/ClaimsPrincipalExtensions.cs (intentionally blank stub)
-- Shared/Contracts/Deck/QuestionTypeMapper.cs
-- docs/DEPLOY-UBUNTU.md
-- docker-compose.sqlserver.yml
-- .env.example
-
-Updated:
-- WorkerService/Worker.cs
-- WorkerService/WorkerService.csproj
-
-Other changes may also exist from earlier hardening work (API pipeline, JWT service, DI, controllers, appsettings). Those were part of the same “read + harden + dedupe + deploy” pass.
+Files:
+- docs/*

@@ -1,43 +1,49 @@
-
----
-
-## 3) Tạo folder `docs/` + UX rules
-**Path:** `CitizenshipApp/docs/UX-RULES.md`
-
 # UX Rules (Elderly-first)
 
-## Mục tiêu
-- Giảm tải nhận thức: 1 màn hình = 1 hành động chính
-- Dễ đọc: chữ lớn, tương phản cao
-- Dễ bấm: nút lớn, khoảng cách đủ rộng
-- Lỗi phải “chỉ cách sửa”, không mơ hồ
+Mục tiêu của app: người lớn tuổi có thể học đều mỗi ngày với thao tác tối thiểu, chữ lớn, tương phản cao, và lỗi dễ hiểu.
+
+## Nguyên tắc cốt lõi
+- **Giảm tải nhận thức**: 1 màn hình = 1 hành động chính.
+- **Đọc dễ**: chữ lớn, tương phản cao, ít chữ.
+- **Bấm dễ**: nút lớn, khoảng cách thoáng.
+- **Sai phải biết sửa**: lỗi phải nói rõ “vì sao” và “làm gì tiếp theo”.
 
 ## Typography
-- Font cơ bản: **18–20px** tối thiểu
-- Tiêu đề: **28–36px**
-- Line height: **1.4–1.6**
-- Tránh đoạn dài, ưu tiên câu ngắn + bullet
+- Font cơ bản: tối thiểu **18–20px**.
+- Tiêu đề: **28–36px**.
+- Line height: **1.4–1.6**.
+- Ưu tiên câu ngắn + bullet; tránh đoạn dài.
+- Không dùng chữ viết tắt nếu không cần.
 
 ## Buttons & touch targets
-- Touch target tối thiểu: **48px height**
-- 1 nút “Primary” chính trên mỗi màn hình
-- Action phụ cũng nên là button (đừng là link nhỏ)
+- Touch target tối thiểu: **48px** chiều cao.
+- Mỗi màn hình nên có **1 nút Primary** rõ ràng.
+- Action phụ cũng dùng button (tránh link nhỏ khó bấm).
+- Trạng thái rõ ràng: default / hover / disabled / loading.
 
 ## Forms
-- Hạn chế nhập liệu; ưu tiên lựa chọn dạng card/radio
-- Validate inline + hướng dẫn cách sửa
-- Label rõ ràng, không viết tắt
+- Hạn chế nhập liệu; ưu tiên lựa chọn dạng card / radio / dropdown.
+- Validate inline và chỉ rõ cách sửa.
+- Label rõ ràng, đặt gần input.
+- Không bắt người dùng nhớ dữ liệu giữa các bước.
 
 ## Navigation
-- Luôn có **Back** trong flow nhiều bước
-- Có **Help/FAQ** đơn giản, dễ tìm
+- Luôn có **Back** trong flow nhiều bước.
+- Không ẩn đường quay lại (đặc biệt trên mobile).
+- Có **Help/FAQ** đơn giản, dễ tìm.
+
+## Study screen
+- 1 câu hỏi trên 1 màn hình.
+- Option trả lời là các nút lớn.
+- Feedback sau khi trả lời: đúng/sai + đáp án đúng.
+- Tiến độ hôm nay: hiển thị đơn giản (đã trả lời, đúng, mục tiêu).
 
 ## Audio (MVP)
-- Nút “Nghe / Nghe lại” lớn
-- Tốc độ: Chậm / Bình thường
-- Không auto-play trừ khi user bật
+- Nút “Nghe / Nghe lại” lớn.
+- Tốc độ: Chậm / Bình thường.
+- Không auto-play trừ khi user bật.
 
 ## Error handling (must-have)
-- Message thân thiện
-- Có ít nhất 1 hành động gợi ý: Retry / Check network / Contact support
-- Không show stack trace cho user
+- Message thân thiện và cụ thể.
+- Có ít nhất 1 hành động gợi ý: Retry / Check network / Contact support.
+- Không show stack trace cho user.

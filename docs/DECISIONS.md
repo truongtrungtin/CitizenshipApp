@@ -1,7 +1,7 @@
 # DECISIONS (Architecture Decision Records)
 
 Project: Citizenship Tutor
-Last updated: 2026-01-04
+Last updated: 2026-01-16
 
 Format cho mỗi ADR:
 - Context
@@ -62,7 +62,7 @@ Decision:
 - Lưu token phía UI trong browser storage (hiện dùng localStorage qua `window.__storage`).
 
 Consequences:
-- Cần chuẩn hoá claims (ít nhất `sub` và role claims).
+- Cần chuẩn hoá claims (ít nhất `sub`, `ClaimTypes.NameIdentifier` và role claims).
 - Nếu triển khai refresh token về sau: bổ sung endpoint/rotation + storage strategy.
 
 Status: Accepted
@@ -144,8 +144,8 @@ Date: 2026-01-03
 
 ## ADR-008 — Logging & observability
 Context:
-- Hiện có Console.WriteLine cho dev diagnostics.
-- Worker chỉ log heartbeat.
+- Hiện API đã dùng ILogger; dev log thông tin an toàn (DataSource/Database) để debug cấu hình, không log secrets.
+- WorkerService hiện chỉ log heartbeat (placeholder).
 
 Decision:
 - Chuẩn hoá structured logging (built-in ILogger với scopes/correlation id; Serilog optional).
@@ -164,7 +164,7 @@ Date: 2026-01-03
 Context:
 - Có 2 nguồn dữ liệu:
 	- SQL tables (Decks/Questions/QuestionOptions) dùng bởi `/api/decks` và `/api/study/*`.
-	- Embedded question bank JSON dùng bởi `IDeckQueryService` và `/api/questions/{id}`.
+	- Embedded question bank JSON vẫn còn trong repo (legacy) nhưng không được wire vào DI/runtime.
 
 Decision:
 - Chọn 1 source-of-truth cho MVP (đề xuất: SQL tables) và refactor các endpoint query qua Application interface.
@@ -193,3 +193,136 @@ Consequences:
 
 Status: Accepted (Implemented)
 Date: 2026-01-04
+
+---
+
+## ADR-011 — Documentation source of truth is `/docs`
+Context:
+- Repo đang có các file docs bị nhân bản (root + /docs) dễ gây cập nhật nhầm.
+
+Decision:
+- Chọn **`/docs`** là nguồn sự thật duy nhất cho mọi tài liệu.
+- Các file trùng ở repo root (nếu còn giữ) phải là **stub/pointer** trỏ về `/docs/*`.
+
+Consequences:
+- Giảm drift giữa code và tài liệu.
+- Khi review PR, chỉ cần kiểm tra `/docs` để biết trạng thái thật.
+
+Status: Accepted (Implemented)
+Date: 2026-01-16
+
+---
+
+## ADR-012 — JWT must include `ClaimTypes.NameIdentifier`
+Context:
+- Nhiều controller parse userId từ claim `ClaimTypes.NameIdentifier`.
+- Nếu chỉ dựa vào claim mapping mặc định của JwtBearer, có thể xảy ra lệch giữa môi trường.
+
+Decision:
+- Khi tạo JWT, luôn đặt đồng thời:
+  - `sub` (JwtRegisteredClaimNames.Sub)
+  - `ClaimTypes.NameIdentifier`
+
+Consequences:
+- Parse userId thống nhất và không phụ thuộc inbound claim mapping.
+- Test auth scheme dễ mô phỏng hành vi thật.
+
+Status: Accepted (Implemented)
+Date: 2026-01-14
+
+---
+
+## ADR-013 — CORS non-development uses safe default (deny if not configured)
+Context:
+- Với SPA, CORS thường chỉ nên mở cho domain UI đã biết.
+- Nếu cấu hình thiếu, việc “AllowAnyOrigin” trong production là rủi ro.
+
+Decision:
+- Development: AllowAnyOrigin/AnyHeader/AnyMethod.
+- Non-development:
+  - Đọc `Cors:AllowedOrigins`.
+  - Nếu không cấu hình origins, **deny cross-origin** (không crash, không allow-all).
+
+Consequences:
+- Tránh mở CORS nhầm trong production.
+- Deploy cần cấu hình rõ allowed origins.
+
+Status: Accepted (Implemented)
+Date: 2026-01-14
+
+---
+
+## ADR-014 — Reverse proxy headers are opt-in via `Proxy:Enabled`
+Context:
+- Khi chạy sau nginx/cloudflared, API cần tôn trọng `X-Forwarded-Proto/For`.
+- Tuy nhiên nếu bật mặc định, có thể mở trust boundary không mong muốn.
+
+Decision:
+- Chỉ bật forwarded headers khi `Proxy:Enabled=true`.
+- Mặc định tắt để an toàn.
+
+Consequences:
+- Deploy sau reverse proxy phải bật cấu hình này.
+- Giảm rủi ro spoof header khi API không nằm sau proxy.
+
+Status: Accepted (Implemented)
+Date: 2026-01-14
+
+---
+
+## ADR-015 — Separate liveness and readiness health checks
+Context:
+- Cần endpoint cho orchestrator/proxy biết process có chạy và app có sẵn sàng phục vụ hay chưa.
+
+Decision:
+- Expose:
+  - `GET /health/live`: chỉ check “self”
+  - `GET /health/ready`: check “self” + DB connectivity
+
+Consequences:
+- Proxy/load balancer có thể dùng readiness để tránh route traffic khi DB down.
+
+Status: Accepted (Implemented)
+Date: 2026-01-14
+
+---
+
+## ADR-016 — Full settings contract: `UserSettingContracts` uses properties + DataAnnotations
+Context:
+- App cần payload "full settings" (Language/FontScale/AudioSpeed/DailyGoalMinutes/Focus/SilentMode).
+- Blazor UI cần 2 yêu cầu:
+  - `@bind` trên `<select>/<input>` phải gán được giá trị (cần setter).
+  - API model validation phải đọc được DataAnnotations ổn định.
+- Positional record (`record Foo(...)`) dễ gặp cảnh báo/behavior: validation metadata gắn trên property có thể bị bỏ qua.
+
+Decision:
+- Dùng DTO `Shared.Contracts.Me.UserSettingContracts` dưới dạng **property-based record**.
+- Các properties dùng **DataAnnotations** và có **setter** (`get; set;`) để Blazor binding hoạt động.
+
+Consequences:
+- UI có thể bind trực tiếp vào DTO để edit settings (ít mapping, nhanh cho MVP).
+- DTO không còn hoàn toàn immutable; nếu muốn immutable về sau, có thể thêm ViewModel "edit model" riêng cho UI.
+
+Status: Accepted (Implemented)
+Date: 2026-01-18
+
+---
+
+## ADR-017 — Add `/api/me/settings/full` while keeping MVP `/api/me/settings`
+Context:
+- Trước đó UI Settings chỉ cần 2 fields (Language + DailyGoalMinutes) qua `/api/me/settings`.
+- Step 5 yêu cầu full settings + onboarding cần save nhiều fields.
+- Muốn thêm full settings mà không phá backward compatibility (các page/clients cũ).
+
+Decision:
+- Giữ endpoint MVP:
+  - `GET/PUT /api/me/settings` (2 fields)
+- Thêm endpoint full:
+  - `GET/PUT /api/me/settings/full` (full payload `UserSettingContracts`)
+
+Consequences:
+- UI Settings/Onboarding mới dùng endpoint `/full`.
+- Có thể deprecate endpoint MVP khi không còn dùng (future cleanup).
+
+Status: Accepted (Implemented)
+Date: 2026-01-18
