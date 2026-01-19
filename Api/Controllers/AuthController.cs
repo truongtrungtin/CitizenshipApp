@@ -14,6 +14,8 @@ using Shared.Contracts.Auth;
 
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
+using Microsoft.AspNetCore.RateLimiting;
+
 namespace Api.Controllers;
 
 /// <summary>
@@ -37,6 +39,7 @@ public sealed class AuthController(
     ///     POST /api/auth/register
     /// </summary>
     [HttpPost("register")]
+    [EnableRateLimiting("auth-register")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
     {
 
@@ -140,6 +143,7 @@ public sealed class AuthController(
     ///     POST /api/auth/login
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("auth-login")]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest req)
     {
         string normalized = req.Email.Trim();

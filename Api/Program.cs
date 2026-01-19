@@ -21,6 +21,9 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+
 const string corsPolicyName = "UiCors";
 
 Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
@@ -67,6 +70,89 @@ builder.Services
             };
         };
     });
+
+// ============================================
+// BL-015: Rate limiting for auth endpoints
+// ============================================
+builder.Services.AddRateLimiter(options =>
+{
+    // Return 429 when the limiter rejects the request
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Policy for login endpoint (per IP)
+    options.AddPolicy("auth-login", httpContext =>
+    {
+        // Use forwarded headers if you run behind proxy; you already have UseForwardedHeaders in pipeline.
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                // Example: 10 requests per 1 minute per IP
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0 // no queue; reject immediately
+            });
+    });
+
+    // Policy for register endpoint (per IP)
+    options.AddPolicy("auth-register", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                // Example: 5 requests per 5 minutes per IP
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(5),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+
+    // Optional: one policy for "general auth" (refresh token, forgot password, etc.)
+    options.AddPolicy("auth-general", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                // Example: 30 requests per 1 minute, smoother than fixed window
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6, // 10-second segments
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+
+    options.OnRejected = async (context, ct) =>
+    {
+        // Return RFC7807 ProblemDetails for consistency
+        context.HttpContext.Response.ContentType = "application/problem+json";
+
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status429TooManyRequests,
+            Title = "Too many requests.",
+            Detail = "Rate limit exceeded. Please retry later.",
+            Instance = context.HttpContext.Request.Path
+        };
+
+        // Keep your existing traceId + correlationId patterns
+        problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+        problem.Extensions["correlationId"] =
+            CorrelationIdMiddleware.TryGet(context.HttpContext);
+
+        await context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken: ct);
+    };
+});
 
 builder.Services.AddProblemDetails(options =>
 {
@@ -329,6 +415,11 @@ if (app.Environment.IsDevelopment())
     app.MapMethods("/", new[] { HttpMethods.Get, HttpMethods.Head }, () => Results.Redirect("/swagger"))
         .ExcludeFromDescription();
 }
+
+// ============================================
+// BL-015: must be placed before MapControllers()
+// ============================================
+app.UseRateLimiter();
 
 app.MapControllers();
 
