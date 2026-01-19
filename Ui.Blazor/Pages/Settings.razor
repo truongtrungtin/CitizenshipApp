@@ -193,7 +193,7 @@ else
     try
     {
       await Api.UpdateMeSettingsFullAsync(_edit);
-
+      await UserSettings.ReloadAsync();
       await UserSettings.ApplyAsync(_edit);
       _message = "Saved.";
     }
