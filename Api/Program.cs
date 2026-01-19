@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 
 using Api.Auth;
+using Api.Infrastructure.Middleware;
 
 using Infrastructure;
 using Infrastructure.Persistence;
@@ -56,6 +57,7 @@ builder.Services
             // Add traceId for easier debugging
             validationProblem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
 
+            validationProblem.Extensions["correlationId"] = CorrelationIdMiddleware.TryGet(context.HttpContext);
             // Ensure consistent instance (path)
             validationProblem.Instance = context.HttpContext.Request.Path;
 
@@ -71,6 +73,7 @@ builder.Services.AddProblemDetails(options =>
     options.CustomizeProblemDetails = ctx =>
     {
         ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
+        ctx.ProblemDetails.Extensions["correlationId"] = CorrelationIdMiddleware.TryGet(ctx.HttpContext);
     };
 });
 
@@ -229,6 +232,10 @@ if (builder.Configuration.GetValue<bool>("Proxy:Enabled"))
     app.UseForwardedHeaders();
 }
 
+// BL-014: correlation id + request logging (must run before exception handler)
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+
 // Global exception handling -> ProblemDetails (RFC 7807)
 // Why: standardize error responses and avoid leaking stack traces.
 app.UseExceptionHandler(errorApp =>
@@ -269,6 +276,8 @@ app.UseExceptionHandler(errorApp =>
         };
 
         problem.Extensions["traceId"] = context.TraceIdentifier;
+
+        problem.Extensions["correlationId"] = CorrelationIdMiddleware.TryGet(context);
 
         if (app.Environment.IsDevelopment())
         {
