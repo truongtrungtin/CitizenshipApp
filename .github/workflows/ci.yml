@@ -44,8 +44,9 @@ jobs:
           # NuGet caching in setup-dotnet requires packages.lock.json.
           # This repo doesn't use lock files, so keep caching disabled.
           cache: false
-          
+
       - name: Format (verify no changes)
+        shell: bash
         run: dotnet format CitizenshipApp.sln --verify-no-changes --severity warn
 
       - name: Restore
