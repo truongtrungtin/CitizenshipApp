@@ -138,6 +138,7 @@ public sealed class AppDbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             b.HasIndex(x => x.DeckId);
+            b.HasIndex(x => new { x.DeckId, x.QuestionId });
         });
 
         modelBuilder.Entity<QuestionOption>(b =>

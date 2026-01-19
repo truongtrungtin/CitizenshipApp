@@ -28,27 +28,46 @@ public sealed class StudyService : IStudyService
 
     public async Task<NextQuestionResponse?> GetNextQuestionAsync(Guid userId, GetNextQuestionRequest req, CancellationToken ct)
     {
-        // Current behavior (MVP): random 1 question in deck using Count + Skip.
-        // BL-018 will optimize this logic later (without changing controller).
-        int total = await _db.Questions
-            .AsNoTracking()
-            .Where(q => q.DeckId == req.DeckId)
-            .CountAsync(ct);
+        // BL-018: Optimize "random question" selection.
+        // We must avoid Count+Skip for large decks.
+        // IMPORTANT: Do NOT filter on a projection that materializes a collection (ToList),
+        // because EF Core cannot translate that to SQL.
+        //
+        // Strategy:
+        // 1) Pick a random Guid pivot
+        // 2) Select only the QuestionId using keyset-like query (fast with index)
+        // 3) Load full projection (including Options) for that single QuestionId
 
-        if (total == 0)
+        Guid pivot = Guid.NewGuid();
+
+        // Query #1: choose QuestionId only (fully translatable)
+        IQueryable<Domain.Entities.Deck.Question> deckQuery = _db.Questions
+            .AsNoTracking().Where(x => x.DeckId == req.DeckId);
+
+        // Try pivot selection first
+        Guid? questionId = await deckQuery
+            .Where(q => q.QuestionId.CompareTo(pivot) >= 0)
+            .OrderBy(q => q.QuestionId)
+            .Select(q => (Guid?)q.QuestionId)
+            .FirstOrDefaultAsync(ct);
+
+        // Wrap-around if pivot landed after the last QuestionId
+        questionId ??= await deckQuery
+            .OrderBy(q => q.QuestionId)
+            .Select(q => (Guid?)q.QuestionId)
+            .FirstOrDefaultAsync(ct);
+
+        if (questionId is null)
         {
+            // Deck has no questions.
             return null;
         }
 
-        int skip = Random.Shared.Next(0, total);
-
-        var q = await _db.Questions
+        // Query #2: load the selected question with Options (projection stays the same)
+        QuestionProjection? q = await _db.Questions
             .AsNoTracking()
-            .Where(x => x.DeckId == req.DeckId)
-            .OrderBy(x => x.QuestionId) // stable order so Skip is deterministic
-            .Skip(skip)
-            .Select(x => new
-            {
+            .Where(x => x.DeckId == req.DeckId && x.QuestionId == questionId.Value)
+            .Select(x => new QuestionProjection(
                 x.QuestionId,
                 x.DeckId,
                 x.Type,
@@ -57,12 +76,17 @@ public sealed class StudyService : IStudyService
                 x.PromptViPhonetic,
                 x.ExplainEn,
                 x.ExplainVi,
-                Options = x.Options
+                x.Options
                     .OrderBy(o => o.SortOrder)
                     .Select(o => new AnswerOption(o.Key, o.TextEn, o.TextVi))
                     .ToList()
-            })
-            .FirstAsync(ct);
+            ))
+            .SingleOrDefaultAsync(ct);
+
+        if (q is null)
+        {
+            return null;
+        }
 
         var question = new Question(
             q.QuestionId,
@@ -144,4 +168,16 @@ public sealed class StudyService : IStudyService
             CorrectAnswered = correct
         };
     }
+
+    private sealed record QuestionProjection(
+        Guid QuestionId,
+        Guid DeckId,
+        string Type,
+        string PromptEn,
+        string? PromptVi,
+        string? PromptViPhonetic,
+        string? ExplainEn,
+        string? ExplainVi,
+        List<AnswerOption> Options
+    );
 }

@@ -12,14 +12,8 @@ namespace Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public sealed class StudyController : ApiControllerBase
+public sealed class StudyController(IStudyService study) : ApiControllerBase
 {
-    private readonly IStudyService _study;
-
-    public StudyController(IStudyService study)
-    {
-        _study = study;
-    }
 
     [HttpGet("next")]
     public async Task<ActionResult<NextQuestionResponse>> GetNext([FromQuery] GetNextQuestionRequest req, CancellationToken ct)
@@ -29,7 +23,7 @@ public sealed class StudyController : ApiControllerBase
             return Unauthorized();
         }
 
-        NextQuestionResponse? next = await _study.GetNextQuestionAsync(userId, req, ct);
+        NextQuestionResponse? next = await study.GetNextQuestionAsync(userId, req, ct);
         if (next is null)
         {
             return NotFound("Deck has no questions.");
@@ -46,7 +40,7 @@ public sealed class StudyController : ApiControllerBase
             return Unauthorized();
         }
 
-        SubmitAnswerResponse? result = await _study.SubmitAnswerAsync(userId, req, ct);
+        SubmitAnswerResponse? result = await study.SubmitAnswerAsync(userId, req, ct);
         if (result is null)
         {
             return NotFound();
@@ -63,7 +57,7 @@ public sealed class StudyController : ApiControllerBase
             return Unauthorized();
         }
 
-        TodayProgressResponse result = await _study.GetTodayProgressAsync(userId, ct);
+        TodayProgressResponse result = await study.GetTodayProgressAsync(userId, ct);
         return Ok(result);
     }
 }
