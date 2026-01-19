@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 using Infrastructure.Persistence; // AppDbContext namespace của bạn
 
@@ -19,9 +20,11 @@ namespace Api.IntegrationTests.Infrastructure;
 
 public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private DbConnection? _connection;
-    private IServiceProvider? _sqliteProvider;
 
+    private DbConnection? _connection;
+    private ServiceProvider? _sqliteProvider;
+    private static readonly object DbInitLock = new();
+    private static bool _dbInitialized;
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         Environment.SetEnvironmentVariable(
@@ -85,6 +88,12 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
                 .AddEntityFrameworkSqlite()
                 .BuildServiceProvider();
 
+            services.AddLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.SetMinimumLevel(LogLevel.Warning);
+            });
+
             services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseSqlite(_connection);
@@ -101,17 +110,18 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             });
 
             // ------------------------------------------------------------
-            // 3) Initialize schema using the internal provider
+            // 3) Initialize schema
             // ------------------------------------------------------------
-            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(_connection)
-                .ConfigureWarnings(warnings =>
-                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
-                .UseInternalServiceProvider(_sqliteProvider)
-                .Options;
+            lock (DbInitLock)
+            {
+                if (_dbInitialized) return;
+                _dbInitialized = true;
 
-            using var db = new AppDbContext(dbOptions);
-            db.Database.EnsureCreated();
+                var sp = services.BuildServiceProvider();
+                using var scope = sp.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.EnsureCreated();
+            }
         });
     }
 
@@ -119,5 +129,9 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         _connection?.Dispose();
+        if (_sqliteProvider is IDisposable disposableProvider)
+        {
+            disposableProvider.Dispose();
+        }
     }
 }
