@@ -37,13 +37,13 @@ else
       <label class="form-label fw-semibold">Font size</label>
       <div class="btn-group" role="group">
         <button class="btn @(_settings.FontScale == FontScale.Medium ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { FontScale = FontScale.Medium }" disabled="@_saving">Medium</button>
+          @onclick="() => SetFontScaleAsync(FontScale.Medium)" disabled="@_saving">Medium</button>
 
         <button class="btn @(_settings.FontScale == FontScale.Large ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { FontScale = FontScale.Large }" disabled="@_saving">Large</button>
+          @onclick="() => SetFontScaleAsync(FontScale.Large)" disabled="@_saving">Large</button>
 
         <button class="btn @(_settings.FontScale == FontScale.XLarge ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { FontScale = FontScale.XLarge }" disabled="@_saving">XLarge</button>
+          @onclick="() => SetFontScaleAsync(FontScale.XLarge)" disabled="@_saving">XLarge</button>
       </div>
       @if (GetFieldError("FontScale") is string e2)
       {
@@ -147,7 +147,9 @@ else
     try
     {
       ClearErrors();
+
       _settings = await Api.GetMeSettingsFullAsync();
+      await UserSettings.ApplyAsync(_settings);
     }
     catch (Ui.Blazor.Services.ApiException ex)
     {
@@ -164,15 +166,23 @@ else
     }
   }
 
+  private async Task SetFontScaleAsync(FontScale scale)
+  {
+    _settings = _settings with { FontScale = scale };
+
+    // Preview immediately (no save needed)
+    await UserSettings.ApplyAsync(_settings);
+  }
+
   private void OnSilentChanged(ChangeEventArgs e)
-{
-  // Blazor checkbox value is usually bool, but can be string in some cases.
-  bool value =
-      e.Value is bool b ? b
+  {
+    // Blazor checkbox value is usually bool, but can be string in some cases.
+    bool value =
+    e.Value is bool b ? b
     : bool.TryParse(e.Value?.ToString(), out var parsed) && parsed;
 
-  _settings = _settings with { SilentMode = value };
-}
+    _settings = _settings with { SilentMode = value };
+  }
 
   private string? GetFieldError(string field)
   {
@@ -196,6 +206,8 @@ else
     {
       // 1) Save full settings
       await Api.UpdateMeSettingsFullAsync(_settings);
+
+      await UserSettings.ApplyAsync(_settings);
 
       // 2) Mark onboarding complete on server
       await Api.CompleteOnboardingAsync();

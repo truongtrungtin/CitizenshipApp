@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 
 <div class="page">
   <div class="sidebar">
@@ -13,34 +14,45 @@
 </div>
 
 @code {
-  private void GoHome()
+
+  protected override void OnInitialized()
   {
-    Nav.NavigateTo("/");
+    // Listen to auth lifecycle: login / logout / onboarding
+    AppState.OnChange += HandleAppStateChanged;
   }
 
-  private void GoLogin()
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    Nav.NavigateTo("/login");
+    if (!firstRender)
+      return;
+
+    // First render -> apply persisted UI settings (FontScale, etc.)
+    await UserSettings.EnsureLoadedAsync();
   }
 
-  private void GoRegister()
+  private async void HandleAppStateChanged()
   {
-    Nav.NavigateTo("/register");
+    // Auth state changed -> cached settings may be stale
+    await UserSettings.InvalidateAsync();
+
+    // Re-apply according to the new state
+    _ = InvokeAsync(async () =>
+    {
+      await UserSettings.EnsureLoadedAsync();
+      StateHasChanged();
+    });
   }
 
-  private void GoLogout()
+  public void Dispose()
   {
-    Nav.NavigateTo("/logout");
+    AppState.OnChange -= HandleAppStateChanged;
   }
 
-  private void GoMe()
-  {
-    Nav.NavigateTo("/me");
-  }
-
-  private void GoSettings()
-  {
-    Nav.NavigateTo("/me/settings");
-  }
-
+  // Navigation helpers (keep as-is)
+  private void GoHome() => Nav.NavigateTo("/");
+  private void GoLogin() => Nav.NavigateTo("/login");
+  private void GoRegister() => Nav.NavigateTo("/register");
+  private void GoLogout() => Nav.NavigateTo("/logout");
+  private void GoMe() => Nav.NavigateTo("/me");
+  private void GoSettings() => Nav.NavigateTo("/me/settings");
 }

@@ -38,7 +38,7 @@ else
 
   <div class="mb-3">
     <label class="form-label fw-semibold">Font size</label>
-    <select class="form-select" @bind="_edit.FontScale" disabled="@_saving">
+    <select class="form-select" value="@_edit.FontScale" @onchange="OnFontScaleChanged" disabled="@_saving">
       <option value="@FontScale.Medium">Medium</option>
       <option value="@FontScale.Large">Large</option>
       <option value="@FontScale.XLarge">X-Large</option>
@@ -65,11 +65,7 @@ else
 
   <div class="mb-3">
     <label class="form-label fw-semibold">Daily study goal (minutes)</label>
-    <input class="form-control"
-           type="number"
-           @bind="_edit.DailyGoalMinutes"
-           min="1" max="200"
-           disabled="@_saving" />
+    <input class="form-control" type="number" @bind="_edit.DailyGoalMinutes" min="1" max="200" disabled="@_saving" />
 
     @if (GetFieldError("DailyGoalMinutes") is string goalErr)
     {
@@ -92,10 +88,8 @@ else
   </div>
 
   <div class="form-check mb-4">
-    <input class="form-check-input" type="checkbox" id="silentMode"
-           checked="@_edit.SilentMode"
-           @onchange="OnSilentChanged"
-           disabled="@_saving" />
+    <input class="form-check-input" type="checkbox" id="silentMode" checked="@_edit.SilentMode"
+      @onchange="OnSilentChanged" disabled="@_saving" />
     <label class="form-check-label" for="silentMode">Silent mode</label>
 
     @if (GetFieldError("SilentMode") is string silentErr)
@@ -119,11 +113,26 @@ else
   // Full settings edit model
   private UserSettingContracts _edit = new(); // uses defaults
 
+  private async Task OnFontScaleChanged(ChangeEventArgs e)
+  {
+    if (e.Value is null)
+      return;
+
+    // Option value = enum name ("Medium","Large","XLarge")
+    if (!Enum.TryParse<FontScale>(e.Value.ToString(), out var scale))
+      return;
+
+    _edit = _edit with { FontScale = scale };
+
+    // Preview immediately across the whole app
+    await UserSettings.ApplyAsync(_edit);
+  }
+
   private string? GetFieldError(string field)
   {
     return _fieldErrors.TryGetValue(field, out var msgs) && msgs.Length > 0
-      ? string.Join(" ", msgs)
-      : null;
+    ? string.Join(" ", msgs)
+    : null;
   }
 
   private void ClearErrors()
@@ -146,6 +155,10 @@ else
       _message = null;
 
       _edit = await Api.GetMeSettingsFullAsync();
+
+      await UserSettings.ApplyAsync(_edit);
+
+
     }
     catch (Ui.Blazor.Services.ApiException ex)
     {
@@ -165,8 +178,8 @@ else
   private void OnSilentChanged(ChangeEventArgs e)
   {
     bool value =
-        e.Value is bool b ? b
-      : bool.TryParse(e.Value?.ToString(), out var parsed) && parsed;
+    e.Value is bool b ? b
+    : bool.TryParse(e.Value?.ToString(), out var parsed) && parsed;
 
     _edit = _edit with { SilentMode = value };
   }
@@ -180,6 +193,8 @@ else
     try
     {
       await Api.UpdateMeSettingsFullAsync(_edit);
+
+      await UserSettings.ApplyAsync(_edit);
       _message = "Saved.";
     }
     catch (Ui.Blazor.Services.ApiException ex)

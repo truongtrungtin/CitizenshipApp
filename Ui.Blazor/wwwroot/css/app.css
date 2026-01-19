@@ -1,6 +1,16 @@
+:root {
+  --app-font-scale: 1;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: calc(16px * var(--app-font-scale));
 }
+
+/* Map app FontScale enum -> CSS scale */
+html[data-font-scale="Medium"] { --app-font-scale: 1; }
+html[data-font-scale="Large"]  { --app-font-scale: 1.125; }
+html[data-font-scale="XLarge"] { --app-font-scale: 1.25; }
 
 h1:focus {
     outline: none;

@@ -11,7 +11,7 @@ namespace Ui.Blazor.Services;
 /// <summary>
 /// Typed client for API endpoints used by the Blazor UI.
 /// Authorization is added by <see cref="AuthHeaderHandler"/>.
-/// 
+///
 /// Design goals:
 /// - Never call EnsureSuccessStatusCode() because it throws HttpRequestException
 ///   and loses RFC7807 ProblemDetails details.

@@ -1,28 +1,12 @@
-@*
-  Placeholder component.
+@implements IDisposable
 
-  MainLayout đang render <NavMenu /> ở sidebar. File này tồn tại để:
-  - tránh warning Razor "unexpected name 'NavMenu'"
-  - giữ chỗ cho menu bên trái khi bạn muốn thêm sau
+<div class="nav flex-column">
+  <NavLink class="nav-link" href="/home">Home</NavLink>
 
-  Hiện tại app đã có các nút điều hướng ở top bar (MainLayout.razor),
-  nên sidebar để trống để tránh thay đổi UX ngoài ý muốn.
-*@
-
-<nav class="nav flex-column">
-  <NavLink class="nav-link" href="/home" Match="NavLinkMatch.All">
-    Home
-  </NavLink>
   @if (AppState.IsAuthenticated)
   {
     <NavLink class="nav-link" href="/study">Study</NavLink>
     <NavLink class="nav-link" href="/settings">Settings</NavLink>
-
-    @if (!AppState.IsOnboarded)
-    {
-      <NavLink class="nav-link" href="/onboarding">Onboarding</NavLink>
-    }
-
     <NavLink class="nav-link" href="/logout">Logout</NavLink>
   }
   else
@@ -30,4 +14,23 @@
     <NavLink class="nav-link" href="/login">Login</NavLink>
     <NavLink class="nav-link" href="/register">Register</NavLink>
   }
-</nav>
+</div>
+
+@code {
+  protected override void OnInitialized()
+  {
+    // Re-render NavMenu whenever auth/onboarding state changes.
+    AppState.OnChange += OnAppStateChanged;
+  }
+
+  private void OnAppStateChanged()
+  {
+    // Must re-render UI on state changes.
+    _ = InvokeAsync(StateHasChanged);
+  }
+
+  public void Dispose()
+  {
+    AppState.OnChange -= OnAppStateChanged;
+  }
+}

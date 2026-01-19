@@ -49,6 +49,8 @@ builder.Services.AddScoped<ITokenStore, BrowserTokenStore>();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<StorageInterop>();
+builder.Services.AddScoped<UiDomInterop>();
+builder.Services.AddScoped<UserSettingsState>();
 
 builder.Services.AddTransient<AuthHeaderHandler>();
 

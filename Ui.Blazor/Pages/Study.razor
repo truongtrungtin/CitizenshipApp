@@ -1,4 +1,5 @@
 @page "/study"
+@inject StorageInterop Storage
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
   <h3 class="mb-0">Study</h3>
@@ -27,8 +28,26 @@
 
 <div class="d-flex align-items-center gap-2 flex-wrap">
   <label class="form-label mb-0"><strong>Deck</strong></label>
+  @if (UserSettings.Current is not null)
+  {
+    var suggestedDeck = GetSuggestedDeck();
 
-  <select class="form-select form-select-sm" style="min-width: 260px" @onchange="OnDeckChanged"
+    <span class="text-muted small">
+      Suggested by Focus: <strong>@UserSettings.Current.Focus</strong>
+      • Suggested deck:
+      @if (suggestedDeck is not null)
+      {
+        <strong>@suggestedDeck.Name</strong>
+        @($"({suggestedDeck.Code})")
+      }
+      else
+      {
+        <strong>(none)</strong>
+      }
+    </span>
+  }
+
+  <select class="form-select form-select-sm" style="min-width: 260px" value="@_selectedDeckId" @onchange="OnDeckChanged"
     disabled="@(_busy || _decks.Count == 0)">
     @if (_decks.Count == 0)
     {
@@ -38,7 +57,7 @@
     {
       @foreach (var deck in _decks)
       {
-        <option value="@deck.Id" selected="@(deck.Id == _selectedDeckId)">
+        <option value="@deck.Id">
           @deck.Name (@deck.Code) • @deck.QuestionCount
         </option>
       }
@@ -175,6 +194,7 @@
   /// This is used for business errors (401/403/404/etc.) or unexpected failures.
   /// </summary>
   private string? _generalError;
+  private Guid? _suggestedDeckId;
 
   /// <summary>
   /// Field-level validation errors returned by API (ValidationProblemDetails).
@@ -185,6 +205,10 @@
   private LanguageCode _language = LanguageCode.En;
   private bool IsVietnamese => _language == LanguageCode.Vi;
 
+  private string SelectedDeckIdKey =>
+  string.IsNullOrWhiteSpace(AppState.UserId)
+  ? "study.selectedDeckId:anonymous"
+  : $"study.selectedDeckId:{AppState.UserId}";
   protected override async Task OnInitializedAsync()
   {
     await ReloadAllAsync();
@@ -216,14 +240,73 @@
 
     try
     {
-      var meSettings = await Api.GetMeSettingsAsync();
-      SetLanguage(meSettings.Language);
+      // Load full settings once from client-side state.
+      // This avoids calling the old MVP endpoint (GetMeSettingsAsync).
+      await UserSettings.EnsureLoadedAsync();
+
+      var settings = UserSettings.Current;
+      if (settings is not null)
+      {
+        // Apply language from full settings.
+        SetLanguage(settings.Language);
+      }
+      // else: keep default (_language = En)
 
       _decks.Clear();
       _decks.AddRange(await Api.GetDecksAsync());
 
-      _selectedDeckId = _decks.FirstOrDefault()?.Id;
 
+      // Always compute suggestion for debug UI (even if we don't use it to select).
+      _suggestedDeckId = settings is not null ? SuggestDeckId(settings.Focus) : null;
+
+      // Load last selected deck from localStorage (if any).
+      Guid? storedDeckId = null;
+
+      try
+      {
+        var rawStored = await Storage.GetItemAsync(SelectedDeckIdKey);
+        if (Guid.TryParse(rawStored, out var parsed))
+          storedDeckId = parsed;
+      }
+      catch
+      {
+        // Ignore storage errors; we can still fallback to focus/first deck.
+      }
+
+      // Choose deck by priority:
+      // 1) Current selection (if still exists)
+      // 2) Stored selection (last selected by user)
+      // 3) Focus suggestion
+      // 4) First deck
+      if (_decks.Count == 0)
+      {
+        _selectedDeckId = null;
+      }
+      else
+      {
+        var selectedStillValid =
+        _selectedDeckId.HasValue && _decks.Any(d => d.Id == _selectedDeckId.Value);
+
+        if (!selectedStillValid)
+        {
+          var storedStillValid =
+          storedDeckId.HasValue && _decks.Any(d => d.Id == storedDeckId.Value);
+
+          if (storedStillValid)
+          {
+            _selectedDeckId = storedDeckId;
+          }
+          else
+          {
+            Guid? suggested = null;
+
+            if (settings is not null)
+              suggested = SuggestDeckId(settings.Focus);
+
+            _selectedDeckId = suggested ?? _decks[0].Id;
+          }
+        }
+      }
       await LoadTodayAsync();
       await LoadNextQuestionAsync();
     }
@@ -242,6 +325,37 @@
     }
   }
 
+  /// <summary>
+  /// Suggest a deck based on user's Focus.
+  /// MVP heuristic:
+  /// - Match deck.Code or deck.Name containing keywords: "civics", "reading", "writing".
+  /// - If no match, return null (caller will fallback to first deck).
+  /// </summary>
+  private Guid? SuggestDeckId(StudyFocus focus)
+  {
+    if (_decks.Count == 0)
+      return null;
+
+    // Map Focus -> keyword used for matching deck Code/Name
+    var keyword = focus switch
+    {
+      StudyFocus.Civics => "civics",
+      StudyFocus.Reading => "reading",
+      StudyFocus.Writing => "writing",
+      _ => null
+    };
+
+    if (string.IsNullOrWhiteSpace(keyword))
+      return null;
+
+    var hit = _decks.FirstOrDefault(d =>
+    (!string.IsNullOrWhiteSpace(d.Code) && d.Code.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+    (!string.IsNullOrWhiteSpace(d.Name) && d.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+    );
+
+    return hit?.Id;
+  }
+
   private async Task OnDeckChanged(ChangeEventArgs e)
   {
     ClearErrors();
@@ -251,6 +365,15 @@
       return;
 
     _selectedDeckId = deckId;
+    // Persist user's selection for next visits.
+    try
+    {
+      await Storage.SetItemAsync(SelectedDeckIdKey, deckId.ToString());
+    }
+    catch
+    {
+      // Ignore storage failures.
+    }
     _lastAnswer = null;
 
     await LoadNextQuestionAsync();
@@ -365,4 +488,10 @@
   }
 
   private sealed record AnswerResult(string SelectedKey, string CorrectKey, bool IsCorrect);
+
+  private DeckListItem? GetSuggestedDeck()
+  {
+    if (!_suggestedDeckId.HasValue) return null;
+    return _decks.FirstOrDefault(d => d.Id == _suggestedDeckId.Value);
+  }
 }
