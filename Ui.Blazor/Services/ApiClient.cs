@@ -156,27 +156,6 @@ public sealed class ApiClient
     // -------------------------
     // Me / Settings
     // -------------------------
-
-    public async Task<MeSettingsResponse> GetMeSettingsAsync(CancellationToken ct = default)
-    {
-        using var response = await _http.GetAsync("/api/Me/settings", ct);
-
-        if (!response.IsSuccessStatusCode)
-            throw await CreateApiExceptionAsync(response);
-
-        return await ReadSuccessJsonAsync<MeSettingsResponse>(response, "GET /api/me/settings", ct);
-    }
-
-    public async Task<MeSettingsResponse> UpdateMeSettingsAsync(UpdateMeSettingsRequest request, CancellationToken ct = default)
-    {
-        using var response = await _http.PutAsJsonAsync("/api/Me/settings", request, JsonOptions, ct);
-
-        if (!response.IsSuccessStatusCode)
-            throw await CreateApiExceptionAsync(response);
-
-        return await ReadSuccessJsonAsync<MeSettingsResponse>(response, "PUT /api/me/settings", ct);
-    }
-
     public async Task CompleteOnboardingAsync(CancellationToken ct = default)
     {
         using var response = await _http.PutAsync("/api/Me/onboarding/complete", content: null, ct);

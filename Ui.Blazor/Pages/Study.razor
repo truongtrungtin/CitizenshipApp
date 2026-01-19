@@ -241,7 +241,7 @@
     try
     {
       // Load full settings once from client-side state.
-      // This avoids calling the old MVP endpoint (GetMeSettingsAsync).
+      // Settings are loaded from the full endpoint (/api/me/settings/full) via UserSettingsState.
       await UserSettings.EnsureLoadedAsync();
 
       var settings = UserSettings.Current;

@@ -60,92 +60,11 @@ public sealed class MeController(AppDbContext db) : ApiControllerBase
         });
     }
 
-    [HttpGet("settings")]
-    public async Task<ActionResult<MeSettingsResponse>> GetSettings(CancellationToken ct)
-    {
-        if (!TryGetUserId(out Guid userId))
-        {
-            return Unauthorized();
-        }
-
-        UserSettings? settings = await db.UserSettings
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
-
-        if (settings is null)
-        {
-            // mặc định MVP (đồng bộ với UI)
-            return Ok(new MeSettingsResponse
-            {
-                Language = LanguageCode.En,
-                DailyGoalMinutes = 10
-            });
-        }
-
-        return Ok(new MeSettingsResponse
-        {
-            Language = settings.Language,
-            DailyGoalMinutes = settings.DailyGoalMinutes
-        });
-    }
-
-    [HttpPut("settings")]
-    public async Task<IActionResult> UpdateSettings([FromBody] UpdateMeSettingsRequest req, CancellationToken ct)
-    {
-        if (!TryGetUserId(out Guid userId))
-        {
-            return Unauthorized();
-        }
-
-        UserSettings? settings = await db.UserSettings
-            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
-
-        if (settings is null)
-        {
-            // AFTER (đúng shared PK: settings.Id == profile.Id)
-            var profile = await db.UserProfiles
-                .FirstOrDefaultAsync(x => x.UserId == userId, ct);
-
-            if (profile is null)
-            {
-                // This should not happen for a valid authenticated user.
-                return NotFound();
-            }
-
-            // Nếu DB chưa tạo settings (hiếm), tạo mới
-            var now = DateTime.UtcNow;
-
-            settings = new UserSettings
-            {
-                Id = profile.Id, // đồng bộ PK với UserProfile
-                UserId = userId,
-                Language = req.Language,
-                DailyGoalMinutes = req.DailyGoalMinutes,
-                CreatedUtc = now,
-                UpdatedUtc = now
-            };
-            db.UserSettings.Add(settings);
-        }
-        else
-        {
-            settings.Language = req.Language;
-            settings.DailyGoalMinutes = req.DailyGoalMinutes;
-            settings.UpdatedUtc = DateTime.UtcNow;
-        }
-
-
-        await db.SaveChangesAsync(ct);
-        return Ok(new MeSettingsResponse
-        {
-            Language = settings.Language,
-            DailyGoalMinutes = settings.DailyGoalMinutes
-        });
-    }
 
     /// <summary>
     ///     PUT /api/me/onboarding/complete
     ///     Chỉ đánh dấu hoàn tất onboarding.
-    ///     (Settings đã được cập nhật qua /me/settings.)
+    ///     (Settings đã được cập nhật qua /me/settings/full.)
     /// </summary>
     [HttpPut("onboarding/complete")]
     public async Task<IActionResult> CompleteOnboarding()
