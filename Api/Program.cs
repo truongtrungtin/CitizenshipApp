@@ -22,7 +22,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.RateLimiting;
 
 const string corsPolicyName = "UiCors";
 

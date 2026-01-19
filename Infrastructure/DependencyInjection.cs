@@ -5,10 +5,13 @@ using Infrastructure.Identity;
 using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using Application.Study;
+using Infrastructure.Study;
+
 
 namespace Infrastructure;
 
@@ -67,7 +70,7 @@ public static class DependencyInjection
         // Deck/question queries (read-only)
         // ---------------------------
         services.AddScoped<IDeckQueryService, DeckQueryService>();
-
+        services.AddScoped<IStudyService, StudyService>();
         return services;
     }
 }
