@@ -15,15 +15,9 @@ namespace Api.Auth;
 ///     - Tạo access token (JWT)
 ///     - Chưa triển khai refresh token (có thể thêm sau)
 /// </summary>
-public sealed class JwtTokenService
+public sealed class JwtTokenService(IOptions<JwtOptions> options)
 {
-    private readonly JwtOptions _options;
-
-    public JwtTokenService(IOptions<JwtOptions> options)
-    {
-        // Lấy config đã bind từ appsettings (Jwt section)
-        _options = options.Value;
-    }
+    private readonly JwtOptions _options = options.Value;
 
     /// <summary>
     ///     Tạo access token cho user.
