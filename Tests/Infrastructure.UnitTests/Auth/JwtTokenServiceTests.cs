@@ -178,11 +178,11 @@ public sealed class JwtTokenServiceTests
             new JwtSecurityTokenHandler().ValidateToken(token, validationParams, out _);
         });
 
-                // Accept either "invalid signature" or "signature key not found"
-                Assert.True(
-                    ex is SecurityTokenInvalidSignatureException ||
-                    ex is SecurityTokenSignatureKeyNotFoundException);
-            }
+        // Accept either "invalid signature" or "signature key not found"
+        Assert.True(
+            ex is SecurityTokenInvalidSignatureException ||
+            ex is SecurityTokenSignatureKeyNotFoundException);
+    }
 
     [Fact]
     public void TokenValidation_ShouldFail_WhenExpired()

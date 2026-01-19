@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 
 using Api.Auth;
 using Api.Infrastructure.Middleware;
@@ -20,8 +21,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-
-using System.Threading.RateLimiting;
 
 const string corsPolicyName = "UiCors";
 

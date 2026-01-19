@@ -8,13 +8,12 @@ using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 using Shared.Contracts.Auth;
 
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
-
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace Api.Controllers;
 

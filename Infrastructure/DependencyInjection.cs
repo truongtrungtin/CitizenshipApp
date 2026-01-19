@@ -1,16 +1,15 @@
 using Application.Decks;
+using Application.Study;
 
 using Infrastructure.Decks;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Study;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
-using Application.Study;
-using Infrastructure.Study;
 
 
 namespace Infrastructure;
