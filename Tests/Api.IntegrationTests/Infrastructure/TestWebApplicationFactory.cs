@@ -23,13 +23,14 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
 
     private DbConnection? _connection;
     private ServiceProvider? _sqliteProvider;
-
     public TestWebApplicationFactory()
     {
         Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
     }
-    private static readonly object DbInitLock = new();
-    private static bool _dbInitialized;
+    // DB initialization must be per factory instance because each factory owns its own
+    // SQLite in-memory connection. Static flags will cause later factories to skip schema creation.
+    private readonly object _dbInitLock = new();
+    private bool _dbInitialized;
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         Environment.SetEnvironmentVariable(
@@ -117,14 +118,16 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             // ------------------------------------------------------------
             // 3) Initialize schema
             // ------------------------------------------------------------
-            lock (DbInitLock)
+            lock (_dbInitLock)
             {
                 if (_dbInitialized) return;
                 _dbInitialized = true;
 
-                var sp = services.BuildServiceProvider();
+                using var sp = services.BuildServiceProvider();
                 using var scope = sp.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                // Ensure schema exists for THIS in-memory SQLite connection.
                 db.Database.EnsureCreated();
             }
         });
