@@ -23,6 +23,11 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
 
     private DbConnection? _connection;
     private ServiceProvider? _sqliteProvider;
+
+    public TestWebApplicationFactory()
+    {
+        Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
+    }
     private static readonly object DbInitLock = new();
     private static bool _dbInitialized;
     protected override void ConfigureWebHost(IWebHostBuilder builder)

@@ -17,16 +17,18 @@ public class SettingsValidationTests
     : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
 
     public SettingsValidationTests(TestWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
     [Fact]
     public async Task Update_settings_invalid_daily_goal_returns_field_error()
     {
-        await AuthTestHelper.AuthenticateAsync(_client);
+        await AuthTestHelper.AuthenticateAsync(_client, _factory.Services);
 
         var payload = new UserSettingContracts
         {
