@@ -3,6 +3,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
+using Api.Auth;
+
+using Infrastructure;
+using Infrastructure.Persistence;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -14,10 +19,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-
-using Api.Auth;
-using Infrastructure;
-using Infrastructure.Persistence;
 
 const string corsPolicyName = "UiCors";
 

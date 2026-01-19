@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+
 using Domain.Enums;
 
 namespace Shared.Contracts.Me;

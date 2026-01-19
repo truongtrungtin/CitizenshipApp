@@ -28,7 +28,7 @@ public sealed class StudyController : ApiControllerBase
     }
 
     [HttpGet("next")]
-public async Task<ActionResult<NextQuestionResponse>> GetNext([FromQuery] GetNextQuestionRequest req, CancellationToken ct)
+    public async Task<ActionResult<NextQuestionResponse>> GetNext([FromQuery] GetNextQuestionRequest req, CancellationToken ct)
     {
         // MVP: random 1 câu trong deck
         int total = await _db.Questions.Where(q => q.DeckId == req.DeckId).CountAsync(ct);

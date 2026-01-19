@@ -39,7 +39,7 @@ public sealed class AuthController(
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
     {
-        
+
         string normalized = req.Email.Trim();
 
         // Tránh trùng username

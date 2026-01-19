@@ -182,7 +182,7 @@ public sealed class MeController(AppDbContext db) : ApiControllerBase
         if (settings is null)
         {
             return Ok(new UserSettingContracts(
-                language : LanguageCode.En,
+                language: LanguageCode.En,
                 fontScale: FontScale.Medium,
                 audioSpeed: AudioSpeed.Normal,
                 dailyGoalMinutes: 15,

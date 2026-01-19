@@ -1,14 +1,14 @@
+using Domain.Entities.Deck;
+
+using Infrastructure.Persistence;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
-using Domain.Entities.Deck;
-
-using Infrastructure.Persistence;
+using Microsoft.Extensions.Hosting;
 
 namespace Api.Tests;
 

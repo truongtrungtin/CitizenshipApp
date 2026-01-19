@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+
 using Shared.Contracts.Common;
 
 namespace Shared.Contracts.Auth;

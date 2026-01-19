@@ -1,13 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using FluentAssertions;
-
-using Xunit;
-
 using Api.IntegrationTests.Infrastructure;
 
+using FluentAssertions;
+
 using Shared.Contracts.Auth;
+
+using Xunit;
 
 namespace Api.IntegrationTests.Validation;
 

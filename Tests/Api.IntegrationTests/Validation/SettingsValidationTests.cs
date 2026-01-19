@@ -1,15 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using FluentAssertions;
-
-using Xunit;
-
 using Api.IntegrationTests.Infrastructure;
+
+using Domain.Enums;
+
+using FluentAssertions;
 
 using Shared.Contracts.Me;
 
-using Domain.Enums;
+using Xunit;
 
 namespace Api.IntegrationTests.Validation;
 

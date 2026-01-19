@@ -97,8 +97,8 @@ public sealed class AppDbContext
         });
 
         // =========================
-// Deck / Question / Study
-// =========================
+        // Deck / Question / Study
+        // =========================
 
         modelBuilder.Entity<Deck>(b =>
         {
