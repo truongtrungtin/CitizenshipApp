@@ -22,6 +22,8 @@ using Microsoft.OpenApi;
 
 const string corsPolicyName = "UiCors";
 
+Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
