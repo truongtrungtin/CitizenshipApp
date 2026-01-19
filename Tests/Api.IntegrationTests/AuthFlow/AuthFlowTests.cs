@@ -9,14 +9,9 @@ using Shared.Contracts.Me;
 
 namespace Api.IntegrationTests.AuthFlow;
 
-public sealed class AuthFlowTests : IClassFixture<TestWebApplicationFactory>
+public sealed class AuthFlowTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly TestWebApplicationFactory _factory;
-
-    public AuthFlowTests(TestWebApplicationFactory factory)
-    {
-        _factory = factory;
-    }
+    private readonly TestWebApplicationFactory _factory = factory;
 
     private static string NewEmail() => $"u{Guid.NewGuid():N}@test.local";
 
