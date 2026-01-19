@@ -174,3 +174,29 @@ IMPORTANT SECURITY NOTE:
 
 Files:
 - docs/*
+
+# Changes Summary
+
+---
+
+## 2026-01-19 — Architecture Hardening & UX Completion
+
+- Standardized API error handling with ProblemDetails
+- Added correlation ID middleware
+- Added rate limiting to login/register endpoints
+- Refactored controllers to Application services
+- Optimized study next-question selection
+- Implemented full onboarding and settings UX
+- Applied global FontScale across UI
+- Used Focus setting to suggest default study deck
+- Added integration tests for validation error contracts
+- Removed legacy MVP `/api/me/settings` endpoint
+
+---
+
+## 2026-01-18 — Full Settings & Onboarding
+
+- Added full settings endpoint `/api/me/settings/full`
+- Introduced UserSettingContracts with DataAnnotations
+- Added onboarding completion flow
+- Improved validation UX across UI

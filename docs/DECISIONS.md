@@ -326,3 +326,25 @@ Consequences:
 
 Status: Accepted (Implemented)
 Date: 2026-01-18
+
+# Architectural Decisions
+
+---
+
+## ADR-023 — Remove legacy MVP settings endpoint
+
+**Context**
+The original `/api/me/settings` endpoint supported only partial settings and
+duplicated logic after full settings were introduced.
+
+**Decision**
+- Remove legacy endpoint and contracts
+- Use `/api/me/settings/full` as the single source of truth
+
+**Consequences**
+- Reduced API surface
+- No duplicated logic
+- Clear ownership of settings behavior
+
+**Status**: Accepted
+**Date**: 2026-01-19

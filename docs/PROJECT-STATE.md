@@ -1,92 +1,91 @@
+---
+
+# 2️⃣ `docs/PROJECT-STATE.md` (FULL FILE)
+
+```md
 # Project State
 
-Last updated: 2026-01-18
+Last updated: 2026-01-19
 
-## Current state (as-is)
-- Solution builds on **.NET 9** (`net9.0`) with a Clean Architecture-style split.
-- **API**
-  - JWT Bearer auth (Swagger includes Bearer support).
-  - Global exception handler returns **ProblemDetails** (`application/problem+json`).
-  - **Model Validation**: DataAnnotations + automatic `ValidationProblemDetails` for invalid payloads (field-level errors).
-  - **Health** endpoints:
-    - `GET /health/live` (process up)
-    - `GET /health/ready` (includes DB connectivity)
-  - **CORS**
-    - Development: allows any origin/header/method.
-    - Non-development: uses `Cors:AllowedOrigins`; if not configured, **cross-origin requests are denied** (safe default).
-  - **Reverse proxy** support is **disabled by default**; enable via `Proxy:Enabled=true` to respect `X-Forwarded-*` headers.
-  - Development convenience:
-    - Auto-migrate + seed on startup with retry for SQL container warm-up.
+---
 
-- **UI (Blazor WASM)** pages:
-  - Register/Login/Logout
-  - **Onboarding (required)**: collects and saves full settings, then marks onboarding complete
-  - **Settings (full)**: Language, FontScale, AudioSpeed, DailyGoalMinutes, Focus, SilentMode
-  - Study (deck select → next question → submit answer → today progress)
+## Current State
 
-- **Route guard**
-  - Not authenticated → only `/login` + `/register`
-  - Authenticated but not onboarded → forced to `/onboarding`
-  - Authenticated & onboarded → redirected away from `/login` + `/register`
+CitizenshipApp is a production-ready .NET 9 application with a focus on
+accessibility, clean architecture, and predictable behavior.
 
-- **WorkerService** exists but currently a placeholder loop (no meaningful background jobs yet).
+---
 
-## What's done (implemented in code)
-- Auth:
-  - Register/Login endpoints returning JWT.
-  - JWT contains both `sub` and `ClaimTypes.NameIdentifier` to keep userId parsing consistent across controllers.
-- Profile & onboarding:
-  - `UserProfile.IsOnboarded` stored and updated via API.
-  - UI enforces onboarding via route guard.
-- Settings:
-  - Full settings contract: `Shared.Contracts.Me.UserSettingContracts`.
-    - Uses DataAnnotations.
-    - Uses **settable properties** to support Blazor `@bind`.
-  - API supports full settings read/update via `GET/PUT /api/me/settings/full`.
-  - UI Settings + Onboarding read/write full settings.
-- Validation + UX errors:
-  - API returns validation errors as `ValidationProblemDetails`.
-  - UI parses ProblemDetails and shows:
-    - Top-level message
-    - Field-level errors next to controls (Login/Register/Settings/Study/Onboarding)
-- Study:
-  - Endpoints for next question, submit answer, and today progress aggregation.
-- Persistence:
-  - EF Core migrations + SQL Server schema.
-  - Seed sample deck/questions.
+## API
 
-## Known issues / gaps
-- UI preference effects are not fully applied yet:
-  - `FontScale` is stored but not yet applied to global UI typography.
-  - `AudioSpeed` / `SilentMode` are stored but not yet wired to a TTS/audio feature.
-  - `Focus` is stored but not yet used to filter/suggest decks.
-- Architecture consistency:
-  - `StudyController` still queries `AppDbContext` directly (not via an Application service).
-- Performance:
-  - Next-question selection still uses simple selection patterns (may need improvement at large scale).
-- Worker:
-  - WorkerService is not yet doing real jobs.
+- JWT authentication with consistent userId extraction
+- Global exception handling using RFC-compliant ProblemDetails
+- Validation errors returned as ValidationProblemDetails (field-level)
+- CorrelationId middleware:
+  - Accepts incoming correlation ID or generates one
+  - Attaches correlationId to all ProblemDetails
+- Rate limiting applied to public auth endpoints
+- Health endpoints:
+  - `/health/live`
+  - `/health/ready`
+- Production CORS is deny-by-default unless explicitly configured
 
-## Next milestones (recommended order)
-1) **Apply settings to UI behavior**
-   - FontScale → global CSS scaling (M/L/XL)
-   - Focus → default deck selection/suggestions
-   - AudioSpeed/SilentMode → when TTS is implemented
-2) **Controller/service consistency**
-   - Continue BL-017: move study/deck queries behind Application services.
-3) **API performance**
-   - Improve next-question selection strategy for large datasets.
-4) **Observability & hardening**
-   - Request logging + correlation id
-   - Rate-limit auth endpoints
-5) **Worker skeleton**
-   - Replace placeholder loop with a real background job framework.
+---
 
-## Risk register
-- Storing UI preferences but not applying them can confuse users.
-  - Mitigation: implement FontScale first (visible impact).
-- Direct EF usage in controllers may cause duplicated logic and makes future optimization harder.
-  - Mitigation: continue refactor via Application interfaces.
+## UI (Blazor WASM)
 
-## Release notes (draft)
-- v0.2: Onboarding route guard + full settings (store + edit) + field-level validation errors in UI.
+### Pages
+- Register
+- Login
+- Logout
+- Onboarding (mandatory)
+- Settings (full)
+- Study
+
+### UX Rules
+- Users must complete onboarding before accessing the app
+- FontScale applies globally via CSS variables
+- Focus is used to suggest a default study deck
+- All forms display clear field-level validation errors
+
+---
+
+## Architecture
+
+- Controllers are thin
+- Business logic lives in Application services
+- Study logic optimized for large datasets
+- EF Core migrations manage schema evolution
+- SQL Server via Docker for local/dev
+
+---
+
+## Testing
+
+- CI pipeline builds and runs tests
+- Integration tests validate:
+  - ValidationProblemDetails for auth
+  - ValidationProblemDetails for full settings
+
+---
+
+## Completed Backlog
+
+BL-001 → BL-018
+BL-024
+BL-027
+BL-028
+BL-030
+BL-031
+
+---
+
+## Open / Future Items
+
+- BL-019: Paging for large question lists
+- BL-020: WorkerService background jobs
+- BL-021: JWT unit tests
+- BL-022: Auth flow integration tests
+- BL-023: Study flow integration tests
+- BL-025: CI analyzers / formatting gate
+- BL-029: Audio/TTS integration
