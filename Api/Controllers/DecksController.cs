@@ -26,4 +26,13 @@ public sealed class DecksController(IDeckQueryService decks) : ControllerBase
         DeckListItem? deck = await decks.GetDeckByIdAsync(deckId, ct);
         return deck is null ? NotFound() : Ok(deck);
     }
+
+
+    [HttpGet("{deckId:guid}/questions")]
+    public async Task<ActionResult<List<Question>>> GetDeckQuestions(Guid deckId, [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50, CancellationToken ct = default)
+    {
+        IReadOnlyList<Question> items = await decks.GetDeckQuestionsAsync(deckId, page, pageSize, ct);
+        return Ok(items);
+    }
 }
