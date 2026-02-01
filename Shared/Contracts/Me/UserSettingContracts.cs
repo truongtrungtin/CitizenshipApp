@@ -13,13 +13,13 @@ namespace Shared.Contracts.Me;
 public sealed record UserSettingContracts
 {
     [EnumDataType(typeof(LanguageCode))]
-    public LanguageCode Language { get; set; } = LanguageCode.En;
+    public LanguageCode Language { get; set; } = LanguageCode.Vi;
 
     [EnumDataType(typeof(FontScale))]
-    public FontScale FontScale { get; set; } = FontScale.Medium;
+    public FontScale FontScale { get; set; } = FontScale.Large;
 
     [EnumDataType(typeof(AudioSpeed))]
-    public AudioSpeed AudioSpeed { get; set; } = AudioSpeed.Normal;
+    public AudioSpeed AudioSpeed { get; set; } = AudioSpeed.Slow;
 
     [Range(1, 200)]
     public int DailyGoalMinutes { get; set; } = 15;
@@ -27,7 +27,7 @@ public sealed record UserSettingContracts
     [EnumDataType(typeof(StudyFocus))]
     public StudyFocus Focus { get; set; } = StudyFocus.Civics;
 
-    public bool SilentMode { get; set; } = false;
+    public bool SilentMode { get; set; }
 
     // Optional convenience constructor (keeps your current "new(...)" usage working).
     public UserSettingContracts() { }

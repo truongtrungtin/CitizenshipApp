@@ -25,6 +25,14 @@ public sealed class QuestionsController(IDeckQueryService decks) : ControllerBas
     public async Task<ActionResult<Question>> GetById(Guid id, CancellationToken ct)
     {
         Question? question = await decks.GetQuestionByIdAsync(id, ct);
-        return question is null ? NotFound() : Ok(question);
+        if (question is null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Not Found",
+                detail: "Question not found.");
+        }
+
+        return Ok(question);
     }
 }

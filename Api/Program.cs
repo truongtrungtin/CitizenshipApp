@@ -4,10 +4,10 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 
-using Api.Auth;
 using Api.Infrastructure.Middleware;
 
 using Infrastructure;
+using Infrastructure.Auth;
 using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;

@@ -20,13 +20,19 @@ public sealed class StudyController(IStudyService study) : ApiControllerBase
     {
         if (!TryGetUserId(out Guid userId))
         {
-            return Unauthorized();
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized",
+                detail: "Missing or invalid access token.");
         }
 
         NextQuestionResponse? next = await study.GetNextQuestionAsync(userId, req, ct);
         if (next is null)
         {
-            return NotFound("Deck has no questions.");
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Not Found",
+                detail: "Deck has no questions.");
         }
 
         return Ok(next);
@@ -37,13 +43,19 @@ public sealed class StudyController(IStudyService study) : ApiControllerBase
     {
         if (!TryGetUserId(out Guid userId))
         {
-            return Unauthorized();
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized",
+                detail: "Missing or invalid access token.");
         }
 
         SubmitAnswerResponse? result = await study.SubmitAnswerAsync(userId, req, ct);
         if (result is null)
         {
-            return NotFound();
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Not Found",
+                detail: "Question not found.");
         }
 
         return Ok(result);
@@ -54,7 +66,10 @@ public sealed class StudyController(IStudyService study) : ApiControllerBase
     {
         if (!TryGetUserId(out Guid userId))
         {
-            return Unauthorized();
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized",
+                detail: "Missing or invalid access token.");
         }
 
         TodayProgressResponse result = await study.GetTodayProgressAsync(userId, ct);

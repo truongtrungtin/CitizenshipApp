@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
-using Api.Auth;
+using Infrastructure.Auth;
 
 using Domain.Entities.Users;
 
@@ -12,7 +12,6 @@ using Infrastructure.Identity;
 using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shared.Contracts.Auth;
@@ -54,9 +53,9 @@ public static class AuthTestHelper
 
         var login = await loginRes.Content.ReadFromJsonAsync<AuthResponse>();
         login.Should().NotBeNull("login response must contain an access token");
-        login!.AccessToken.Should().NotBeNullOrWhiteSpace("login response must contain an access token");
+        login.AccessToken.Should().NotBeNullOrWhiteSpace("login response must contain an access token");
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", login!.AccessToken);
+            new AuthenticationHeaderValue("Bearer", login.AccessToken);
     }
 
     public static async Task AuthenticateAsync(HttpClient client, IServiceProvider services)

@@ -77,7 +77,7 @@ public sealed class UserSettingsState
     /// Apply safe defaults for anonymous/initial state.
     /// </summary>
     public Task ApplyDefaultsAsync()
-        => _ui.SetFontScaleAsync("Medium").AsTask();
+        => _ui.SetFontScaleAsync("Large").AsTask();
 
     /// <summary>
     /// Marks cached settings as stale so the next EnsureLoadedAsync will fetch/apply again.

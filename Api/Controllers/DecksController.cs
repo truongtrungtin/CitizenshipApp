@@ -24,7 +24,15 @@ public sealed class DecksController(IDeckQueryService decks) : ControllerBase
     public async Task<ActionResult<DeckListItem>> GetDeck(Guid deckId, CancellationToken ct)
     {
         DeckListItem? deck = await decks.GetDeckByIdAsync(deckId, ct);
-        return deck is null ? NotFound() : Ok(deck);
+        if (deck is null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Not Found",
+                detail: "Deck not found.");
+        }
+
+        return Ok(deck);
     }
 
 
