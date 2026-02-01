@@ -24,6 +24,8 @@ public sealed record UserSettingContracts
     [EnumDataType(typeof(AudioSpeed))]
     public AudioSpeed AudioSpeed { get; set; } = AudioSpeed.Slow;
 
+    public string Voice { get; set; } = string.Empty;
+
     [Range(1, 200)]
     public int DailyGoalMinutes { get; set; } = 15;
 
@@ -40,6 +42,7 @@ public sealed record UserSettingContracts
         LanguageCode systemLanguage,
         FontScale fontScale,
         AudioSpeed audioSpeed,
+        string voice,
         int dailyGoalMinutes,
         StudyFocus focus,
         bool silentMode)
@@ -48,6 +51,7 @@ public sealed record UserSettingContracts
         SystemLanguage = systemLanguage;
         FontScale = fontScale;
         AudioSpeed = audioSpeed;
+        Voice = voice;
         DailyGoalMinutes = dailyGoalMinutes;
         Focus = focus;
         SilentMode = silentMode;

@@ -42,6 +42,11 @@ public sealed class UserSettings
     public AudioSpeed AudioSpeed { get; set; } = AudioSpeed.Slow;
 
     /// <summary>
+    ///     Tên giọng đọc (Web Speech voice name). Rỗng = default.
+    /// </summary>
+    public string Voice { get; set; } = string.Empty;
+
+    /// <summary>
     ///     Mục tiêu học mỗi ngày (phút).
     /// </summary>
     public int DailyGoalMinutes { get; set; } = 15;

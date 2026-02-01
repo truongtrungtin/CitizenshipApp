@@ -45,6 +45,7 @@ Mục tiêu của app: người lớn tuổi có thể học đều mỗi ngày 
 - Có nút “Dừng/Stop” để ngắt đọc ngay.
 - Tốc độ: Chậm / Vừa / Nhanh (theo `AudioSpeed`).
 - Có **SilentMode**: tắt toàn bộ audio trong UI (chỉ học dạng chọn đáp án).
+- Có thể chọn giọng đọc (voice) trong Settings để phù hợp người dùng.
 - Không auto-play trừ khi user bật.
 
 ## Error handling (must-have)

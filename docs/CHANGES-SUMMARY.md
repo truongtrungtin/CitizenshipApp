@@ -204,6 +204,7 @@ Files:
   - Settings/Onboarding labels localized (font sizes, audio speeds, focus).
   - Study UI: localized question type labels and hid dev/admin-only controls.
   - Added Web Speech API TTS with Listen/Stop and per-option audio.
+  - Added voice selection setting for TTS.
 
 - **Testing**
   - Added unit tests for `JwtTokenService`.

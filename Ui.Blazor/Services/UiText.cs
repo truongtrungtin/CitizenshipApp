@@ -89,6 +89,8 @@ public sealed class UiText
         ["Font.Medium"] = ("Trung bình", "Medium"),
         ["Font.Large"] = ("Lớn", "Large"),
         ["Settings.Audio"] = ("Tốc độ audio", "Audio speed"),
+        ["Settings.Voice"] = ("Giọng đọc", "Voice"),
+        ["Voice.Default"] = ("Mặc định", "Default"),
         ["Audio.Slow"] = ("Chậm", "Slow"),
         ["Audio.Medium"] = ("Trung bình", "Medium"),
         ["Audio.Fast"] = ("Nhanh", "Fast"),

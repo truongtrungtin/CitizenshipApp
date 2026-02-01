@@ -73,6 +73,7 @@ public sealed class MeService(AppDbContext db) : IMeService
                 systemLanguage: LanguageCode.Vi,
                 fontScale: FontScale.Large,
                 audioSpeed: AudioSpeed.Slow,
+                voice: string.Empty,
                 dailyGoalMinutes: 15,
                 focus: StudyFocus.Civics,
                 silentMode: false
@@ -84,6 +85,7 @@ public sealed class MeService(AppDbContext db) : IMeService
             systemLanguage: settings.SystemLanguage,
             fontScale: settings.FontScale,
             audioSpeed: settings.AudioSpeed,
+            voice: settings.Voice,
             dailyGoalMinutes: settings.DailyGoalMinutes,
             focus: settings.Focus,
             silentMode: settings.SilentMode
@@ -123,6 +125,7 @@ public sealed class MeService(AppDbContext db) : IMeService
         settings.SystemLanguage = req.SystemLanguage;
         settings.FontScale = req.FontScale;
         settings.AudioSpeed = req.AudioSpeed;
+        settings.Voice = req.Voice;
         settings.DailyGoalMinutes = req.DailyGoalMinutes;
         settings.Focus = req.Focus;
         settings.SilentMode = req.SilentMode;

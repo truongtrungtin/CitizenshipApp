@@ -55,6 +55,7 @@ accessibility, clean architecture, and predictable behavior.
 - UI language uses a local fallback (persisted) until full settings load
 - All forms display clear field-level validation errors
 - Study supports TTS via Web Speech API (Listen/Stop + option audio)
+- TTS voice preference is stored in settings and applies to speech output
 
 ---
 

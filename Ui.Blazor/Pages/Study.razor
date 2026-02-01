@@ -568,22 +568,24 @@
 
     var settings = UserSettings.Current;
     var speed = settings?.AudioSpeed ?? AudioSpeed.Normal;
+    var voice = settings?.Voice;
     string text = GetPrompt(_question.Prompt);
 
     _isSpeaking = true;
     _speakingTarget = "prompt";
-    await Tts.SpeakAsync(text, _language, speed, _ttsRef!);
+    await Tts.SpeakAsync(text, _language, speed, _ttsRef!, voice);
   }
 
   private async Task SpeakOptionAsync(AnswerOption option)
   {
     var settings = UserSettings.Current;
     var speed = settings?.AudioSpeed ?? AudioSpeed.Normal;
+    var voice = settings?.Voice;
     string text = GetOptionText(option);
 
     _isSpeaking = true;
     _speakingTarget = option.Key;
-    await Tts.SpeakAsync(text, _language, speed, _ttsRef!);
+    await Tts.SpeakAsync(text, _language, speed, _ttsRef!, voice);
   }
 
   private Task StopSpeakingAsync()

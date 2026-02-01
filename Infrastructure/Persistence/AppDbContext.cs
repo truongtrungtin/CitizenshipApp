@@ -83,6 +83,7 @@ public sealed class AppDbContext
             b.Property(x => x.DailyGoalMinutes).HasDefaultValue(15);
             b.Property(x => x.Language).HasDefaultValue(LanguageCode.En);
             b.Property(x => x.SystemLanguage).HasDefaultValue(LanguageCode.Vi);
+            b.Property(x => x.Voice).HasMaxLength(200).HasDefaultValue("");
             b.Property(x => x.SilentMode).HasDefaultValue(false);
             b.Property(x => x.CreatedUtc).HasDefaultValueSql("SYSUTCDATETIME()");
             b.Property(x => x.UpdatedUtc).HasDefaultValueSql("SYSUTCDATETIME()");
