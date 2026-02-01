@@ -34,6 +34,105 @@ a, .btn-link {
     padding-top: 1.1rem;
 }
 
+/* ==========================
+   App navigation (responsive)
+   ========================== */
+.page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+}
+
+.sidebar {
+    background: #f8f9fa;
+    border-right: 1px solid #e5e7eb;
+    padding: 1rem 0.75rem;
+}
+
+.app-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.app-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.75rem;
+    color: #1f2937;
+    text-decoration: none;
+}
+
+.app-nav-link.active {
+    background: #e7f1ff;
+    color: #0b5ed7;
+    font-weight: 600;
+}
+
+.app-nav-link:hover {
+    background: #eef2f7;
+    color: #0b5ed7;
+}
+
+.app-nav-icon {
+    font-size: 1.25rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.app-nav-label {
+    font-size: 1rem;
+}
+
+/* Tablet + mobile: bottom nav bar with icons */
+@media (max-width: 1024px) {
+    .page {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 0.4rem 0.75rem;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+        background: #ffffff;
+    }
+
+    .app-nav {
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .app-nav-link {
+        flex: 1 1 0;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.5rem 0.25rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .app-nav-icon {
+        font-size: 1.2rem;
+    }
+
+    .app-nav-label {
+        font-size: 0.75rem;
+    }
+
+    main {
+        padding-bottom: 4rem; /* space for bottom nav */
+    }
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

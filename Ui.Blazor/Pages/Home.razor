@@ -1,21 +1,44 @@
 ﻿@page "/home"
 
-@code {
-  private TodayProgressResponse? _today;
+<section class="mb-4">
+  <h1 class="fw-semibold">CitizenshipApp</h1>
+  <p class="text-muted mb-3">
+    Ứng dụng ôn thi quốc tịch Mỹ đơn giản, thân thiện với người lớn tuổi.
+  </p>
 
-  protected override async Task OnInitializedAsync()
-  {
-    if (AppState.IsAuthenticated)
-    {
-      _today = await Api.GetTodayProgressAsync();
-    }
-  }
+  <div class="row g-3">
+    <div class="col-12 col-lg-4">
+      <div class="p-3 border rounded h-100">
+        <div class="fw-semibold">Thiết kế ưu tiên người lớn tuổi</div>
+        <div class="text-muted small">Chữ lớn, nút lớn, phản hồi rõ ràng.</div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="p-3 border rounded h-100">
+        <div class="fw-semibold">Luyện song ngữ</div>
+        <div class="text-muted small">Câu hỏi tiếng Anh và tiếng Việt.</div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="p-3 border rounded h-100">
+        <div class="fw-semibold">Theo dõi tiến độ mỗi ngày</div>
+        <div class="text-muted small">Thống kê số câu đã làm và đúng.</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-}
-
-@if (_today is not null)
+@if (AppState.IsAuthenticated)
 {
-  <hr />
-  <p><b>Today:</b> @_today.TotalAnswered / @_today.DailyGoalMinutes (Correct: @_today.CorrectAnswered)</p>
-  <p><a href="/study">Go to Study</a></p>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="/study">Bắt đầu học</a>
+    <a class="btn btn-outline-secondary" href="/settings">Cài đặt</a>
+  </div>
+}
+else
+{
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="/login">Đăng nhập</a>
+    <a class="btn btn-outline-secondary" href="/register">Tạo tài khoản</a>
+  </div>
 }

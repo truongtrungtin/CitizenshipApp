@@ -1,20 +1,38 @@
 @implements IDisposable
 
-<div class="nav flex-column">
-  <NavLink class="nav-link" href="/home">Home</NavLink>
+<nav class="app-nav" aria-label="Primary">
+  <NavLink class="app-nav-link" href="/home">
+    <span class="app-nav-icon" aria-hidden="true">🏠</span>
+    <span class="app-nav-label">Home</span>
+  </NavLink>
 
   @if (AppState.IsAuthenticated)
   {
-    <NavLink class="nav-link" href="/study">Study</NavLink>
-    <NavLink class="nav-link" href="/settings">Settings</NavLink>
-    <NavLink class="nav-link" href="/logout">Logout</NavLink>
+    <NavLink class="app-nav-link" href="/study">
+      <span class="app-nav-icon" aria-hidden="true">📚</span>
+      <span class="app-nav-label">Study</span>
+    </NavLink>
+    <NavLink class="app-nav-link" href="/settings">
+      <span class="app-nav-icon" aria-hidden="true">⚙️</span>
+      <span class="app-nav-label">Settings</span>
+    </NavLink>
+    <NavLink class="app-nav-link" href="/logout">
+      <span class="app-nav-icon" aria-hidden="true">🚪</span>
+      <span class="app-nav-label">Logout</span>
+    </NavLink>
   }
   else
   {
-    <NavLink class="nav-link" href="/login">Login</NavLink>
-    <NavLink class="nav-link" href="/register">Register</NavLink>
+    <NavLink class="app-nav-link" href="/login">
+      <span class="app-nav-icon" aria-hidden="true">🔐</span>
+      <span class="app-nav-label">Login</span>
+    </NavLink>
+    <NavLink class="app-nav-link" href="/register">
+      <span class="app-nav-icon" aria-hidden="true">📝</span>
+      <span class="app-nav-label">Register</span>
+    </NavLink>
   }
-</div>
+</nav>
 
 @code {
   protected override void OnInitialized()
