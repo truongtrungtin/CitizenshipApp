@@ -37,5 +37,5 @@
 - Top: “Câu 3/10”
 - Question card (chữ lớn)
 - Answers: A/B/C/D là button lớn
-- Audio: “Nghe lại” + speed
+- Audio: “Nghe / Dừng” + speed, option có icon 🔊 để đọc đáp án
 - Bottom: “Tiếp theo” (disabled nếu chưa chọn)

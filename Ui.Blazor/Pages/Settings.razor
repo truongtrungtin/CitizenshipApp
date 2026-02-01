@@ -182,7 +182,7 @@ else
         _edit = _edit with { SystemLanguage = LanguageCode.Vi };
       }
 
-      await UserSettings.ApplyAsync(_edit);
+      await UserSettings.ApplyFromServerAsync(_edit);
 
 
     }
@@ -220,7 +220,7 @@ else
     {
       await Api.UpdateMeSettingsFullAsync(_edit);
       await UserSettings.ReloadAsync();
-      await UserSettings.ApplyAsync(_edit);
+      await UserSettings.ApplyFromServerAsync(_edit);
       _message = T["Settings.Saved"];
     }
     catch (ApiException ex)

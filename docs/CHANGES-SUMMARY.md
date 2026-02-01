@@ -203,6 +203,7 @@ Files:
   - Home page redesign and bilingual UI labels.
   - Settings/Onboarding labels localized (font sizes, audio speeds, focus).
   - Study UI: localized question type labels and hid dev/admin-only controls.
+  - Added Web Speech API TTS with Listen/Stop and per-option audio.
 
 - **Testing**
   - Added unit tests for `JwtTokenService`.

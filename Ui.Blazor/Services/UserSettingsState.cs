@@ -16,6 +16,7 @@ public sealed class UserSettingsState
     private readonly UiDomInterop _ui;
     private readonly AppState _app;
     private readonly StorageInterop _storage;
+    private bool _hasFullSettings;
 
     public UserSettingsState(ApiClient api, UiDomInterop ui, AppState app, StorageInterop storage)
     {
@@ -39,21 +40,23 @@ public sealed class UserSettingsState
         if (!_app.IsAuthenticated)
         {
             Current ??= new UserSettingContracts();
+            _hasFullSettings = false;
             await ApplyDefaultsAsync();
             return;
         }
 
-        if (Current is not null) return;
+        if (Current is not null && _hasFullSettings) return;
 
         try
         {
             Current = await _api.GetMeSettingsFullAsync();
-            await ApplyAsync(Current);
+            await ApplyFromServerAsync(Current);
         }
         catch
         {
             // If API fails, keep local fallback and apply defaults.
             Current ??= new UserSettingContracts();
+            _hasFullSettings = false;
             await ApplyDefaultsAsync();
         }
     }
@@ -68,12 +71,13 @@ public sealed class UserSettingsState
         if (!_app.IsAuthenticated)
         {
             Current ??= new UserSettingContracts();
+            _hasFullSettings = false;
             await ApplyDefaultsAsync();
             return;
         }
 
         Current = await _api.GetMeSettingsFullAsync();
-        await ApplyAsync(Current);
+        await ApplyFromServerAsync(Current);
     }
 
     /// <summary>
@@ -88,6 +92,15 @@ public sealed class UserSettingsState
         // 1) Font scale
         await _ui.SetFontScaleAsync(settings.FontScale.ToString());
         NotifyChanged();
+    }
+
+    /// <summary>
+    /// Apply settings loaded from server (marks settings as fully loaded).
+    /// </summary>
+    public Task ApplyFromServerAsync(UserSettingContracts settings)
+    {
+        _hasFullSettings = true;
+        return ApplyAsync(settings);
     }
 
     /// <summary>
@@ -113,6 +126,7 @@ public sealed class UserSettingsState
     public async Task InvalidateAsync()
     {
         Current = null;
+        _hasFullSettings = false;
         await ApplyDefaultsAsync();
     }
 
@@ -136,6 +150,7 @@ public sealed class UserSettingsState
             return;
 
         Current = new UserSettingContracts { SystemLanguage = lang };
+        _hasFullSettings = false;
         NotifyChanged();
     }
 

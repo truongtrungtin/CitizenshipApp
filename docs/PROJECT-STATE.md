@@ -54,6 +54,7 @@ accessibility, clean architecture, and predictable behavior.
   - `SystemLanguage` = UI/system text language
 - UI language uses a local fallback (persisted) until full settings load
 - All forms display clear field-level validation errors
+- Study supports TTS via Web Speech API (Listen/Stop + option audio)
 
 ---
 
@@ -99,5 +100,5 @@ BL-032
 
 ## Open / Future Items
 
-- BL-029: Audio/TTS integration (AudioSpeed/SilentMode)
+- (none)
 ```

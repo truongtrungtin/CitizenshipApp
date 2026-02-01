@@ -1,7 +1,9 @@
 @page "/study"
+@implements IDisposable
 @inject StorageInterop Storage
 @inject UiText T
 @inject AuthenticationStateProvider AuthStateProvider
+@inject TtsService Tts
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
   <h3 class="mb-0">@T["Study.Title"]</h3>
@@ -121,10 +123,34 @@
         }
       </div>
 
-      @if (_isPrivileged)
-      {
-        <div class="text-muted small">ID: @_question.Id</div>
-      }
+      <div class="d-flex align-items-center gap-2">
+        @if (!IsSilentMode)
+        {
+          <div class="position-relative">
+            <button class="btn btn-outline-primary" title="@T["Study.Listen"]" @onclick="SpeakPromptAsync"
+              disabled="@(!_ttsSupported)">
+              🔊
+            </button>
+
+            @if (_isSpeaking && _speakingTarget == "prompt")
+            {
+              <button class="btn btn-outline-secondary position-absolute top-0 start-0" title="@T["Study.Stop"]"
+                style="transform: translate(0, 0);" @onclick="StopSpeakingAsync" disabled="@(!_ttsSupported)">
+                ⏹️
+              </button>
+            }
+          </div>
+        }
+        else
+        {
+          <span class="text-muted small">@T["Study.SilentModeHint"]</span>
+        }
+
+        @if (_isPrivileged)
+        {
+          <div class="text-muted small">ID: @_question.Id</div>
+        }
+      </div>
     </div>
 
     @if (_lastAnswer is not null)
@@ -177,9 +203,30 @@
         <div class="d-grid gap-2">
           @foreach (var opt in _question.Options)
           {
-            <button class="btn btn-outline-primary text-start" disabled="@_busy" @onclick="() => SubmitAnswerAsync(opt.Key)">
-              <strong>@opt.Key</strong>. @GetOptionText(opt)
-            </button>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-outline-primary text-start flex-grow-1" disabled="@_busy"
+                @onclick="() => SubmitAnswerAsync(opt.Key)">
+                <strong>@opt.Key</strong>. @GetOptionText(opt)
+              </button>
+
+              @if (!IsSilentMode && _ttsSupported)
+              {
+                <div class="position-relative">
+                  <button class="btn btn-outline-secondary" title="@T["Study.Listen"]"
+                    @onclick="() => SpeakOptionAsync(opt)">
+                    🔊
+                  </button>
+
+                  @if (_isSpeaking && _speakingTarget == opt.Key)
+                  {
+                    <button class="btn btn-outline-secondary position-absolute top-0 start-0" title="@T["Study.Stop"]"
+                      style="transform: translate(0, 0);" @onclick="StopSpeakingAsync" disabled="@(!_ttsSupported)">
+                      ⏹️
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           }
         </div>
       }
@@ -213,6 +260,11 @@
   private LanguageCode _language = LanguageCode.En;
   private bool IsVietnamese => _language == LanguageCode.Vi;
   private bool _isPrivileged;
+  private bool _ttsSupported;
+  private bool _isSpeaking;
+  private string? _speakingTarget;
+  private bool IsSilentMode => UserSettings.Current?.SilentMode == true;
+  private DotNetObjectReference<Study>? _ttsRef;
 
   private string SelectedDeckIdKey =>
   string.IsNullOrWhiteSpace(AppState.UserId)
@@ -220,6 +272,8 @@
   : $"study.selectedDeckId:{AppState.UserId}";
   protected override async Task OnInitializedAsync()
   {
+    _ttsRef = DotNetObjectReference.Create(this);
+    _ttsSupported = await Tts.IsSupportedAsync();
     await LoadPrivilegesAsync();
     await ReloadAllAsync();
   }
@@ -254,6 +308,8 @@
   {
     ClearErrors();
     _busy = true;
+
+    await StopSpeakingAsync();
 
     try
     {
@@ -377,6 +433,8 @@
   {
     ClearErrors();
 
+    await StopSpeakingAsync();
+
     var raw = e.Value?.ToString();
     if (!Guid.TryParse(raw, out var deckId))
       return;
@@ -413,6 +471,8 @@
   {
     ClearErrors();
     _lastAnswer = null;
+
+    await StopSpeakingAsync();
 
     if (!_selectedDeckId.HasValue)
       return;
@@ -484,6 +544,51 @@
   }
 
   private void ClearAnswer() => _lastAnswer = null;
+
+  private async Task SpeakPromptAsync()
+  {
+    if (_question is null)
+      return;
+
+    var settings = UserSettings.Current;
+    var speed = settings?.AudioSpeed ?? AudioSpeed.Normal;
+    string text = GetPrompt(_question.Prompt);
+
+    _isSpeaking = true;
+    _speakingTarget = "prompt";
+    await Tts.SpeakAsync(text, _language, speed, _ttsRef!);
+  }
+
+  private async Task SpeakOptionAsync(AnswerOption option)
+  {
+    var settings = UserSettings.Current;
+    var speed = settings?.AudioSpeed ?? AudioSpeed.Normal;
+    string text = GetOptionText(option);
+
+    _isSpeaking = true;
+    _speakingTarget = option.Key;
+    await Tts.SpeakAsync(text, _language, speed, _ttsRef!);
+  }
+
+  private Task StopSpeakingAsync()
+  {
+    _isSpeaking = false;
+    _speakingTarget = null;
+    return _ttsSupported ? Tts.CancelAsync().AsTask() : Task.CompletedTask;
+  }
+
+  [JSInvokable]
+  public void OnSpeakEnded()
+  {
+    _isSpeaking = false;
+    _speakingTarget = null;
+    _ = InvokeAsync(StateHasChanged);
+  }
+
+  public void Dispose()
+  {
+    _ttsRef?.Dispose();
+  }
 
   private string GetPrompt(QuestionText t) =>
   IsVietnamese

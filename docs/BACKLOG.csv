@@ -27,7 +27,7 @@ BL-025,CI analyzers/format gate,Chore,P3,S,Done,CI,CI now runs dotnet format --v
 BL-026,Docs consolidation,Chore,P2,S,Done,Docs,,
 BL-027,Global FontScale UI,Feature,P1,S,Done,UI,,
 BL-028,Focus-based deck suggestion,Feature,P1,S,Done,UI,,
-BL-029,AudioSpeed/SilentMode TTS,Feature,P3,M,Todo,UI,,
+BL-029,AudioSpeed/SilentMode TTS,Feature,P3,M,Done,UI,"Implemented Web Speech API TTS in Study (Listen/Stop + option audio) respecting AudioSpeed and SilentMode.",
 BL-030,Validation integration tests,Test,P2,M,Done,Tests,,
 BL-031,Remove MVP settings endpoint,Chore,P2,S,Done,Api,,
 BL-032,Add SystemLanguage to user settings (UI language),Feature,P1,S,Done,Api/UI,Added SystemLanguage to UserSettings + contracts + UI settings and DB migrations (default Vi).,BL-009

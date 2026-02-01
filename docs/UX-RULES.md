@@ -42,6 +42,7 @@ Mục tiêu của app: người lớn tuổi có thể học đều mỗi ngày 
 ## Audio (MVP)
 
 - Nút “Nghe / Nghe lại” lớn.
+- Có nút “Dừng/Stop” để ngắt đọc ngay.
 - Tốc độ: Chậm / Vừa / Nhanh (theo `AudioSpeed`).
 - Có **SilentMode**: tắt toàn bộ audio trong UI (chỉ học dạng chọn đáp án).
 - Không auto-play trừ khi user bật.
