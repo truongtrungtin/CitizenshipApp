@@ -4,6 +4,12 @@
 
 # Local publish outputs
 publish-api/
+publish/
+publish-ui/
+**/publish/
+**/publish-ui/
+**/release/
+**/debug/
 
 # Local environment files (secrets)
 .env
