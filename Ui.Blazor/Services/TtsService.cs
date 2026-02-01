@@ -18,7 +18,12 @@ public sealed class TtsService
 
     public ValueTask SpeakAsync(string text, LanguageCode language, AudioSpeed speed)
     {
-        string lang = language == LanguageCode.Vi ? "vi-VN" : "en-US";
+        if (language == LanguageCode.Vi)
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        string lang = "en-US";
         double rate = speed switch
         {
             AudioSpeed.Slow => 0.8,
@@ -33,7 +38,12 @@ public sealed class TtsService
     public ValueTask SpeakAsync<T>(string text, LanguageCode language, AudioSpeed speed, DotNetObjectReference<T> dotnetRef)
         where T : class
     {
-        string lang = language == LanguageCode.Vi ? "vi-VN" : "en-US";
+        if (language == LanguageCode.Vi)
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        string lang = "en-US";
         double rate = speed switch
         {
             AudioSpeed.Slow => 0.8,
