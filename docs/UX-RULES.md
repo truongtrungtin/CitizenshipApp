@@ -3,6 +3,7 @@
 Mục tiêu của app: người lớn tuổi có thể học đều mỗi ngày với thao tác tối thiểu, chữ lớn, tương phản cao, và lỗi dễ hiểu.
 
 ## Nguyên tắc cốt lõi
+- **SystemLanguage (UI)** tách riêng với **Language (nội dung câu hỏi)** để người học có thể dùng giao diện tiếng Việt nhưng vẫn luyện câu hỏi tiếng Anh.
 - **Giảm tải nhận thức**: 1 màn hình = 1 hành động chính.
 - **Đọc dễ**: chữ lớn, tương phản cao, ít chữ.
 - **Bấm dễ**: nút lớn, khoảng cách thoáng.
@@ -39,8 +40,10 @@ Mục tiêu của app: người lớn tuổi có thể học đều mỗi ngày 
 - Tiến độ hôm nay: hiển thị đơn giản (đã trả lời, đúng, mục tiêu).
 
 ## Audio (MVP)
+
 - Nút “Nghe / Nghe lại” lớn.
-- Tốc độ: Chậm / Bình thường.
+- Tốc độ: Chậm / Vừa / Nhanh (theo `AudioSpeed`).
+- Có **SilentMode**: tắt toàn bộ audio trong UI (chỉ học dạng chọn đáp án).
 - Không auto-play trừ khi user bật.
 
 ## Error handling (must-have)

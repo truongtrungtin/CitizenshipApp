@@ -1,7 +1,7 @@
 # DECISIONS (Architecture Decision Records)
 
 Project: Citizenship Tutor
-Last updated: 2026-01-16
+Last updated: 2026-02-01
 
 Format cho mỗi ADR:
 - Context
@@ -324,7 +324,7 @@ Consequences:
 - UI Settings/Onboarding mới dùng endpoint `/full`.
 - Có thể deprecate endpoint MVP khi không còn dùng (future cleanup).
 
-Status: Accepted (Implemented)
+Status: Deprecated (see ADR-023)
 Date: 2026-01-18
 
 # Architectural Decisions
@@ -348,3 +348,52 @@ duplicated logic after full settings were introduced.
 
 **Status**: Accepted
 **Date**: 2026-01-19
+
+
+---
+
+## ADR-024: Paging parameters for deck question lists
+
+**Status:** Accepted
+**Date:** 2026-02-01
+
+### Decision
+For endpoints returning potentially large question lists (starting with deck questions), we use query-string paging:
+
+- `page` (1-based)
+- `pageSize` (bounded)
+
+Example:
+- `GET /api/decks/{deckId}/questions?page=1&pageSize=50`
+
+Validation rules:
+- `page >= 1`
+- `1 <= pageSize <= 200`
+
+Ordering rule:
+- Always order by a stable key (`QuestionId`) before applying `Skip/Take` to ensure deterministic paging.
+
+### Rationale
+- Keeps payload sizes predictable.
+- Avoids accidental “load all questions” behavior.
+- Stable ordering prevents duplicates/missing items when paging.
+
+---
+
+## ADR-025: Separate SystemLanguage vs content Language
+
+**Status:** Accepted
+**Date:** 2026-02-01
+
+### Decision
+User settings store two language values:
+
+- `SystemLanguage`: UI/system text language (default `Vi` for the target audience).
+- `Language`: question content language (default `En`).
+
+UI edits both, and the API persists both in `UserSettings`.
+
+### Rationale
+- Elderly learners often want Vietnamese UI, but still practice English questions.
+- Keeps localization logic explicit and avoids overloading a single “language” flag.
+

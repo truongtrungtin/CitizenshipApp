@@ -1,6 +1,6 @@
 # CitizenshipApp – Summary of Changes
 
-> Date: 2026-01-18
+> Date: 2026-02-01
 >
 > This document summarizes all code + config changes made during this refactor/hardening pass. It intentionally **does not include any real secrets** (passwords, JWT keys, etc.).
 
@@ -179,6 +179,42 @@ Files:
 
 ---
 
+
+## 2026-02-01 — Paging, Worker maintenance, SystemLanguage, tests & CI gate
+
+- **API (Decks)**
+  - Added paging for deck questions:
+    - `GET /api/decks/{deckId}/questions?page=1&pageSize=50`
+  - Validates `page >= 1` and `1 <= pageSize <= 200`, and uses deterministic ordering for stable paging.
+
+- **WorkerService**
+  - Added `DbMaintenanceWorker`:
+    - Runs once on startup, then daily
+    - Executes `SeedData.SeedAsync(db)` and provides a safe place for future retention/cleanup jobs.
+
+- **User settings**
+  - Added `SystemLanguage` to `UserSettings` + `UserSettingContracts` and updated UI to edit it.
+  - Added EF Core migrations to backfill/default the new column.
+  - Defaulted SystemLanguage to Vietnamese and question Language to English.
+  - UI language preview + local fallback for SystemLanguage.
+
+- **UI/UX**
+  - Responsive navigation (sidebar on desktop, bottom bar on mobile).
+  - Home page redesign and bilingual UI labels.
+  - Settings/Onboarding labels localized (font sizes, audio speeds, focus).
+  - Study UI: localized question type labels and hid dev/admin-only controls.
+
+- **Testing**
+  - Added unit tests for `JwtTokenService`.
+  - Added/expanded integration tests for:
+    - Auth flow
+    - Study flow
+    - Decks/Questions (including paging)
+
+- **CI**
+  - Added a formatting gate (`dotnet format --verify-no-changes`) and repo hygiene checks (no tracked `bin/obj`, no real `.env`).
+
+---
 ## 2026-01-19 — Architecture Hardening & UX Completion
 
 - Standardized API error handling with ProblemDetails

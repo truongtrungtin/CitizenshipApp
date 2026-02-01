@@ -2,10 +2,9 @@
 
 # 2️⃣ `docs/PROJECT-STATE.md` (FULL FILE)
 
-```md
 # Project State
 
-Last updated: 2026-01-19
+Last updated: 2026-02-01
 
 ---
 
@@ -29,12 +28,16 @@ accessibility, clean architecture, and predictable behavior.
   - `/health/live`
   - `/health/ready`
 - Production CORS is deny-by-default unless explicitly configured
+- Deck browsing endpoints support paging for large question lists:
+  - `GET /api/decks/{deckId}/questions?page=1&pageSize=50`
+  - `page >= 1`, `1 <= pageSize <= 200`
 
 ---
 
 ## UI (Blazor WASM)
 
 ### Pages
+- Home
 - Register
 - Login
 - Logout
@@ -43,9 +46,13 @@ accessibility, clean architecture, and predictable behavior.
 - Study
 
 ### UX Rules
-- Users must complete onboarding before accessing the app
+- Users can access Home without login; onboarding is required before Study/Settings
 - FontScale applies globally via CSS variables
 - Focus is used to suggest a default study deck
+- Language model:
+  - `Language` = question content language
+  - `SystemLanguage` = UI/system text language
+- UI language uses a local fallback (persisted) until full settings load
 - All forms display clear field-level validation errors
 
 ---
@@ -57,35 +64,40 @@ accessibility, clean architecture, and predictable behavior.
 - Study logic optimized for large datasets
 - EF Core migrations manage schema evolution
 - SQL Server via Docker for local/dev
+- WorkerService includes a maintenance job:
+  - Runs at startup + daily
+  - Executes SeedData and provides hooks for future cleanup/retention jobs
 
 ---
 
 ## Testing
 
 - CI pipeline builds and runs tests
+- CI includes a formatting gate:
+  - `dotnet format --verify-no-changes`
+  - Fails if tracked build artifacts (`bin/`, `obj/`) or real `.env` files are committed
+- Unit tests validate:
+  - JWT token generation/claims/validation
 - Integration tests validate:
-  - ValidationProblemDetails for auth
-  - ValidationProblemDetails for full settings
+  - Auth flow (register/login + authorized requests)
+  - Study flow (next-question and answer progression)
+  - Deck/Question endpoints (including paging)
+  - ValidationProblemDetails contracts (auth + full settings)
 
 ---
 
 ## Completed Backlog
 
-BL-001 → BL-018
-BL-024
+BL-001 → BL-025
 BL-027
 BL-028
 BL-030
 BL-031
+BL-032
 
 ---
 
 ## Open / Future Items
 
-- BL-019: Paging for large question lists
-- BL-020: WorkerService background jobs
-- BL-021: JWT unit tests
-- BL-022: Auth flow integration tests
-- BL-023: Study flow integration tests
-- BL-025: CI analyzers / formatting gate
-- BL-029: Audio/TTS integration
+- BL-029: Audio/TTS integration (AudioSpeed/SilentMode)
+```

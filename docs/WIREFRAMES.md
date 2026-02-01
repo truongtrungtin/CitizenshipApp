@@ -18,8 +18,8 @@
 - Title: “Cài đặt ban đầu”
 - Cards/radios:
   1) Ngôn ngữ: VN / EN
-  2) Cỡ chữ: M / L / XL
-  3) Tốc độ audio: Chậm / Bình thường
+  2) Cỡ chữ: Nhỏ / Trung bình / Lớn
+  3) Tốc độ audio: Chậm / Vừa / Nhanh
   4) Mục tiêu mỗi ngày: 15 / 30 / 45 phút
   5) Nội dung ưu tiên: Civics / Reading / Writing
 - Primary: “Bắt đầu học”
