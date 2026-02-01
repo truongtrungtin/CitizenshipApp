@@ -69,7 +69,8 @@ public sealed class MeService(AppDbContext db) : IMeService
         {
             // Why: provide safe defaults if settings row is missing.
             return new UserSettingContracts(
-                language: LanguageCode.Vi,
+                language: LanguageCode.En,
+                systemLanguage: LanguageCode.Vi,
                 fontScale: FontScale.Large,
                 audioSpeed: AudioSpeed.Slow,
                 dailyGoalMinutes: 15,
@@ -80,6 +81,7 @@ public sealed class MeService(AppDbContext db) : IMeService
 
         return new UserSettingContracts(
             language: settings.Language,
+            systemLanguage: settings.SystemLanguage,
             fontScale: settings.FontScale,
             audioSpeed: settings.AudioSpeed,
             dailyGoalMinutes: settings.DailyGoalMinutes,
@@ -118,6 +120,7 @@ public sealed class MeService(AppDbContext db) : IMeService
         }
 
         settings.Language = req.Language;
+        settings.SystemLanguage = req.SystemLanguage;
         settings.FontScale = req.FontScale;
         settings.AudioSpeed = req.AudioSpeed;
         settings.DailyGoalMinutes = req.DailyGoalMinutes;

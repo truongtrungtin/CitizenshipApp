@@ -6,5 +6,6 @@ namespace Domain.Enums;
 public enum AudioSpeed
 {
     Slow = 1,
-    Normal = 2
+    Normal = 2,
+    Fast = 3
 }

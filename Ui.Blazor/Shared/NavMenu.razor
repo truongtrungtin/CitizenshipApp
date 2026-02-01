@@ -1,35 +1,44 @@
 @implements IDisposable
 
+@inject UiText T
+
 <nav class="app-nav" aria-label="Primary">
   <NavLink class="app-nav-link" href="/home">
     <span class="app-nav-icon" aria-hidden="true">🏠</span>
-    <span class="app-nav-label">Home</span>
+    <span class="app-nav-label fw-semibold">@T["Nav.Home"]</span>
   </NavLink>
 
-  @if (AppState.IsAuthenticated)
+  @if (AppState.IsAuthenticated && AppState.IsOnboarded)
   {
     <NavLink class="app-nav-link" href="/study">
       <span class="app-nav-icon" aria-hidden="true">📚</span>
-      <span class="app-nav-label">Study</span>
+      <span class="app-nav-label fw-semibold">@T["Nav.Study"]</span>
     </NavLink>
     <NavLink class="app-nav-link" href="/settings">
       <span class="app-nav-icon" aria-hidden="true">⚙️</span>
-      <span class="app-nav-label">Settings</span>
+      <span class="app-nav-label fw-semibold">@T["Nav.Settings"]</span>
     </NavLink>
     <NavLink class="app-nav-link" href="/logout">
       <span class="app-nav-icon" aria-hidden="true">🚪</span>
-      <span class="app-nav-label">Logout</span>
+      <span class="app-nav-label fw-semibold">@T["Nav.Logout"]</span>
+    </NavLink>
+  }
+  else if (AppState.IsAuthenticated)
+  {
+    <NavLink class="app-nav-link" href="/logout">
+      <span class="app-nav-icon" aria-hidden="true">🚪</span>
+      <span class="app-nav-label fw-semibold">@T["Nav.Logout"]</span>
     </NavLink>
   }
   else
   {
     <NavLink class="app-nav-link" href="/login">
       <span class="app-nav-icon" aria-hidden="true">🔐</span>
-      <span class="app-nav-label">Login</span>
+      <span class="app-nav-label fw-semibold">@T["Nav.Login"]</span>
     </NavLink>
     <NavLink class="app-nav-link" href="/register">
       <span class="app-nav-icon" aria-hidden="true">📝</span>
-      <span class="app-nav-label">Register</span>
+      <span class="app-nav-label fw-semibold">@T["Nav.Register"]</span>
     </NavLink>
   }
 </nav>
@@ -39,6 +48,7 @@
   {
     // Re-render NavMenu whenever auth/onboarding state changes.
     AppState.OnChange += OnAppStateChanged;
+    UserSettings.OnChange += OnAppStateChanged;
   }
 
   private void OnAppStateChanged()
@@ -50,5 +60,6 @@
   public void Dispose()
   {
     AppState.OnChange -= OnAppStateChanged;
+    UserSettings.OnChange -= OnAppStateChanged;
   }
 }

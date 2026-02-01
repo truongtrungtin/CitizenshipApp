@@ -1,28 +1,29 @@
 ﻿@page "/home"
+@implements IDisposable
 
 <section class="mb-4">
-  <h1 class="fw-semibold">CitizenshipApp</h1>
+  <h1 class="fw-semibold">@T["Home.Title"]</h1>
   <p class="text-muted mb-3">
-    Ứng dụng ôn thi quốc tịch Mỹ đơn giản, thân thiện với người lớn tuổi.
+    @T["Home.Tagline"]
   </p>
 
   <div class="row g-3">
     <div class="col-12 col-lg-4">
       <div class="p-3 border rounded h-100">
-        <div class="fw-semibold">Thiết kế ưu tiên người lớn tuổi</div>
-        <div class="text-muted small">Chữ lớn, nút lớn, phản hồi rõ ràng.</div>
+        <div class="fw-semibold">@T["Home.Card.Elderly.Title"]</div>
+        <div class="text-muted small">@T["Home.Card.Elderly.Desc"]</div>
       </div>
     </div>
     <div class="col-12 col-lg-4">
       <div class="p-3 border rounded h-100">
-        <div class="fw-semibold">Luyện song ngữ</div>
-        <div class="text-muted small">Câu hỏi tiếng Anh và tiếng Việt.</div>
+        <div class="fw-semibold">@T["Home.Card.Bilingual.Title"]</div>
+        <div class="text-muted small">@T["Home.Card.Bilingual.Desc"]</div>
       </div>
     </div>
     <div class="col-12 col-lg-4">
       <div class="p-3 border rounded h-100">
-        <div class="fw-semibold">Theo dõi tiến độ mỗi ngày</div>
-        <div class="text-muted small">Thống kê số câu đã làm và đúng.</div>
+        <div class="fw-semibold">@T["Home.Card.Progress.Title"]</div>
+        <div class="text-muted small">@T["Home.Card.Progress.Desc"]</div>
       </div>
     </div>
   </div>
@@ -31,14 +32,32 @@
 @if (AppState.IsAuthenticated)
 {
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-primary" href="/study">Bắt đầu học</a>
-    <a class="btn btn-outline-secondary" href="/settings">Cài đặt</a>
+    <a class="btn btn-primary" href="/study">@T["Home.CTA.Start"]</a>
+    <a class="btn btn-outline-secondary" href="/settings">@T["Home.CTA.Settings"]</a>
   </div>
 }
 else
 {
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-primary" href="/login">Đăng nhập</a>
-    <a class="btn btn-outline-secondary" href="/register">Tạo tài khoản</a>
+    <a class="btn btn-primary" href="/login">@T["Home.CTA.Login"]</a>
+    <a class="btn btn-outline-secondary" href="/register">@T["Home.CTA.Register"]</a>
   </div>
+}
+
+
+@code {
+  protected override void OnInitialized()
+  {
+    UserSettings.OnChange += HandleSettingsChanged;
+  }
+
+  private void HandleSettingsChanged()
+  {
+    _ = InvokeAsync(StateHasChanged);
+  }
+
+  public void Dispose()
+  {
+    UserSettings.OnChange -= HandleSettingsChanged;
+  }
 }

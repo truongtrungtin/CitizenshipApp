@@ -1,6 +1,5 @@
 @page "/login"
-
-<h1>Login</h1>
+<h1>@T["Auth.Login.Title"]</h1>
 
 @if (!string.IsNullOrWhiteSpace(Error))
 {
@@ -8,25 +7,25 @@
 }
 
 <div class="mb-3">
-  <label class="form-label">Username (email / phone)</label>
+  <label class="form-label">@T["Auth.Username.Label"]</label>
   <input class="form-control" @bind="Username" disabled="@Busy" />
-  @if (GetFieldError("Email") is string emailErr)
+  @if (GetFieldError("Email") is { } emailErr)
   {
     <div class="text-danger small mt-1">@emailErr</div>
   }
 </div>
 
 <div class="mb-3">
-  <label class="form-label">Password</label>
+  <label class="form-label">@T["Auth.Password.Label"]</label>
   <input class="form-control" type="password" @bind="Password" disabled="@Busy" />
-  @if (GetFieldError("Password") is string passErr)
+  @if (GetFieldError("Password") is { } passErr)
   {
     <div class="text-danger small mt-1">@passErr</div>
   }
 </div>
 
-<button class="btn btn-primary" @onclick="OnLogin" disabled="@Busy">Login</button>
-<button class="btn btn-link" @onclick="GoRegister" disabled="@Busy">Register</button>
+<button class="btn btn-primary" @onclick="OnLogin" disabled="@Busy">@T["Auth.Login.Button"]</button>
+<button class="btn btn-link" @onclick="GoRegister" disabled="@Busy">@T["Auth.GoRegister"]</button>
 
 @code {
   private string Username { get; set; } = "";
@@ -86,7 +85,7 @@
       Nav.NavigateTo(auth.IsOnboarded ? "/home" : "/onboarding", replace: true);
     }
 
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       // Field-level errors (e.g., Email/Password required) come here.
       Error = ex.Detail ?? ex.Title ?? ex.Message;

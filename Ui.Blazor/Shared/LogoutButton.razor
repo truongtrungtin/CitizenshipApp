@@ -1,8 +1,9 @@
 @inject ITokenStore TokenStore
 @inject AuthenticationStateProvider AuthProvider
+@inject UiText T
 
 <button @onclick="LogoutAsync" style="font-size:20px; height:48px; border-radius:12px;">
-  Đăng xuất
+  @T["Nav.Logout"]
 </button>
 
 @code {

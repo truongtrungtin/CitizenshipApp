@@ -1,10 +1,12 @@
 @page "/study"
 @inject StorageInterop Storage
+@inject UiText T
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-  <h3 class="mb-0">Study</h3>
+  <h3 class="mb-0">@T["Study.Title"]</h3>
 
-  <div class="btn-group" role="group" aria-label="Language">
+  <div class="btn-group" role="group" aria-label="@T["Study.Language"]">
     <button type="button" class="btn btn-sm @(_language == LanguageCode.Vi ? "btn-primary" : "btn-outline-primary")"
       @onclick="() => SetLanguage(LanguageCode.Vi)">
       VI
@@ -22,19 +24,19 @@
 @if (!string.IsNullOrWhiteSpace(_generalError))
 {
   <div class="alert alert-danger" role="alert">
-    <strong>Error:</strong> @_generalError
+    <strong>@T["Study.Error"]:</strong> @_generalError
   </div>
 }
 
 <div class="d-flex align-items-center gap-2 flex-wrap">
-  <label class="form-label mb-0"><strong>Deck</strong></label>
+  <label class="form-label mb-0"><strong>@T["Study.Deck"]</strong></label>
   @if (UserSettings.Current is not null)
   {
     var suggestedDeck = GetSuggestedDeck();
 
     <span class="text-muted small">
-      Suggested by Focus: <strong>@UserSettings.Current.Focus</strong>
-      • Suggested deck:
+      @T["Study.Suggested"]: <strong>@UserSettings.Current.Focus</strong>
+      • @T["Study.SuggestedDeck"]:
       @if (suggestedDeck is not null)
       {
         <strong>@suggestedDeck.Name</strong>
@@ -42,7 +44,7 @@
       }
       else
       {
-        <strong>(none)</strong>
+          <strong>@T["Study.None"]</strong>
       }
     </span>
   }
@@ -51,7 +53,7 @@
     disabled="@(_busy || _decks.Count == 0)">
     @if (_decks.Count == 0)
     {
-      <option selected>— No decks —</option>
+      <option selected>@T["Study.NoDecks"]</option>
     }
     else
     {
@@ -64,19 +66,22 @@
     }
   </select>
 
-  @if (GetFieldError("DeckId") is string deckErr)
+  @if (GetFieldError("DeckId") is { } deckErr)
   {
     <div class="text-danger small mt-1">@deckErr</div>
   }
 
-  <button class="btn btn-sm btn-outline-secondary" @onclick="ReloadAllAsync" disabled="@_busy">
-    Reload
-  </button>
+  @if (_isPrivileged)
+  {
+    <button class="btn btn-sm btn-outline-secondary" @onclick="ReloadAllAsync" disabled="@_busy">
+      @T["Study.Reload"]
+    </button>
 
-  <button class="btn btn-sm btn-primary" @onclick="LoadNextQuestionAsync"
-    disabled="@(!_selectedDeckId.HasValue || _busy)">
-    Next
-  </button>
+    <button class="btn btn-sm btn-primary" @onclick="LoadNextQuestionAsync"
+      disabled="@(!_selectedDeckId.HasValue || _busy)">
+      @T["Study.Next"]
+    </button>
+  }
 </div>
 
 @if (_today is not null)
@@ -84,22 +89,22 @@
   <div class="mt-3 p-3 border rounded">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div>
-        <div class="fw-semibold">Today</div>
+        <div class="fw-semibold">@T["Study.Today"]</div>
         <div class="text-muted small">
-          Goal: @_today.DailyGoalMinutes
-          &nbsp;|&nbsp; Answered: @_today.TotalAnswered
-          &nbsp;|&nbsp; Correct: @_today.CorrectAnswered
+          @T["Study.Goal"]: @_today.DailyGoalMinutes
+          &nbsp;|&nbsp; @T["Study.Answered"]: @_today.TotalAnswered
+          &nbsp;|&nbsp; @T["Study.Correct"]: @_today.CorrectAnswered
         </div>
       </div>
 
-      <div class="small text-muted">(UTC day boundary)</div>
+      <div class="small text-muted">@T["Study.UtcNote"]</div>
     </div>
   </div>
 }
 
 @if (_busy && _question is null)
 {
-  <div class="mt-3 alert alert-info">Loading…</div>
+  <div class="mt-3 alert alert-info">@T["Study.Loading"]</div>
 }
 
 @if (_question is not null)
@@ -107,7 +112,7 @@
   <div class="mt-4 p-3 border rounded">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div>
-        <div class="text-muted small">Question type: @_question.Type</div>
+        <div class="text-muted small">@T["Study.QuestionType"]: @GetQuestionTypeLabel(_question.Type)</div>
         <div class="fs-5 fw-semibold">@GetPrompt(_question.Prompt)</div>
 
         @if (_language == LanguageCode.Vi && !string.IsNullOrWhiteSpace(_question.Prompt.ViPhonetic))
@@ -116,7 +121,10 @@
         }
       </div>
 
-      <div class="text-muted small">ID: @_question.Id</div>
+      @if (_isPrivileged)
+      {
+        <div class="text-muted small">ID: @_question.Id</div>
+      }
     </div>
 
     @if (_lastAnswer is not null)
@@ -124,24 +132,24 @@
       <hr />
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <span class="badge @(_lastAnswer.IsCorrect ? "bg-success" : "bg-danger")">
-          @(_lastAnswer.IsCorrect ? "Correct" : "Incorrect")
+          @(_lastAnswer.IsCorrect ? T["Study.CorrectBadge"] : T["Study.IncorrectBadge"])
         </span>
 
-        <div class="small"><strong>Your:</strong> @GetOptionLabel(_lastAnswer.SelectedKey)</div>
-        <div class="small"><strong>Correct:</strong> @GetOptionLabel(_lastAnswer.CorrectKey)</div>
+        <div class="small"><strong>@T["Study.YourAnswer"]:</strong> @GetOptionLabel(_lastAnswer.SelectedKey)</div>
+        <div class="small"><strong>@T["Study.CorrectAnswer"]:</strong> @GetOptionLabel(_lastAnswer.CorrectKey)</div>
       </div>
 
       @if (!string.IsNullOrWhiteSpace(GetExplain(_question.Prompt)))
       {
         <div class="mt-3 alert alert-secondary mb-0">
-          <div class="fw-semibold">Explanation</div>
+          <div class="fw-semibold">@T["Study.Explanation"]</div>
           <div>@GetExplain(_question.Prompt)</div>
         </div>
       }
 
       <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-primary" @onclick="LoadNextQuestionAsync" disabled="@_busy">Continue</button>
-        <button class="btn btn-outline-secondary" @onclick="ClearAnswer">Clear result</button>
+        <button class="btn btn-primary" @onclick="LoadNextQuestionAsync" disabled="@_busy">@T["Study.Continue"]</button>
+        <button class="btn btn-outline-secondary" @onclick="ClearAnswer">@T["Study.ClearResult"]</button>
       </div>
     }
     else
@@ -149,19 +157,19 @@
       <hr />
 
       @* Field errors close to the answer interaction *@
-      @if (GetFieldError("SelectedKey") is string selectedErr)
+      @if (GetFieldError("SelectedKey") is { } selectedErr)
       {
         <div class="text-danger small mb-2">@selectedErr</div>
       }
-      @if (GetFieldError("QuestionId") is string questionErr)
+      @if (GetFieldError("QuestionId") is { } questionErr)
       {
         <div class="text-danger small mb-2">@questionErr</div>
       }
 
-      @if (_question.Options is null || _question.Options.Count == 0)
+      @if (_question.Options.Count == 0)
       {
         <div class="alert alert-warning mb-0">
-          This question has no options yet (free-text not implemented in MVP).
+          @T["Study.NoOptions"]
         </div>
       }
       else
@@ -204,6 +212,7 @@
 
   private LanguageCode _language = LanguageCode.En;
   private bool IsVietnamese => _language == LanguageCode.Vi;
+  private bool _isPrivileged;
 
   private string SelectedDeckIdKey =>
   string.IsNullOrWhiteSpace(AppState.UserId)
@@ -211,7 +220,15 @@
   : $"study.selectedDeckId:{AppState.UserId}";
   protected override async Task OnInitializedAsync()
   {
+    await LoadPrivilegesAsync();
     await ReloadAllAsync();
+  }
+
+  private async Task LoadPrivilegesAsync()
+  {
+    var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    var user = authState.User;
+    _isPrivileged = user.IsInRole("Admin") || user.IsInRole("Dev");
   }
 
   private void SetLanguage(LanguageCode lang)
@@ -310,7 +327,7 @@
       await LoadTodayAsync();
       await LoadNextQuestionAsync();
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _generalError = ex.Detail ?? ex.Title ?? ex.Message;
       _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
@@ -407,7 +424,7 @@
       var res = await Api.GetNextQuestionAsync(_selectedDeckId.Value);
       _question = res.Question;
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _question = null;
       _generalError = ex.Detail ?? ex.Title ?? ex.Message;
@@ -451,7 +468,7 @@
 
       await LoadTodayAsync();
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _generalError = ex.Detail ?? ex.Title ?? ex.Message;
       _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
@@ -469,13 +486,17 @@
   private void ClearAnswer() => _lastAnswer = null;
 
   private string GetPrompt(QuestionText t) =>
-  IsVietnamese ? (t.TextVi ?? t.TextEn ?? "") : (t.TextEn ?? t.TextVi ?? "");
+  IsVietnamese
+    ? (string.IsNullOrWhiteSpace(t.TextVi) ? t.TextEn : t.TextVi)
+    : t.TextEn;
 
   private string GetExplain(QuestionText t) =>
   IsVietnamese ? (t.ExplainVi ?? t.ExplainEn ?? "") : (t.ExplainEn ?? t.ExplainVi ?? "");
 
   private string GetOptionText(AnswerOption o) =>
-  IsVietnamese ? (o.TextVi ?? o.TextEn ?? "") : (o.TextEn ?? o.TextVi ?? "");
+  IsVietnamese
+    ? (string.IsNullOrWhiteSpace(o.TextVi) ? o.TextEn : o.TextVi)
+    : o.TextEn;
 
   private string GetOptionLabel(string key)
   {
@@ -485,6 +506,17 @@
     string.Equals(o.Key, key, StringComparison.OrdinalIgnoreCase));
 
     return opt is null ? key : $"{opt.Key}. {GetOptionText(opt)}";
+  }
+
+  private string GetQuestionTypeLabel(QuestionType type)
+  {
+    return type switch
+    {
+      QuestionType.SingleChoice => T["Study.QuestionType.SingleChoice"],
+      QuestionType.MultiChoice => T["Study.QuestionType.MultiChoice"],
+      QuestionType.Text => T["Study.QuestionType.Text"],
+      _ => T["Study.QuestionType.Unknown"]
+    };
   }
 
   private sealed record AnswerResult(string SelectedKey, string CorrectKey, bool IsCorrect);

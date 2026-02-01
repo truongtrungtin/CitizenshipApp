@@ -19,6 +19,7 @@
   {
     // Listen to auth lifecycle: login / logout / onboarding
     AppState.OnChange += HandleAppStateChanged;
+    UserSettings.OnChange += HandleUserSettingsChanged;
   }
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -43,16 +44,14 @@
     });
   }
 
+  private void HandleUserSettingsChanged()
+  {
+    _ = InvokeAsync(StateHasChanged);
+  }
+
   public void Dispose()
   {
     AppState.OnChange -= HandleAppStateChanged;
+    UserSettings.OnChange -= HandleUserSettingsChanged;
   }
-
-  // Navigation helpers (keep as-is)
-  private void GoHome() => Nav.NavigateTo("/");
-  private void GoLogin() => Nav.NavigateTo("/login");
-  private void GoRegister() => Nav.NavigateTo("/register");
-  private void GoLogout() => Nav.NavigateTo("/logout");
-  private void GoMe() => Nav.NavigateTo("/me");
-  private void GoSettings() => Nav.NavigateTo("/settings");
 }

@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Domain.Entities.Deck;
 using Domain.Entities.Users;
+using Domain.Enums;
 
 using Infrastructure.Identity;
 
@@ -80,6 +81,8 @@ public sealed class AppDbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             b.Property(x => x.DailyGoalMinutes).HasDefaultValue(15);
+            b.Property(x => x.Language).HasDefaultValue(LanguageCode.En);
+            b.Property(x => x.SystemLanguage).HasDefaultValue(LanguageCode.Vi);
             b.Property(x => x.SilentMode).HasDefaultValue(false);
             b.Property(x => x.CreatedUtc).HasDefaultValueSql("SYSUTCDATETIME()");
             b.Property(x => x.UpdatedUtc).HasDefaultValueSql("SYSUTCDATETIME()");

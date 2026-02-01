@@ -1,6 +1,5 @@
 @page "/onboarding"
-
-<h1>Onboarding</h1>
+<h1>@T["Onboarding.Title"]</h1>
 
 @if (!string.IsNullOrWhiteSpace(_error))
 {
@@ -9,14 +8,14 @@
 
 @if (_loading)
 {
-  <div class="alert alert-info mt-3">Loading…</div>
+  <div class="alert alert-info mt-3">@T["Onboarding.Loading"]</div>
 }
 else
 {
   <div class="mt-3">
 
     <div class="mb-3">
-      <label class="form-label fw-semibold">Language</label>
+      <label class="form-label fw-semibold">@T["Settings.Language"]</label>
       <div class="btn-group" role="group">
         <button class="btn @(_settings.Language == LanguageCode.Vi ? "btn-primary" : "btn-outline-primary")"
           @onclick="() => _settings = _settings with { Language = LanguageCode.Vi }" disabled="@_saving">
@@ -27,48 +26,52 @@ else
           English
         </button>
       </div>
-      @if (GetFieldError("Language") is string e1)
+      @if (GetFieldError("Language") is { } e1)
       {
         <div class="text-danger small mt-1">@e1</div>
       }
     </div>
 
     <div class="mb-3">
-      <label class="form-label fw-semibold">Font size</label>
+      <label class="form-label fw-semibold">@T["Onboarding.Font"]</label>
       <div class="btn-group" role="group">
         <button class="btn @(_settings.FontScale == FontScale.Medium ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => SetFontScaleAsync(FontScale.Medium)" disabled="@_saving">Medium</button>
+          @onclick="() => SetFontScaleAsync(FontScale.Medium)" disabled="@_saving">@T["Font.Small"]</button>
 
         <button class="btn @(_settings.FontScale == FontScale.Large ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => SetFontScaleAsync(FontScale.Large)" disabled="@_saving">Large</button>
+          @onclick="() => SetFontScaleAsync(FontScale.Large)" disabled="@_saving">@T["Font.Medium"]</button>
 
         <button class="btn @(_settings.FontScale == FontScale.XLarge ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => SetFontScaleAsync(FontScale.XLarge)" disabled="@_saving">XLarge</button>
+          @onclick="() => SetFontScaleAsync(FontScale.XLarge)" disabled="@_saving">@T["Font.Large"]</button>
       </div>
-      @if (GetFieldError("FontScale") is string e2)
+      @if (GetFieldError("FontScale") is { } e2)
       {
         <div class="text-danger small mt-1">@e2</div>
       }
     </div>
 
     <div class="mb-3">
-      <label class="form-label fw-semibold">Audio speed</label>
+      <label class="form-label fw-semibold">@T["Onboarding.Audio"]</label>
       <div class="btn-group" role="group">
         <button class="btn @(_settings.AudioSpeed == AudioSpeed.Slow ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { AudioSpeed = AudioSpeed.Slow }" disabled="@_saving">Slow</button>
+          @onclick="() => _settings = _settings with { AudioSpeed = AudioSpeed.Slow }" disabled="@_saving">@T["Audio.Slow"]</button>
 
         <button class="btn @(_settings.AudioSpeed == AudioSpeed.Normal ? "btn-primary" : "btn-outline-primary")"
           @onclick="() => _settings = _settings with { AudioSpeed = AudioSpeed.Normal }"
-          disabled="@_saving">Normal</button>
+          disabled="@_saving">@T["Audio.Medium"]</button>
+
+        <button class="btn @(_settings.AudioSpeed == AudioSpeed.Fast ? "btn-primary" : "btn-outline-primary")"
+          @onclick="() => _settings = _settings with { AudioSpeed = AudioSpeed.Fast }"
+          disabled="@_saving">@T["Audio.Fast"]</button>
       </div>
-      @if (GetFieldError("AudioSpeed") is string e3)
+      @if (GetFieldError("AudioSpeed") is { } e3)
       {
         <div class="text-danger small mt-1">@e3</div>
       }
     </div>
 
     <div class="mb-3">
-      <label class="form-label fw-semibold">Daily goal</label>
+      <label class="form-label fw-semibold">@T["Onboarding.DailyGoal"]</label>
       <div class="btn-group" role="group">
         <button class="btn @(_settings.DailyGoalMinutes == 15 ? "btn-primary" : "btn-outline-primary")"
           @onclick="() => _settings = _settings with { DailyGoalMinutes = 15 }" disabled="@_saving">15 min</button>
@@ -79,25 +82,25 @@ else
         <button class="btn @(_settings.DailyGoalMinutes == 45 ? "btn-primary" : "btn-outline-primary")"
           @onclick="() => _settings = _settings with { DailyGoalMinutes = 45 }" disabled="@_saving">45 min</button>
       </div>
-      @if (GetFieldError("DailyGoalMinutes") is string e4)
+      @if (GetFieldError("DailyGoalMinutes") is { } e4)
       {
         <div class="text-danger small mt-1">@e4</div>
       }
     </div>
 
     <div class="mb-3">
-      <label class="form-label fw-semibold">Focus</label>
+      <label class="form-label fw-semibold">@T["Onboarding.Focus"]</label>
       <div class="btn-group" role="group">
         <button class="btn @(_settings.Focus == StudyFocus.Civics ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { Focus = StudyFocus.Civics }" disabled="@_saving">Civics</button>
+          @onclick="() => _settings = _settings with { Focus = StudyFocus.Civics }" disabled="@_saving">@T["Focus.Civics"]</button>
 
         <button class="btn @(_settings.Focus == StudyFocus.Reading ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { Focus = StudyFocus.Reading }" disabled="@_saving">Reading</button>
+          @onclick="() => _settings = _settings with { Focus = StudyFocus.Reading }" disabled="@_saving">@T["Focus.Reading"]</button>
 
         <button class="btn @(_settings.Focus == StudyFocus.Writing ? "btn-primary" : "btn-outline-primary")"
-          @onclick="() => _settings = _settings with { Focus = StudyFocus.Writing }" disabled="@_saving">Writing</button>
+          @onclick="() => _settings = _settings with { Focus = StudyFocus.Writing }" disabled="@_saving">@T["Focus.Writing"]</button>
       </div>
-      @if (GetFieldError("Focus") is string e5)
+      @if (GetFieldError("Focus") is { } e5)
       {
         <div class="text-danger small mt-1">@e5</div>
       }
@@ -106,15 +109,15 @@ else
     <div class="form-check mb-4">
       <input class="form-check-input" type="checkbox" id="silent" checked="@_settings.SilentMode"
         @onchange="OnSilentChanged" disabled="@_saving" />
-      <label class="form-check-label" for="silent">Silent mode</label>
-      @if (GetFieldError("SilentMode") is string e6)
+      <label class="form-check-label" for="silent">@T["Onboarding.Silent"]</label>
+      @if (GetFieldError("SilentMode") is { } e6)
       {
         <div class="text-danger small mt-1">@e6</div>
       }
     </div>
 
     <button class="btn btn-primary" @onclick="SaveAndContinueAsync" disabled="@_saving">
-      Start studying
+      @T["Onboarding.Start"]
     </button>
   </div>
 }
@@ -128,6 +131,7 @@ else
 
   private UserSettingContracts _settings = new(
   LanguageCode.En,
+  LanguageCode.Vi,
   FontScale.Medium,
   AudioSpeed.Normal,
   15,
@@ -151,7 +155,7 @@ else
       _settings = await Api.GetMeSettingsFullAsync();
       await UserSettings.ApplyAsync(_settings);
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _error = ex.Detail ?? ex.Title ?? ex.Message;
       _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
@@ -218,7 +222,7 @@ else
       // 4) Go home
       Nav.NavigateTo("/home", replace: true);
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _error = ex.Detail ?? ex.Title ?? ex.Message;
       _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);

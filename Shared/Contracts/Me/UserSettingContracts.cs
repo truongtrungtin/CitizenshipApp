@@ -13,7 +13,10 @@ namespace Shared.Contracts.Me;
 public sealed record UserSettingContracts
 {
     [EnumDataType(typeof(LanguageCode))]
-    public LanguageCode Language { get; set; } = LanguageCode.Vi;
+    public LanguageCode Language { get; set; } = LanguageCode.En;
+
+    [EnumDataType(typeof(LanguageCode))]
+    public LanguageCode SystemLanguage { get; set; } = LanguageCode.Vi;
 
     [EnumDataType(typeof(FontScale))]
     public FontScale FontScale { get; set; } = FontScale.Large;
@@ -34,6 +37,7 @@ public sealed record UserSettingContracts
 
     public UserSettingContracts(
         LanguageCode language,
+        LanguageCode systemLanguage,
         FontScale fontScale,
         AudioSpeed audioSpeed,
         int dailyGoalMinutes,
@@ -41,6 +45,7 @@ public sealed record UserSettingContracts
         bool silentMode)
     {
         Language = language;
+        SystemLanguage = systemLanguage;
         FontScale = fontScale;
         AudioSpeed = audioSpeed;
         DailyGoalMinutes = dailyGoalMinutes;

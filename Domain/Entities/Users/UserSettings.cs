@@ -22,9 +22,14 @@ public sealed class UserSettings
     public Guid UserId { get; set; }
 
     /// <summary>
-    ///     Ngôn ngữ UI.
+    ///     Ngôn ngữ câu hỏi.
     /// </summary>
-    public LanguageCode Language { get; set; } = LanguageCode.Vi;
+    public LanguageCode Language { get; set; } = LanguageCode.En;
+
+    /// <summary>
+    ///     Ngôn ngữ hệ thống (UI text).
+    /// </summary>
+    public LanguageCode SystemLanguage { get; set; } = LanguageCode.Vi;
 
     /// <summary>
     ///     Cỡ chữ UI.

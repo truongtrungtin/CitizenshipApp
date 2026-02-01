@@ -1,13 +1,13 @@
 @implements IDisposable
-@using Microsoft.AspNetCore.Components.Routing
+@inject UiText T
 
-<Router AppAssembly="@typeof(Program).Assembly">
+<Router AppAssembly="@typeof(App).Assembly">
   <Found Context="routeData">
     <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
   </Found>
   <NotFound>
     <LayoutView Layout="@typeof(MainLayout)">
-      <p>Page not found.</p>
+      <p>@T["Common.NotFound"]</p>
     </LayoutView>
   </NotFound>
 </Router>
@@ -16,6 +16,14 @@
   // Public pages that do not require authentication.
   // IMPORTANT: "/" is no longer public because Index.razor handles redirect.
   private static readonly HashSet<string> PublicPaths = new(StringComparer.OrdinalIgnoreCase)
+{
+"/home",
+"/login",
+"/register"
+};
+
+  // Pages that should not be accessible once authenticated.
+  private static readonly HashSet<string> AuthForbiddenPaths = new(StringComparer.OrdinalIgnoreCase)
 {
 "/login",
 "/register"
@@ -76,7 +84,7 @@
     }
 
     // 3) Authenticated and onboarded: do not allow going back to login/register
-    if (PublicPaths.Contains(path))
+    if (AuthForbiddenPaths.Contains(path))
     {
       Nav.NavigateTo("/home", replace: true);
     }

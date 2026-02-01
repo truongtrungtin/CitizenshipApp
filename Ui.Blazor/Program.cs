@@ -51,6 +51,7 @@ builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<StorageInterop>();
 builder.Services.AddScoped<UiDomInterop>();
 builder.Services.AddScoped<UserSettingsState>();
+builder.Services.AddScoped<UiText>();
 
 builder.Services.AddTransient<AuthHeaderHandler>();
 

@@ -1,15 +1,14 @@
 @page "/settings"
-
-<h1>Settings</h1>
+<h1>@T["Settings.Title"]</h1>
 
 @if (!AppState.IsAuthenticated)
 {
-  <div class="alert alert-warning">Please login to access settings.</div>
-  <button class="btn btn-primary" @onclick="GoLogin">Go to login</button>
+  <div class="alert alert-warning">@T["Settings.LoginRequired"]</div>
+  <button class="btn btn-primary" @onclick="GoLogin">@T["Settings.GoLogin"]</button>
 }
 else if (_loading)
 {
-  <p>Loading settings...</p>
+  <p>@T["Settings.Loading"]</p>
 }
 else
 {
@@ -24,64 +23,79 @@ else
   }
 
   <div class="mb-3">
-    <label class="form-label fw-semibold">Language</label>
+    <label class="form-label fw-semibold">@T["Settings.Language"]</label>
     <select class="form-select" @bind="_edit.Language" disabled="@_saving">
-      <option value="@LanguageCode.Vi">Vietnamese</option>
-      <option value="@LanguageCode.En">English</option>
+      <option value="@LanguageCode.Vi">@T["Lang.Vi"]</option>
+      <option value="@LanguageCode.En">@T["Lang.En"]</option>
     </select>
 
-    @if (GetFieldError("Language") is string langErr)
+    @if (GetFieldError("Language") is { } langErr)
     {
       <div class="text-danger small mt-1">@langErr</div>
     }
   </div>
 
   <div class="mb-3">
-    <label class="form-label fw-semibold">Font size</label>
-    <select class="form-select" value="@_edit.FontScale" @onchange="OnFontScaleChanged" disabled="@_saving">
-      <option value="@FontScale.Medium">Medium</option>
-      <option value="@FontScale.Large">Large</option>
-      <option value="@FontScale.XLarge">X-Large</option>
+    <label class="form-label fw-semibold">@T["Settings.SystemLanguage"]</label>
+    <select class="form-select" @bind="_edit.SystemLanguage" @bind:after="OnSystemLanguageChanged"
+      disabled="@_saving">
+      <option value="@LanguageCode.Vi">@T["Lang.Vi"]</option>
+      <option value="@LanguageCode.En">@T["Lang.En"]</option>
     </select>
 
-    @if (GetFieldError("FontScale") is string fontErr)
+    @if (GetFieldError("SystemLanguage") is { } sysLangErr)
+    {
+      <div class="text-danger small mt-1">@sysLangErr</div>
+    }
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">@T["Settings.Font"]</label>
+    <select class="form-select" value="@_edit.FontScale" @onchange="OnFontScaleChanged" disabled="@_saving">
+      <option value="@FontScale.Medium">@T["Font.Small"]</option>
+      <option value="@FontScale.Large">@T["Font.Medium"]</option>
+      <option value="@FontScale.XLarge">@T["Font.Large"]</option>
+    </select>
+
+    @if (GetFieldError("FontScale") is { } fontErr)
     {
       <div class="text-danger small mt-1">@fontErr</div>
     }
   </div>
 
   <div class="mb-3">
-    <label class="form-label fw-semibold">Audio speed</label>
+    <label class="form-label fw-semibold">@T["Settings.Audio"]</label>
     <select class="form-select" @bind="_edit.AudioSpeed" disabled="@_saving">
-      <option value="@AudioSpeed.Slow">Slow</option>
-      <option value="@AudioSpeed.Normal">Normal</option>
+      <option value="@AudioSpeed.Slow">@T["Audio.Slow"]</option>
+      <option value="@AudioSpeed.Normal">@T["Audio.Medium"]</option>
+      <option value="@AudioSpeed.Fast">@T["Audio.Fast"]</option>
     </select>
 
-    @if (GetFieldError("AudioSpeed") is string audioErr)
+    @if (GetFieldError("AudioSpeed") is { } audioErr)
     {
       <div class="text-danger small mt-1">@audioErr</div>
     }
   </div>
 
   <div class="mb-3">
-    <label class="form-label fw-semibold">Daily study goal (minutes)</label>
+    <label class="form-label fw-semibold">@T["Settings.DailyGoal"]</label>
     <input class="form-control" type="number" @bind="_edit.DailyGoalMinutes" min="1" max="200" disabled="@_saving" />
 
-    @if (GetFieldError("DailyGoalMinutes") is string goalErr)
+    @if (GetFieldError("DailyGoalMinutes") is { } goalErr)
     {
       <div class="text-danger small mt-1">@goalErr</div>
     }
   </div>
 
   <div class="mb-3">
-    <label class="form-label fw-semibold">Study focus</label>
+    <label class="form-label fw-semibold">@T["Settings.Focus"]</label>
     <select class="form-select" @bind="_edit.Focus" disabled="@_saving">
-      <option value="@StudyFocus.Civics">Civics</option>
-      <option value="@StudyFocus.Reading">Reading</option>
-      <option value="@StudyFocus.Writing">Writing</option>
+      <option value="@StudyFocus.Civics">@T["Focus.Civics"]</option>
+      <option value="@StudyFocus.Reading">@T["Focus.Reading"]</option>
+      <option value="@StudyFocus.Writing">@T["Focus.Writing"]</option>
     </select>
 
-    @if (GetFieldError("Focus") is string focusErr)
+    @if (GetFieldError("Focus") is { } focusErr)
     {
       <div class="text-danger small mt-1">@focusErr</div>
     }
@@ -90,15 +104,15 @@ else
   <div class="form-check mb-4">
     <input class="form-check-input" type="checkbox" id="silentMode" checked="@_edit.SilentMode"
       @onchange="OnSilentChanged" disabled="@_saving" />
-    <label class="form-check-label" for="silentMode">Silent mode</label>
+    <label class="form-check-label" for="silentMode">@T["Settings.Silent"]</label>
 
-    @if (GetFieldError("SilentMode") is string silentErr)
+    @if (GetFieldError("SilentMode") is { } silentErr)
     {
       <div class="text-danger small mt-1">@silentErr</div>
     }
   </div>
 
-  <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">Save</button>
+  <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">@T["Settings.Save"]</button>
 }
 
 @code {
@@ -126,6 +140,12 @@ else
 
     // Preview immediately across the whole app
     await UserSettings.ApplyAsync(_edit);
+  }
+
+  private async Task OnSystemLanguageChanged()
+  {
+    // Preview UI language immediately without saving
+    await UserSettings.PreviewAsync(_edit);
   }
 
   private string? GetFieldError(string field)
@@ -156,11 +176,17 @@ else
 
       _edit = await Api.GetMeSettingsFullAsync();
 
+      // Ensure SystemLanguage is set for older accounts
+      if (_edit.SystemLanguage == default)
+      {
+        _edit = _edit with { SystemLanguage = LanguageCode.Vi };
+      }
+
       await UserSettings.ApplyAsync(_edit);
 
 
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _error = ex.Detail ?? ex.Title ?? ex.Message;
       _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);
@@ -195,9 +221,9 @@ else
       await Api.UpdateMeSettingsFullAsync(_edit);
       await UserSettings.ReloadAsync();
       await UserSettings.ApplyAsync(_edit);
-      _message = "Saved.";
+      _message = T["Settings.Saved"];
     }
-    catch (Ui.Blazor.Services.ApiException ex)
+    catch (ApiException ex)
     {
       _error = ex.Detail ?? ex.Title ?? ex.Message;
       _fieldErrors = new Dictionary<string, string[]>(ex.Errors, StringComparer.OrdinalIgnoreCase);

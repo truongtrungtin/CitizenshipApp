@@ -52,7 +52,8 @@ public sealed class MeControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var payload = await res.Content.ReadFromJsonAsync<UserSettingContracts>();
         Assert.NotNull(payload);
-        Assert.Equal(Domain.Enums.LanguageCode.Vi, payload.Language);
+        Assert.Equal(Domain.Enums.LanguageCode.En, payload.Language);
+        Assert.Equal(Domain.Enums.LanguageCode.Vi, payload.SystemLanguage);
         Assert.Equal(Domain.Enums.FontScale.Large, payload.FontScale);
         Assert.Equal(Domain.Enums.AudioSpeed.Slow, payload.AudioSpeed);
     }
@@ -67,6 +68,7 @@ public sealed class MeControllerTests : IClassFixture<TestWebApplicationFactory>
         var update = new UserSettingContracts
         {
             Language = Domain.Enums.LanguageCode.En,
+            SystemLanguage = Domain.Enums.LanguageCode.En,
             FontScale = Domain.Enums.FontScale.Medium,
             AudioSpeed = Domain.Enums.AudioSpeed.Normal,
             DailyGoalMinutes = 20,
@@ -81,6 +83,7 @@ public sealed class MeControllerTests : IClassFixture<TestWebApplicationFactory>
         var payload = await res.Content.ReadFromJsonAsync<UserSettingContracts>();
         Assert.NotNull(payload);
         Assert.Equal(update.Language, payload.Language);
+        Assert.Equal(update.SystemLanguage, payload.SystemLanguage);
         Assert.Equal(update.FontScale, payload.FontScale);
         Assert.Equal(update.AudioSpeed, payload.AudioSpeed);
         Assert.Equal(update.DailyGoalMinutes, payload.DailyGoalMinutes);

@@ -1,7 +1,9 @@
 @page "/logout"
-<PageTitle>Logout</PageTitle>
+@inject UiText T
 
-<p>Signing out...</p>
+<PageTitle>@T["Nav.Logout"]</PageTitle>
+
+<p>@T["Logout.SigningOut"]</p>
 
 @code {
 
