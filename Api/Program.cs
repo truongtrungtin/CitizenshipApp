@@ -363,7 +363,7 @@ app.UseExceptionHandler(errorApp =>
 
         problem.Extensions["correlationId"] = CorrelationIdMiddleware.TryGet(context);
 
-        if (app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         {
             problem.Detail = ex.Message;
             problem.Extensions["exceptionType"] = ex.GetType().FullName;

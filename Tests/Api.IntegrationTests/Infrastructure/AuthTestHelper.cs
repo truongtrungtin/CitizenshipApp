@@ -109,4 +109,68 @@ public static class AuthTestHelper
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
     }
+
+    public static async Task AuthenticateAsAdminAsync(HttpClient client, IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var jwt = scope.ServiceProvider.GetRequiredService<JwtTokenService>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        await db.Database.EnsureCreatedAsync();
+
+        const string adminRole = "Admin";
+
+        if (!await roleManager.RoleExistsAsync(adminRole))
+        {
+            IdentityResult roleCreate = await roleManager.CreateAsync(new IdentityRole<Guid>(adminRole));
+            roleCreate.Succeeded.Should().BeTrue("admin role should be created successfully");
+        }
+
+        var unique = Guid.NewGuid().ToString("N")[..8];
+        var username = $"admin_{unique}";
+        var email = $"{username}@test.local";
+        var password = "Test123!@#abc";
+
+        var user = new AppUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = email,
+            Email = email
+        };
+
+        IdentityResult create = await userManager.CreateAsync(user, password);
+        create.Succeeded.Should().BeTrue($"user creation failed: {string.Join("; ", create.Errors.Select(e => e.Description))}");
+
+        IdentityResult addRole = await userManager.AddToRoleAsync(user, adminRole);
+        addRole.Succeeded.Should().BeTrue($"adding admin role failed: {string.Join("; ", addRole.Errors.Select(e => e.Description))}");
+
+        DateTime now = DateTime.UtcNow;
+        var profile = new UserProfile
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            IsOnboarded = false,
+            CreatedUtc = now,
+            UpdatedUtc = now
+        };
+
+        var settings = new UserSettings
+        {
+            Id = profile.Id,
+            UserId = user.Id,
+            CreatedUtc = now,
+            UpdatedUtc = now
+        };
+
+        db.UserProfiles.Add(profile);
+        db.UserSettings.Add(settings);
+        await db.SaveChangesAsync();
+
+        IList<string> roles = await userManager.GetRolesAsync(user);
+        string token = jwt.CreateAccessToken(user, roles);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+    }
 }
