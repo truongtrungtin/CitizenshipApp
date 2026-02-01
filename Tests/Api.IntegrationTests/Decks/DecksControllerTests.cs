@@ -10,6 +10,7 @@ using Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shared.Contracts.Deck;
+
 using QuestionContract = Shared.Contracts.Deck.Question;
 
 namespace Api.IntegrationTests.Decks;

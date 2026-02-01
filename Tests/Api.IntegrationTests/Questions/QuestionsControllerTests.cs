@@ -4,13 +4,13 @@ using System.Net.Http.Json;
 using Api.IntegrationTests.Infrastructure;
 
 using Domain.Entities.Deck;
-using DeckQuestion = Domain.Entities.Deck.Question;
 
 using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
+using DeckQuestion = Domain.Entities.Deck.Question;
 using QuestionContract = Shared.Contracts.Deck.Question;
 
 namespace Api.IntegrationTests.Questions;

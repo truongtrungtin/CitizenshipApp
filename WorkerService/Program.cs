@@ -1,5 +1,5 @@
-
 using Infrastructure;
+
 using WorkerService;
 
 HostApplicationBuilder? builder = Host.CreateApplicationBuilder(args);

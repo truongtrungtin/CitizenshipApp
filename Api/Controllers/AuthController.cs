@@ -1,7 +1,7 @@
+using Application.Auth;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-
-using Application.Auth;
 
 using Shared.Contracts.Auth;
 
