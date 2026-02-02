@@ -115,7 +115,7 @@ jobs:
           Seed__E2EUserEmail: e2e_user@example.com
           Seed__E2EUserPassword: ChangeMe123!
         run: |
-          dotnet run --project Api > /tmp/api.log 2>&1 &
+          dotnet run --project Api --no-launch-profile > /tmp/api.log 2>&1 &
 
       - name: Start UI
         shell: bash
@@ -123,7 +123,7 @@ jobs:
           ASPNETCORE_ENVIRONMENT: Development
           ASPNETCORE_URLS: http://localhost:5215
         run: |
-          dotnet run --project Ui.Blazor > /tmp/ui.log 2>&1 &
+          dotnet run --project Ui.Blazor --no-launch-profile > /tmp/ui.log 2>&1 &
 
       - name: Wait for services
         shell: bash
