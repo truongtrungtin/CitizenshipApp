@@ -1,5 +1,5 @@
 @page "/onboarding"
-<h1>@T["Onboarding.Title"]</h1>
+<h1 data-testid="onboarding-title">@T["Onboarding.Title"]</h1>
 
 @if (!string.IsNullOrWhiteSpace(_error))
 {
@@ -116,7 +116,7 @@ else
       }
     </div>
 
-    <button class="btn btn-primary" @onclick="SaveAndContinueAsync" disabled="@_saving">
+    <button class="btn btn-primary" data-testid="onboarding-start" @onclick="SaveAndContinueAsync" disabled="@_saving">
       @T["Onboarding.Start"]
     </button>
   </div>

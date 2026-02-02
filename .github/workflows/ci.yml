@@ -57,3 +57,107 @@ jobs:
 
       - name: Test
         run: dotnet test CitizenshipApp.sln -c Release --no-build
+
+  e2e:
+    needs: build_test
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          SA_PASSWORD: "Your_password123"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "bash -lc 'echo > /dev/tcp/localhost/1433'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+          cache: false
+
+      - name: Restore
+        run: dotnet restore CitizenshipApp.sln
+
+      - name: Build
+        run: dotnet build CitizenshipApp.sln -c Release --no-restore
+
+      - name: Install Playwright browsers
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet build Tests/UiE2E.Playwright/UiE2E.Playwright.csproj -c Release --no-restore
+          if [[ -f Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.sh ]]; then
+            bash Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.sh install --with-deps
+          elif command -v pwsh >/dev/null 2>&1 && [[ -f Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.ps1 ]]; then
+            pwsh Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.ps1 install --with-deps
+          else
+            dotnet Tests/UiE2E.Playwright/bin/Release/net9.0/Microsoft.Playwright.dll install --with-deps
+          fi
+
+      - name: Start API
+        shell: bash
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5294
+          ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=CitizenshipApp_E2E;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+          Jwt__Key: e2e-ci-jwt-key-0123456789-0123456789-0123456789
+          E2E__Enabled: "true"
+          Seed__E2EUserEmail: e2e_user@local
+          Seed__E2EUserPassword: ChangeMe123!
+        run: |
+          dotnet run --project Api > /tmp/api.log 2>&1 &
+
+      - name: Start UI
+        shell: bash
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5215
+        run: |
+          dotnet run --project Ui.Blazor > /tmp/ui.log 2>&1 &
+
+      - name: Wait for services
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5294/health/ready >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://localhost:5294/health/ready >/dev/null
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5215 >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://localhost:5215 >/dev/null
+
+      - name: Run E2E tests
+        env:
+          E2E_BASE_URL: http://localhost:5215
+          E2E_API_BASE_URL: http://localhost:5294
+          E2E_HEADLESS: "true"
+          E2E_RECORD_TRACE: "true"
+        run: dotnet test Tests/UiE2E.Playwright/UiE2E.Playwright.csproj -c Release --no-build
+
+      - name: Upload E2E artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            **/e2e-artifacts/**
+            /tmp/api.log
+            /tmp/ui.log

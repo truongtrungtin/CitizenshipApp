@@ -6,7 +6,7 @@
 @inject TtsService Tts
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-  <h3 class="mb-0">@T["Study.Title"]</h3>
+  <h3 class="mb-0" data-testid="study-title">@T["Study.Title"]</h3>
 
   <div class="btn-group" role="group" aria-label="@T["Study.Language"]">
     <button type="button" class="btn btn-sm @(_language == LanguageCode.Vi ? "btn-primary" : "btn-outline-primary")"
@@ -25,7 +25,7 @@
 
 @if (!string.IsNullOrWhiteSpace(_generalError))
 {
-  <div class="alert alert-danger" role="alert">
+  <div class="alert alert-danger" role="alert" data-testid="study-error">
     <strong>@T["Study.Error"]:</strong> @_generalError
   </div>
 }
@@ -52,7 +52,7 @@
     </span>
   }
 
-  <select class="form-select form-select-sm" style="min-width: 260px" value="@_selectedDeckId" @onchange="OnDeckChanged"
+  <select class="form-select form-select-sm" data-testid="study-deck-select" style="min-width: 260px" value="@_selectedDeckId" @onchange="OnDeckChanged"
     disabled="@(_busy || _decks.Count == 0)">
     @if (_decks.Count == 0)
     {
@@ -93,10 +93,10 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div>
         <div class="fw-semibold">@T["Study.Today"]</div>
-        <div class="text-muted small">
-          @T["Study.Goal"]: @_today.DailyGoalMinutes
-          &nbsp;|&nbsp; @T["Study.Answered"]: @_today.TotalAnswered
-          &nbsp;|&nbsp; @T["Study.Correct"]: @_today.CorrectAnswered
+        <div class="text-muted small" data-testid="study-progress">
+          @T["Study.Goal"]: <span data-testid="study-progress-goal">@_today.DailyGoalMinutes</span>
+          &nbsp;|&nbsp; @T["Study.Answered"]: <span data-testid="study-progress-answered">@_today.TotalAnswered</span>
+          &nbsp;|&nbsp; @T["Study.Correct"]: <span data-testid="study-progress-correct">@_today.CorrectAnswered</span>
         </div>
       </div>
 
@@ -116,7 +116,7 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div>
         <div class="text-muted small">@T["Study.QuestionType"]: @GetQuestionTypeLabel(_question.Type)</div>
-        <div class="fs-5 fw-semibold">@GetPrompt(_question.Prompt)</div>
+        <div class="fs-5 fw-semibold" data-testid="study-question">@GetPrompt(_question.Prompt)</div>
 
         @if (_language == LanguageCode.Vi && !string.IsNullOrWhiteSpace(_question.Prompt.ViPhonetic))
         {
@@ -158,7 +158,7 @@
     {
       <hr />
       <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="badge @(_lastAnswer.IsCorrect ? "bg-success" : "bg-danger")">
+        <span class="badge @(_lastAnswer.IsCorrect ? "bg-success" : "bg-danger")" data-testid="study-result-badge">
           @(_lastAnswer.IsCorrect ? T["Study.CorrectBadge"] : T["Study.IncorrectBadge"])
         </span>
 
@@ -175,7 +175,7 @@
       }
 
       <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-primary" @onclick="LoadNextQuestionAsync" disabled="@_busy">@T["Study.Continue"]</button>
+        <button class="btn btn-primary" data-testid="study-continue" @onclick="LoadNextQuestionAsync" disabled="@_busy">@T["Study.Continue"]</button>
         <button class="btn btn-outline-secondary" @onclick="ClearAnswer">@T["Study.ClearResult"]</button>
       </div>
     }
@@ -205,7 +205,7 @@
           @foreach (var opt in _question.Options)
           {
             <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-outline-primary text-start flex-grow-1" disabled="@_busy"
+              <button class="btn btn-outline-primary text-start flex-grow-1" data-testid="study-answer-@opt.Key" disabled="@_busy"
                 @onclick="() => SubmitAnswerAsync(opt.Key)">
                 <strong>@opt.Key</strong>. @GetOptionText(opt)
               </button>

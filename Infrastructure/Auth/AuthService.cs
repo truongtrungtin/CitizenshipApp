@@ -7,6 +7,8 @@ using Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Shared.Contracts.Auth;
 
@@ -24,7 +26,9 @@ public sealed class AuthService(
     UserManager<AppUser> userManager,
     SignInManager<AppUser> signInManager,
     JwtTokenService jwt,
-    AppDbContext db)
+    AppDbContext db,
+    ILogger<AuthService> logger,
+    IHostEnvironment env)
     : IAuthService
 {
     public async Task<AuthResult> RegisterAsync(RegisterRequest req, CancellationToken ct)
@@ -46,8 +50,6 @@ public sealed class AuthService(
             PhoneNumber = normalized.Contains('@') ? null : normalized
         };
 
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
-
         try
         {
             // 1) Create identity user
@@ -55,7 +57,6 @@ public sealed class AuthService(
             if (!create.Succeeded)
             {
                 string msg = string.Join(" ", create.Errors.Select(e => e.Description));
-                await tx.RollbackAsync(ct);
                 return AuthResult.Fail(AuthFailureReason.BadRequest, msg);
             }
 
@@ -86,8 +87,6 @@ public sealed class AuthService(
             IList<string> roles = await userManager.GetRolesAsync(user);
             string token = jwt.CreateAccessToken(user, roles);
 
-            await tx.CommitAsync(ct);
-
             return AuthResult.Success(new AuthResponse
             {
                 AccessToken = token,
@@ -95,8 +94,10 @@ public sealed class AuthService(
                 IsOnboarded = false
             });
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Register failed for {User}.", normalized);
+
             // Best-effort cleanup if identity user was created but related rows failed.
             try
             {
@@ -111,7 +112,11 @@ public sealed class AuthService(
                 // Avoid masking the root exception.
             }
 
-            return AuthResult.Fail(AuthFailureReason.Failure, "Register failed. Please try again.");
+            string msg = env.IsDevelopment()
+                ? ex.GetBaseException().Message
+                : "Register failed. Please try again.";
+
+            return AuthResult.Fail(AuthFailureReason.Failure, msg);
         }
     }
 

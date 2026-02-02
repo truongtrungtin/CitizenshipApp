@@ -1,6 +1,6 @@
 @page "/settings"
 @inject TtsService Tts
-<h1>@T["Settings.Title"]</h1>
+<h1 data-testid="settings-title">@T["Settings.Title"]</h1>
 
 @if (!AppState.IsAuthenticated)
 {
@@ -15,17 +15,17 @@ else
 {
   @if (!string.IsNullOrWhiteSpace(_message))
   {
-    <div class="alert alert-info mt-3">@_message</div>
+    <div class="alert alert-info mt-3" data-testid="settings-message">@_message</div>
   }
 
   @if (!string.IsNullOrWhiteSpace(_error))
   {
-    <div class="alert alert-danger mt-3">@_error</div>
+    <div class="alert alert-danger mt-3" data-testid="settings-error">@_error</div>
   }
 
   <div class="mb-3">
     <label class="form-label fw-semibold">@T["Settings.Language"]</label>
-    <select class="form-select" @bind="_edit.Language" disabled="@_saving">
+    <select class="form-select" data-testid="settings-language" @bind="_edit.Language" disabled="@_saving">
       <option value="@LanguageCode.Vi">@T["Lang.Vi"]</option>
       <option value="@LanguageCode.En">@T["Lang.En"]</option>
     </select>
@@ -38,7 +38,7 @@ else
 
   <div class="mb-3">
     <label class="form-label fw-semibold">@T["Settings.SystemLanguage"]</label>
-    <select class="form-select" @bind="_edit.SystemLanguage" @bind:after="OnSystemLanguageChanged"
+    <select class="form-select" data-testid="settings-system-language" @bind="_edit.SystemLanguage" @bind:after="OnSystemLanguageChanged"
       disabled="@_saving">
       <option value="@LanguageCode.Vi">@T["Lang.Vi"]</option>
       <option value="@LanguageCode.En">@T["Lang.En"]</option>
@@ -52,7 +52,7 @@ else
 
   <div class="mb-3">
     <label class="form-label fw-semibold">@T["Settings.Font"]</label>
-    <select class="form-select" value="@_edit.FontScale" @onchange="OnFontScaleChanged" disabled="@_saving">
+    <select class="form-select" data-testid="settings-font-scale" value="@_edit.FontScale" @onchange="OnFontScaleChanged" disabled="@_saving">
       <option value="@FontScale.Medium">@T["Font.Small"]</option>
       <option value="@FontScale.Large">@T["Font.Medium"]</option>
       <option value="@FontScale.XLarge">@T["Font.Large"]</option>
@@ -66,7 +66,7 @@ else
 
   <div class="mb-3">
     <label class="form-label fw-semibold">@T["Settings.Audio"]</label>
-    <select class="form-select" @bind="_edit.AudioSpeed" disabled="@_saving">
+    <select class="form-select" data-testid="settings-audio-speed" @bind="_edit.AudioSpeed" disabled="@_saving">
       <option value="@AudioSpeed.Slow">@T["Audio.Slow"]</option>
       <option value="@AudioSpeed.Normal">@T["Audio.Medium"]</option>
       <option value="@AudioSpeed.Fast">@T["Audio.Fast"]</option>
@@ -80,7 +80,7 @@ else
 
   <div class="mb-3">
     <label class="form-label fw-semibold">@T["Settings.Voice"]</label>
-    <select class="form-select" @bind="_edit.Voice" disabled="@_saving || _voices.Count == 0">
+    <select class="form-select" data-testid="settings-voice" @bind="_edit.Voice" disabled="@_saving || _voices.Count == 0">
       <option value="">@T["Voice.Default"]</option>
       @foreach (var voice in _voices)
       {
@@ -124,7 +124,7 @@ else
     }
   </div>
 
-  <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">@T["Settings.Save"]</button>
+  <button class="btn btn-primary" data-testid="settings-save" @onclick="SaveAsync" disabled="@_saving">@T["Settings.Save"]</button>
 }
 
 @code {

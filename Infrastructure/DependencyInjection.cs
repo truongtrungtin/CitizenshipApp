@@ -1,12 +1,14 @@
 using Application.AppSettings;
 using Application.Auth;
 using Application.Decks;
+using Application.E2E;
 using Application.Me;
 using Application.Study;
 
 using Infrastructure.AppSettings;
 using Infrastructure.Auth;
 using Infrastructure.Decks;
+using Infrastructure.E2E;
 using Infrastructure.Identity;
 using Infrastructure.Me;
 using Infrastructure.Persistence;
@@ -79,6 +81,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IMeService, MeService>();
         services.AddScoped<IAppSettingsService, AppSettingsService>();
+        services.AddScoped<IE2ESeedService, E2ESeedService>();
         return services;
     }
 }

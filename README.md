@@ -113,3 +113,30 @@ All project documentation lives in `/docs`:
 docker compose up -d
 dotnet run --project Api
 dotnet run --project Ui.Blazor
+```
+
+### E2E UI Tests (Playwright)
+
+Prerequisites:
+- API + UI running (see Local Config for ports)
+- SQL Server up (Docker or local)
+
+Defaults:
+- UI: http://localhost:5215
+- API: http://localhost:5294
+
+Run (one command):
+```bash
+./scripts/run-e2e.sh
+```
+
+Useful env vars:
+- E2E_BASE_URL (default http://localhost:5215)
+- E2E_API_BASE_URL (default http://localhost:5294)
+- E2E_HEADLESS (true/false, default true)
+- E2E_RECORD_VIDEO (true/false)
+- E2E_RECORD_TRACE (true/false, default true)
+
+Dev-only seed endpoint (used by tests):
+- POST /api/e2e/seed (enabled in Development or when E2E:Enabled=true)
+- Seed credentials can be overridden via Seed:E2EUserEmail / Seed:E2EUserPassword
