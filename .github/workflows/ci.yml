@@ -111,7 +111,7 @@ jobs:
           ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=CitizenshipApp_E2E;User Id=sa;Password=Your_password123;TrustServerCertificate=True
           Jwt__Key: e2e-ci-jwt-key-0123456789-0123456789-0123456789
           E2E__Enabled: "true"
-          Seed__E2EUserEmail: e2e_user@local
+          Seed__E2EUserEmail: e2e_user@example.com
           Seed__E2EUserPassword: ChangeMe123!
         run: |
           dotnet run --project Api > /tmp/api.log 2>&1 &
@@ -158,6 +158,20 @@ jobs:
             cat /tmp/ui.log || true
             exit 1
           fi
+
+      - name: Prime E2E seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in {1..10}; do
+            if curl -fsS -X POST http://localhost:5294/api/e2e/seed -H "Content-Type: application/json" -d '{}' >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "E2E seed failed. API logs:" >&2
+          cat /tmp/api.log || true
+          exit 1
 
       - name: Run E2E tests
         env:
