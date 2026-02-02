@@ -1,6 +1,6 @@
 # CitizenshipApp – Summary of Changes
 
-> Date: 2026-02-01
+> Date: 2026-02-02
 >
 > This document summarizes all code + config changes made during this refactor/hardening pass. It intentionally **does not include any real secrets** (passwords, JWT keys, etc.).
 
@@ -178,6 +178,13 @@ Files:
 # Changes Summary
 
 ---
+
+## 2026-02-02 — Voice migration hotfix + encoding cleanup
+
+- **EF Core migrations**
+  - Added a hotfix migration to ensure `UserSettings.Voice` column exists even if an earlier migration was applied empty.
+  - Removed stray UTF-8 BOM in migration files to satisfy `dotnet format` encoding checks.
+
 
 
 ## 2026-02-01 — Paging, Worker maintenance, SystemLanguage, tests & CI gate

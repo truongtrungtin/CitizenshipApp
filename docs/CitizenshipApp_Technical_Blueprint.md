@@ -130,4 +130,7 @@ CI (`.github/workflows/ci.yml`):
 ## 9) Remaining roadmap (high-level)
 
 Open item:
-- BL-029: Audio/TTS integration (implement actual playback/tts in UI and any server support if needed)
+- (none)
+
+Completed:
+- BL-029: Audio/TTS integration (implemented in UI with Web Speech API + voice setting)
