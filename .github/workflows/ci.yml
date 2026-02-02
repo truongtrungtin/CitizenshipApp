@@ -56,7 +56,7 @@ jobs:
         run: dotnet build CitizenshipApp.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test CitizenshipApp.sln -c Release --no-build
+        run: dotnet test CitizenshipApp.sln -c Release --no-build --filter "TestCategory!=E2E"
 
   e2e:
     needs: build_test

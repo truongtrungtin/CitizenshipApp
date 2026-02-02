@@ -8,6 +8,7 @@ using static Microsoft.Playwright.Assertions;
 
 namespace UiE2E.Playwright.Tests;
 
+[Category("E2E")]
 public sealed class AuthOnboardingTests : E2EPageTest
 {
     [Test]
