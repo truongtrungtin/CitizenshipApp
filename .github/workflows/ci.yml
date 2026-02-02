@@ -107,7 +107,7 @@ jobs:
         shell: bash
         env:
           ASPNETCORE_ENVIRONMENT: Development
-          ASPNETCORE_URLS: http://localhost:5294
+          ASPNETCORE_URLS: http://0.0.0.0:5294
           ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=CitizenshipApp_E2E;User Id=sa;Password=Your_password123;TrustServerCertificate=True
           Jwt__Key: e2e-ci-jwt-key-0123456789-0123456789-0123456789
           E2E__Enabled: "true"
@@ -129,12 +129,23 @@ jobs:
         run: |
           set -euo pipefail
           for i in {1..30}; do
+            if bash -lc 'echo > /dev/tcp/localhost/1433' 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          for i in {1..30}; do
             if curl -fsS http://localhost:5294/health/ready >/dev/null; then
               break
             fi
             sleep 2
           done
-          curl -fsS http://localhost:5294/health/ready >/dev/null
+          if ! curl -fsS http://localhost:5294/health/ready >/dev/null; then
+            echo "API failed to become ready. Logs:" >&2
+            cat /tmp/api.log || true
+            exit 1
+          fi
 
           for i in {1..30}; do
             if curl -fsS http://localhost:5215 >/dev/null; then
@@ -142,7 +153,11 @@ jobs:
             fi
             sleep 2
           done
-          curl -fsS http://localhost:5215 >/dev/null
+          if ! curl -fsS http://localhost:5215 >/dev/null; then
+            echo "UI failed to become ready. Logs:" >&2
+            cat /tmp/ui.log || true
+            exit 1
+          fi
 
       - name: Run E2E tests
         env:
