@@ -1,7 +1,7 @@
 # CitizenshipApp – Technical Blueprint (Developer-Follow)
 
 > **Note:** The PDF blueprint `docs/CitizenshipApp_Technical_Blueprint.pdf` is a snapshot around **2026-01-19**.
-> This Markdown file is the **living blueprint** updated to match the current repo state (**2026-02-01**).
+> This Markdown file is the **living blueprint** updated to match the current repo state (**2026-02-02**).
 
 ---
 
@@ -125,13 +125,18 @@ CI (`.github/workflows/ci.yml`):
 - repo hygiene checks (no tracked `bin/obj`, no real `.env`)
 - `dotnet format --verify-no-changes`
 - build + test on ubuntu-latest
+- E2E job (Playwright) with:
+  - `/api/e2e/seed` to create stable test data
+  - artifacts (screenshots/traces/logs) uploaded on failure
+  - readiness checks require HTTP 200 (avoid “ready” on 3xx redirect)
 
 ---
 
 ## 9) Remaining roadmap (high-level)
 
 Open item:
-- (none)
+- BL-036: E2E stability hardening
 
 Completed:
 - BL-029: Audio/TTS integration (implemented in UI with Web Speech API + voice setting)
+- BL-035: E2E UI tests with Playwright

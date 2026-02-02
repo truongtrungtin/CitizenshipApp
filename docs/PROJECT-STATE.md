@@ -90,16 +90,19 @@ accessibility, clean architecture, and predictable behavior.
 
 ## Completed Backlog
 
-BL-001 → BL-025
+BL-001 → BL-026
 BL-027
 BL-028
+BL-029
 BL-030
 BL-031
 BL-032
+BL-033
+BL-035
 
 ---
 
 ## Open / Future Items
 
-- (none)
+- BL-036
 ```

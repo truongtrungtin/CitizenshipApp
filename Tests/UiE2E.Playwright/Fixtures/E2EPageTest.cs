@@ -37,7 +37,7 @@ public abstract class E2EPageTest
         Context = await Browser.NewContextAsync(new BrowserNewContextOptions
         {
             BaseURL = Config.BaseUrl,
-            IgnoreHTTPSErrors = true,
+            IgnoreHTTPSErrors = Config.IgnoreHttpsErrors,
             RecordVideoDir = Config.RecordVideo ? EnsureDir("videos") : null
         });
 
@@ -100,7 +100,7 @@ public abstract class E2EPageTest
         var apiContext = await Playwright.APIRequest.NewContextAsync(new APIRequestNewContextOptions
         {
             BaseURL = Config.ApiBaseUrl,
-            IgnoreHTTPSErrors = true
+            IgnoreHTTPSErrors = Config.IgnoreHttpsErrors
         });
 
         try

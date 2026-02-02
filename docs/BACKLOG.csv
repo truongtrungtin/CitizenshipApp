@@ -34,3 +34,4 @@ BL-030,Validation integration tests,Test,P2,M,Done,Tests,,
 BL-031,Remove MVP settings endpoint,Chore,P2,S,Done,Api,,
 BL-032,Add SystemLanguage to user settings (UI language),Feature,P1,S,Done,Api/UI,Added SystemLanguage to UserSettings + contracts + UI settings and DB migrations (default Vi).,BL-009
 BL-035,E2E UI tests with Playwright,Test,P1,M,Done,Tests/CI,Added Playwright E2E suite + seed endpoint + CI workflow updates.,BL-013
+BL-036,E2E stability hardening,Chore,P1,S,Todo,CI/Tests,Fix HTTP-only CI redirects and readiness checks; improve E2E diagnostics.,BL-035

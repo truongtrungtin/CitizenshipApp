@@ -22,7 +22,21 @@ public sealed class AuthOnboardingTests : E2EPageTest
         await Page.GetByTestId("register-password").FillAsync(password);
         await Page.GetByTestId("register-submit").ClickAsync();
 
-        await Expect(Page).ToHaveURLAsync(new Regex("/onboarding$"));
+        try
+        {
+            await Expect(Page).ToHaveURLAsync(new Regex("/onboarding$"));
+        }
+        catch
+        {
+            var error = Page.GetByTestId("register-error");
+            if (await error.IsVisibleAsync())
+            {
+                var message = await error.InnerTextAsync();
+                Assert.Fail($"Register failed on {Page.Url}: {message}");
+            }
+
+            throw;
+        }
         await Expect(Page.GetByTestId("onboarding-title")).ToBeVisibleAsync();
 
         var token = await Page.EvaluateAsync<string>("() => localStorage.getItem('auth.accessToken')");

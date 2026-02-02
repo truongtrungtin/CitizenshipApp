@@ -388,10 +388,18 @@ if (swaggerEnabled)
     });
 }
 
-if (app.Environment.IsDevelopment() &&
-    app.Configuration.GetValue("HttpsRedirection:Enabled", true))
+if (app.Environment.IsDevelopment())
 {
-    app.UseHttpsRedirection();
+    // In Development, HTTPS redirection is useful only when the app is actually listening on HTTPS.
+    // In CI we often bind HTTP only (ASPNETCORE_URLS=http://...), and forcing HTTPS redirection
+    // breaks UI/API calls by redirecting to a non-listening HTTPS endpoint.
+    var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? string.Empty;
+
+    // Enable HTTPS redirection only when at least one HTTPS URL is configured.
+    if (urls.Contains("https://", StringComparison.OrdinalIgnoreCase))
+    {
+        app.UseHttpsRedirection();
+    }
 }
 
 app.UseCors(corsPolicyName);
