@@ -1,14 +1,34 @@
 # DECISIONS (Architecture Decision Records)
 
 Project: Citizenship Tutor
-Last updated: 2026-02-01
-
+Last updated: 2026-02-02
 Format cho mỗi ADR:
 - Context
 - Decision
 - Consequences
 - Status
 - Date
+
+---
+
+## ADR-026 — E2E test strategy for UI (Playwright) + seed endpoint
+Context:
+- Cần test end-to-end UI cho các flow chính (auth/onboarding/study/settings).
+- UI là Blazor WASM nên cần browser automation thực sự để kiểm chứng hành vi.
+- Tests cần dữ liệu ổn định và idempotent.
+
+Decision:
+- Dùng Playwright + NUnit cho E2E UI tests.
+- Thêm dev-only seed endpoint `/api/e2e/seed` (bật trong Development hoặc khi `E2E:Enabled=true`) để tạo user/deck tối thiểu.
+- E2E chạy riêng job trong CI; build/test job loại bỏ E2E bằng category filter.
+
+Consequences:
+- CI cần cài Playwright browsers + OS deps.
+- Seed endpoint phải được bảo vệ môi trường, không bật ở Production.
+- E2E có thể chạy ổn định nhờ dữ liệu seed cố định.
+
+Status: Accepted (Implemented)
+Date: 2026-02-02
 
 ---
 
@@ -396,4 +416,40 @@ UI edits both, and the API persists both in `UserSettings`.
 ### Rationale
 - Elderly learners often want Vietnamese UI, but still practice English questions.
 - Keeps localization logic explicit and avoids overloading a single “language” flag.
+
+---
+
+## ADR-027 — Persist TTS voice preference in UserSettings
+Context:
+- Study uses Web Speech API for TTS.
+- Users need a stable voice choice across sessions/devices.
+
+Decision:
+- Store selected voice identifier in `UserSettings.Voice`.
+- Apply the saved voice when speaking; fallback to default voice if unavailable.
+
+Consequences:
+- Settings UI must expose voice selection.
+- Voice list may vary by device/browser, so selection is best-effort.
+
+Status: Accepted (Implemented)
+Date: 2026-02-01
+
+---
+
+## ADR-028 — Hotfix migration to guarantee `UserSettings.Voice`
+Context:
+- Some environments applied an earlier migration that left `UserSettings.Voice` missing.
+- CI enforces strict formatting/encoding checks.
+
+Decision:
+- Add a dedicated hotfix migration to ensure the `Voice` column exists.
+- Remove stray UTF-8 BOM in migration files to satisfy format checks.
+
+Consequences:
+- Schema is consistent across environments, preventing TTS settings errors.
+- Migrations remain clean for `dotnet format` gate.
+
+Status: Accepted (Implemented)
+Date: 2026-02-02
 

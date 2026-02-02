@@ -125,6 +125,10 @@ Defaults:
 - UI: http://localhost:5215
 - API: http://localhost:5294
 
+Notes:
+- In Development, API HTTPS redirection can be disabled for HTTP-only runs via `HttpsRedirection:Enabled=false` (or env `HttpsRedirection__Enabled=false`).
+- Seed credentials must be a valid email format (default uses `e2e_user@example.com`).
+
 Run (one command):
 ```bash
 ./scripts/run-e2e.sh

@@ -29,6 +29,8 @@ BL-027,Global FontScale UI,Feature,P1,S,Done,UI,,
 BL-028,Focus-based deck suggestion,Feature,P1,S,Done,UI,,
 BL-029,AudioSpeed/SilentMode TTS,Feature,P3,M,Done,UI,"Implemented Web Speech API TTS in Study (Listen/Stop + option audio) respecting AudioSpeed and SilentMode.",
 BL-033,Store TTS voice preference,Feature,P3,S,Done,UI,"Added Voice setting for TTS and applied selection to speech output.",BL-029
+BL-034,Voice column hotfix migration,Chore,P3,S,Done,Infrastructure,"Added hotfix migration to ensure UserSettings.Voice exists; cleaned migration encoding.",BL-033
 BL-030,Validation integration tests,Test,P2,M,Done,Tests,,
 BL-031,Remove MVP settings endpoint,Chore,P2,S,Done,Api,,
 BL-032,Add SystemLanguage to user settings (UI language),Feature,P1,S,Done,Api/UI,Added SystemLanguage to UserSettings + contracts + UI settings and DB migrations (default Vi).,BL-009
+BL-035,E2E UI tests with Playwright,Test,P1,M,Done,Tests/CI,Added Playwright E2E suite + seed endpoint + CI workflow updates.,BL-013
