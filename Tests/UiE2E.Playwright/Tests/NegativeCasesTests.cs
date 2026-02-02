@@ -2,10 +2,12 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Microsoft.Playwright;
+
 using NUnit.Framework;
-using static Microsoft.Playwright.Assertions;
 
 using UiE2E.Playwright.Fixtures;
+
+using static Microsoft.Playwright.Assertions;
 
 namespace UiE2E.Playwright.Tests;
 

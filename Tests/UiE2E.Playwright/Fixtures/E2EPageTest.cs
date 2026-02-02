@@ -2,12 +2,13 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Microsoft.Playwright;
-using static Microsoft.Playwright.Assertions;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 
 using Shared.Contracts.E2E;
+
+using static Microsoft.Playwright.Assertions;
 
 namespace UiE2E.Playwright.Fixtures;
 
