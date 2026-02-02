@@ -388,7 +388,8 @@ if (swaggerEnabled)
     });
 }
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() &&
+    app.Configuration.GetValue("HttpsRedirection:Enabled", true))
 {
     app.UseHttpsRedirection();
 }

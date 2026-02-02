@@ -108,6 +108,7 @@ jobs:
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ASPNETCORE_URLS: http://0.0.0.0:5294
+          HttpsRedirection__Enabled: "false"
           ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=CitizenshipApp_E2E;User Id=sa;Password=Your_password123;TrustServerCertificate=True
           Jwt__Key: e2e-ci-jwt-key-0123456789-0123456789-0123456789
           E2E__Enabled: "true"
