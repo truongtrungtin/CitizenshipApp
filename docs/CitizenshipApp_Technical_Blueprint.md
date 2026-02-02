@@ -1,6 +1,6 @@
 # CitizenshipApp – Technical Blueprint (Developer-Follow)
 
-> **Note:** The PDF blueprint `docs/CitizenshipApp_Technical_Blueprint.pdf` is a snapshot around **2026-01-19**.  
+> **Note:** The PDF blueprint `docs/CitizenshipApp_Technical_Blueprint.pdf` is a snapshot around **2026-01-19**.
 > This Markdown file is the **living blueprint** updated to match the current repo state (**2026-02-01**).
 
 ---
@@ -43,6 +43,7 @@ Dependency direction:
 - Infrastructure → Application + Domain + Shared + EF/Identity
 - Api → Application + Infrastructure + Shared (composition only)
 - Ui.Blazor → Shared (contracts) + Api endpoints
+- Shared → Domain (enums)
 
 Controllers are thin:
 - input binding + ModelState validation
