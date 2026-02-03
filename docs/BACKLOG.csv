@@ -35,3 +35,24 @@ BL-031,Remove MVP settings endpoint,Chore,P2,S,Done,Api,,
 BL-032,Add SystemLanguage to user settings (UI language),Feature,P1,S,Done,Api/UI,Added SystemLanguage to UserSettings + contracts + UI settings and DB migrations (default Vi).,BL-009
 BL-035,E2E UI tests with Playwright,Test,P1,M,Done,Tests/CI,Added Playwright E2E suite + seed endpoint + CI workflow updates.,BL-013
 BL-036,E2E stability hardening,Chore,P1,S,Done,CI/Tests,Fix HTTP-only CI redirects and readiness checks; improve E2E diagnostics.,BL-035
+BL-037,Admin import questions (CSV/JSON),Feature,P1,L,Todo,Api,"POST /admin/import/questions. Upsert by TestVersion+QuestionNo; create/update answers/texts; return summary (created/updated/skipped/errors).",BL-002
+BL-038,Admin edit question/answer texts (Swagger),Feature,P1,M,Todo,Api,"PUT /admin/questions/{id}/texts and /admin/answers/{id}/texts for manual fixes; include audit fields (UpdatedBy/UpdatedAt) if needed.",BL-002
+BL-039,Study Sessions domain model + StartSession API,Feature,P1,L,Todo,Domain/Api,"Introduce StudySession + StudySessionItem model. POST /study/sessions/start (mode, deckId, ruleId) returns sessionId and initial state.",BL-009
+BL-040,SRS scheduler + NextQuestion + Grade endpoints,Feature,P1,L,Todo,Domain/Api,"Implement SRS due logic: GET /study/sessions/{id}/next selects DueAt<=now then mixes new; POST /study/sessions/items/{itemId}/grade (again/good) updates UserQuestionState via scheduler.",BL-039
+BL-041,Blazor Learn session UI (session-based),Feature,P1,M,Todo,UI,"Learn screen driven by sessionId/itemId. Show Q + Answer reveal + self-grade buttons + Next; reflect settings (shuffle/explain/phonetic).",BL-040
+BL-042,Quiz MCQ generator + frozen choices per item,Feature,P1,L,Todo,Domain/Api,"Generate 4 choices (1 correct + 3 distractors). Persist SessionChoice for each StudySessionItem so choices remain stable across refresh/retry.",BL-039
+BL-043,Silent lock MCQ-only flow (API + UI),Feature,P1,M,Todo,Api/UI,"POST /study/sessions/{id}/silent-on sets SilentMode=1 ForceMcqOnly=1. UI adds clickable 'Tạm thời tôi không thể nói hoặc nghe' line; switches to MCQ-only.",BL-042
+BL-044,Audio cache file-based (hash + storage + serving),Feature,P2,L,Todo,Infra/Api,"Hash (text+voice+rate+lang) -> AudioAsset. Store mp3 at data/audio/{hash}. Serve with immutable caching headers; optional Range support; cleanup strategy optional.",BL-033
+BL-045,Blazor audio playback controls (use cached audio URLs),Feature,P2,M,Todo,UI,"Add 🔊 playback buttons for question/answer in Learn mode when not silent; request audio URL and play; respect AudioSpeed/Voice settings.",BL-044
+BL-046,Integration tests for sessions/quiz/silent/SRS,Test,P2,L,Todo,Tests,"Add integration tests for: start session, next selection (due vs new), grade updates, MCQ freeze stability, silent lock behavior.",BL-043
+BL-047,Self-host deploy checklist + backup DB/audio,Chore,P2,M,Todo,Docs/Infra,"Document: migrations, run API/UI/Worker, reverse proxy HTTPS, backups for SQL + data/audio folder, restore procedure smoke test.",BL-044
+BL-048,AI generation pipeline (tables + admin + worker + approve),Feature,P3,L,Todo,Api/Worker,"Add AiGenerationJob/Item tables, admin create/list endpoints, worker runner w/ retry, upsert generated phonetic/explain, approve/edit flow (Swagger).",BL-020
+BL-049,Dynamic facts (schema + refresh job + payload resolve),Feature,P3,L,Todo,Api/Worker,"DynamicFact + bindings (FactKey). Worker refresh schedule; API resolves bound answers using user's StateCode; safe fallback when refresh fails.",BL-048
+BL-050,MAUI Blazor Hybrid stub (mobile readiness),Chore,P4,M,Todo,UI,"Create MAUI project stub hosting Blazor; reuse Shared contracts/client; no full UI required yet.",BL-032
+BL-051,Mobile responsive UI improvements,Feature,P4,M,Todo,UI,"Improve layout/navigation for small screens: hamburger menu, responsive grids, touch targets.",BL-050
+BL-052,Mobile offline study mode (local storage sync),Feature,P4,L,Todo,UI/Api,"Cache decks/questions locally; sync answers when online; handle conflicts.",BL-050
+BL-053,Mobile TTS offline support (platform APIs),Feature,P4,L,Todo,UI,"Use platform TTS APIs when offline; fallback to Web Speech API when online.",BL-050
+BL-054,Mobile push notifications (reminders),Feature,P4,M,Todo,UI/Api,"Schedule local notifications for study reminders; allow opt-in/out in settings.",BL-050
+BL-055,Mobile device settings sync (language/voice),Feature,P4,M,Todo,UI/Api,"Sync SystemLanguage and Voice settings with mobile device preferences.",BL-050
+BL-056,Mobile E2E tests (device/emulator),Test,P4,L,Todo,Tests,"Add E2E tests for mobile UI flows using device/emulator; integrate into CI.",BL-050
+

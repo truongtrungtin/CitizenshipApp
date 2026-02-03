@@ -1,6 +1,6 @@
 # CitizenshipApp – Summary of Changes
 
-> Date: 2026-02-02
+> Date: 2026-02-03
 >
 > This document summarizes all code + config changes made during this refactor/hardening pass. It intentionally **does not include any real secrets** (passwords, JWT keys, etc.).
 
@@ -184,6 +184,17 @@ Files:
 - **EF Core migrations**
   - Added a hotfix migration to ensure `UserSettings.Voice` column exists even if an earlier migration was applied empty.
   - Removed stray UTF-8 BOM in migration files to satisfy `dotnet format` encoding checks.
+
+---
+
+## 2026-02-03 — BL-036: E2E stability hardening
+
+- **CI readiness checks**
+  - Require HTTP 200 for API/UI readiness (avoid “ready” on 3xx redirects).
+- **Development HTTPS redirect**
+  - Enable redirection only when an HTTPS binding exists in `ASPNETCORE_URLS`.
+- **E2E diagnostics**
+  - Clearer registration failure messages when onboarding navigation does not occur.
 
 
 

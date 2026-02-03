@@ -1,7 +1,7 @@
 # CitizenshipApp – Technical Blueprint (Developer-Follow)
 
 > **Note:** The PDF blueprint `docs/CitizenshipApp_Technical_Blueprint.pdf` is a snapshot around **2026-01-19**.
-> This Markdown file is the **living blueprint** updated to match the current repo state (**2026-02-02**).
+> This Markdown file is the **living blueprint** updated to match the current repo state (**2026-02-03**).
 
 ---
 
@@ -135,8 +135,16 @@ CI (`.github/workflows/ci.yml`):
 ## 9) Remaining roadmap (high-level)
 
 Open item:
-- BL-036: E2E stability hardening
+- BL-037/038: Admin question import + edit endpoints
+- BL-039/040/042: Study sessions + SRS + MCQ generation
+- BL-041/043: Session-based Learn UI + silent MCQ-only flow
+- BL-044/045: Audio cache + playback controls
+- BL-046: Integration tests for sessions/quiz/silent/SRS
+- BL-047: Self-host deploy checklist + backup guidance
+- BL-048/049: AI generation + dynamic facts pipeline
+- BL-050 → BL-056: Mobile readiness (MAUI stub, responsive UI, offline, TTS, notifications, sync, E2E)
 
 Completed:
 - BL-029: Audio/TTS integration (implemented in UI with Web Speech API + voice setting)
 - BL-035: E2E UI tests with Playwright
+- BL-036: E2E stability hardening

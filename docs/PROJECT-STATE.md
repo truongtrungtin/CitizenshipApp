@@ -4,7 +4,7 @@
 
 # Project State
 
-Last updated: 2026-02-02
+Last updated: 2026-02-03
 
 ---
 
@@ -105,5 +105,31 @@ BL-036
 
 ## Open / Future Items
 
-- (none)
+### P1 (near-term)
+- BL-037: Admin import questions (CSV/JSON)
+- BL-038: Admin edit question/answer texts (Swagger)
+- BL-039: Study sessions domain + start session API
+- BL-040: SRS scheduler + next/grade endpoints
+- BL-041: Blazor Learn session UI (session-based)
+- BL-042: Quiz MCQ generator + frozen choices per item
+- BL-043: Silent lock MCQ-only flow (API + UI)
+
+### P2 (mid-term)
+- BL-044: Audio cache file-based (hash + storage + serving)
+- BL-045: Blazor audio playback controls (cached audio URLs)
+- BL-046: Integration tests for sessions/quiz/silent/SRS
+- BL-047: Self-host deploy checklist + backup DB/audio
+
+### P3 (later)
+- BL-048: AI generation pipeline (admin + worker + approve)
+- BL-049: Dynamic facts (schema + refresh job)
+
+### P4 (mobile readiness)
+- BL-050: MAUI Blazor Hybrid stub
+- BL-051: Mobile responsive UI improvements
+- BL-052: Mobile offline study mode (local storage sync)
+- BL-053: Mobile TTS offline support (platform APIs)
+- BL-054: Mobile push notifications (reminders)
+- BL-055: Mobile device settings sync (language/voice)
+- BL-056: Mobile E2E tests (device/emulator)
 ```

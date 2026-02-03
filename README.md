@@ -126,7 +126,8 @@ Defaults:
 - API: http://localhost:5294
 
 Notes:
-- In Development, API HTTPS redirection can be disabled for HTTP-only runs via `HttpsRedirection:Enabled=false` (or env `HttpsRedirection__Enabled=false`).
+- In Development, HTTPS redirection is enabled only when `ASPNETCORE_URLS` includes an `https://` binding.
+- For HTTP-only runs, set `ASPNETCORE_URLS=http://localhost:5294` (API) and `ASPNETCORE_URLS=http://localhost:5215` (UI).
 - Seed credentials must be a valid email format (default uses `e2e_user@example.com`).
 
 Run (one command):
@@ -138,6 +139,7 @@ Useful env vars:
 - E2E_BASE_URL (default http://localhost:5215)
 - E2E_API_BASE_URL (default http://localhost:5294)
 - E2E_HEADLESS (true/false, default true)
+- E2E_IGNORE_HTTPS_ERRORS (true/false, default true)
 - E2E_RECORD_VIDEO (true/false)
 - E2E_RECORD_TRACE (true/false, default true)
 

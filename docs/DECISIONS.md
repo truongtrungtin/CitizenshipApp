@@ -1,7 +1,7 @@
 # DECISIONS (Architecture Decision Records)
 
 Project: Citizenship Tutor
-Last updated: 2026-02-02
+Last updated: 2026-02-03
 Format cho mỗi ADR:
 - Context
 - Decision
@@ -29,6 +29,23 @@ Consequences:
 
 Status: Accepted (Implemented)
 Date: 2026-02-02
+
+---
+
+## ADR-029 — Development HTTPS redirection requires HTTPS binding
+Context:
+- CI often runs the API HTTP-only (ASPNETCORE_URLS=http://...).
+- Unconditional HTTPS redirection in Development breaks UI/API calls by redirecting to a non-listening HTTPS endpoint.
+
+Decision:
+- Only enable HTTPS redirection in Development when at least one HTTPS URL is present in ASPNETCORE_URLS.
+
+Consequences:
+- Local dev can still use HTTPS when configured.
+- CI HTTP-only runs are stable and avoid false redirects.
+
+Status: Accepted (Implemented)
+Date: 2026-02-03
 
 ---
 
