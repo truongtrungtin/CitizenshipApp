@@ -1,0 +1,55 @@
+{
+  "items": [
+    {
+      "testVersion": "2025.12",
+      "questionNo": 1,
+      "type": "MCQ",
+      "promptEn": "What is the capital of the United States?",
+      "promptVi": "Thủ đô của Hoa Kỳ là gì?",
+      "promptViPhonetic": null,
+      "explainEn": "Washington, D.C. is the capital city.",
+      "explainVi": "Washington, D.C. là thủ đô.",
+      "correctOptionKey": "B",
+      "options": [
+        { "key": "A", "textEn": "New York City", "textVi": "New York", "sortOrder": 1 },
+        { "key": "B", "textEn": "Washington, D.C.", "textVi": "Washington, D.C.", "sortOrder": 2 },
+        { "key": "C", "textEn": "Los Angeles", "textVi": "Los Angeles", "sortOrder": 3 },
+        { "key": "D", "textEn": "Chicago", "textVi": "Chicago", "sortOrder": 4 }
+      ]
+    },
+    {
+      "testVersion": "2025.12",
+      "questionNo": 2,
+      "type": "MCQ",
+      "promptEn": "How many U.S. Senators are there?",
+      "promptVi": "Hoa Kỳ có bao nhiêu Thượng nghị sĩ?",
+      "promptViPhonetic": null,
+      "explainEn": "Each state has two Senators, so there are 100 total.",
+      "explainVi": "Mỗi tiểu bang có 2 Thượng nghị sĩ, tổng cộng là 100.",
+      "correctOptionKey": "D",
+      "options": [
+        { "key": "A", "textEn": "50", "textVi": "50", "sortOrder": 1 },
+        { "key": "B", "textEn": "75", "textVi": "75", "sortOrder": 2 },
+        { "key": "C", "textEn": "90", "textVi": "90", "sortOrder": 3 },
+        { "key": "D", "textEn": "100", "textVi": "100", "sortOrder": 4 }
+      ]
+    },
+    {
+      "testVersion": "2025.12",
+      "questionNo": 3,
+      "type": "MCQ",
+      "promptEn": "What is one right or freedom from the First Amendment?",
+      "promptVi": "Một quyền hoặc tự do trong Tu chính án thứ nhất là gì?",
+      "promptViPhonetic": null,
+      "explainEn": "The First Amendment protects freedoms like speech and religion.",
+      "explainVi": "Tu chính án thứ nhất bảo vệ các tự do như ngôn luận và tôn giáo.",
+      "correctOptionKey": "A",
+      "options": [
+        { "key": "A", "textEn": "Freedom of speech", "textVi": "Tự do ngôn luận", "sortOrder": 1 },
+        { "key": "B", "textEn": "Right to bear arms", "textVi": "Quyền mang vũ khí", "sortOrder": 2 },
+        { "key": "C", "textEn": "Right to vote", "textVi": "Quyền bầu cử", "sortOrder": 3 },
+        { "key": "D", "textEn": "Right to a jury trial", "textVi": "Quyền xét xử bởi bồi thẩm đoàn", "sortOrder": 4 }
+      ]
+    }
+  ]
+}

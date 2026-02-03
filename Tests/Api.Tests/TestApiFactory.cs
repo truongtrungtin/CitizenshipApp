@@ -99,6 +99,8 @@ public sealed class TestApiFactory : WebApplicationFactory<Program>
         {
             QuestionId = SeedQuestionId,
             DeckId = SeedDeckId,
+            TestVersion = "2025.12",
+            QuestionNo = 1,
             Type = "MCQ",
             PromptEn = "What is 2 + 2?",
             PromptVi = "2 + 2 bằng mấy?",

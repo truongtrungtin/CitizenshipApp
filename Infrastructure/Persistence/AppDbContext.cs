@@ -127,6 +127,9 @@ public sealed class AppDbContext
 
             b.Property(x => x.Type).HasMaxLength(50).IsRequired();
 
+            b.Property(x => x.TestVersion).HasMaxLength(50).IsRequired();
+            b.Property(x => x.QuestionNo).IsRequired();
+
             b.Property(x => x.PromptEn).HasMaxLength(2000).IsRequired();
             b.Property(x => x.PromptVi).HasMaxLength(2000);
             b.Property(x => x.PromptViPhonetic).HasMaxLength(2000);
@@ -143,6 +146,7 @@ public sealed class AppDbContext
 
             b.HasIndex(x => x.DeckId);
             b.HasIndex(x => new { x.DeckId, x.QuestionId });
+            b.HasIndex(x => new { x.TestVersion, x.QuestionNo }).IsUnique();
         });
 
         modelBuilder.Entity<QuestionOption>(b =>

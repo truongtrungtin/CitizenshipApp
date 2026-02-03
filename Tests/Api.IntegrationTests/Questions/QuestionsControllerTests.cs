@@ -70,6 +70,8 @@ public sealed class QuestionsControllerTests : IClassFixture<TestWebApplicationF
         {
             QuestionId = questionId,
             DeckId = deckId,
+            TestVersion = "2025.12",
+            QuestionNo = 1,
             Type = "MCQ",
             PromptEn = "What is 1+1?",
             PromptVi = "1+1 bằng mấy?",

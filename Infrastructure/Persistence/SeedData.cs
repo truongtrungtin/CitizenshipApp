@@ -95,6 +95,8 @@ public static class SeedData
         var q1 = new Question
         {
             Deck = deck,
+            TestVersion = "2025.12",
+            QuestionNo = 1,
             Type = "MCQ",
             PromptEn = "What is the supreme law of the land?",
             PromptVi = "Luật tối cao của quốc gia là gì?",
@@ -120,6 +122,8 @@ public static class SeedData
         var q2 = new Question
         {
             Deck = deck,
+            TestVersion = "2025.12",
+            QuestionNo = 2,
             Type = "MCQ",
             PromptEn = "What do we call the first ten amendments to the Constitution?",
             PromptVi = "10 tu chính án đầu tiên của Hiến Pháp được gọi là gì?",

@@ -97,10 +97,14 @@ public sealed class DecksControllerTests : IClassFixture<TestWebApplicationFacto
             IsActive = true
         };
 
+        string testVersion = $"2025.12-{Guid.NewGuid():N}";
+
         var q1 = new Domain.Entities.Deck.Question
         {
             QuestionId = Guid.NewGuid(),
             DeckId = deckId,
+            TestVersion = testVersion,
+            QuestionNo = 1,
             Type = "MCQ",
             PromptEn = "What is 1+1?",
             PromptVi = "1+1 bằng mấy?",
@@ -116,6 +120,8 @@ public sealed class DecksControllerTests : IClassFixture<TestWebApplicationFacto
         {
             QuestionId = Guid.NewGuid(),
             DeckId = deckId,
+            TestVersion = testVersion,
+            QuestionNo = 2,
             Type = "MCQ",
             PromptEn = "What is 2+2?",
             PromptVi = "2+2 bằng mấy?",

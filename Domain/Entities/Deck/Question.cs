@@ -11,6 +11,12 @@ public sealed class Question
     public Guid DeckId { get; set; }
     public Deck Deck { get; set; } = default!;
 
+    /// <summary>Ví dụ: "2025.12"</summary>
+    public required string TestVersion { get; set; }
+
+    /// <summary>Số thứ tự câu hỏi trong test version</summary>
+    public int QuestionNo { get; set; }
+
     /// <summary>Ví dụ: "MCQ"</summary>
     public required string Type { get; set; }
 

@@ -221,6 +221,7 @@ public sealed class StudyFlowTests : IClassFixture<TestWebApplicationFactory>
 
         string code = $"TEST-{Guid.NewGuid():N}".Substring(0, 12);
         string name = $"Test Deck {Guid.NewGuid():N}".Substring(0, 20);
+        string testVersion = $"2025.12-{Guid.NewGuid():N}";
 
         var deck = new Deck
         {
@@ -233,6 +234,8 @@ public sealed class StudyFlowTests : IClassFixture<TestWebApplicationFactory>
         {
             QuestionId = q1,
             DeckId = deckId,
+            TestVersion = testVersion,
+            QuestionNo = 1,
             Type = "MCQ", // your mapper supports "MCQ" => SingleChoice
             PromptEn = "What is 1+1?",
             PromptVi = "1+1 bằng mấy?",
@@ -246,6 +249,8 @@ public sealed class StudyFlowTests : IClassFixture<TestWebApplicationFactory>
         {
             QuestionId = q2,
             DeckId = deckId,
+            TestVersion = testVersion,
+            QuestionNo = 2,
             Type = "MCQ",
             PromptEn = "What is 2+2?",
             PromptVi = "2+2 bằng mấy?",

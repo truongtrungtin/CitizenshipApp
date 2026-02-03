@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 
 using Api.Infrastructure.Middleware;
+using Api.Infrastructure.Swagger;
 
 using Infrastructure;
 using Infrastructure.Auth;
@@ -210,6 +211,13 @@ builder.Services.AddSwaggerGen(c =>
             new List<string>()
         );
         return requirement;
+    });
+
+    c.OperationFilter<FileUploadOperationFilter>();
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = JsonSchemaType.String,
+        Format = "binary"
     });
 });
 

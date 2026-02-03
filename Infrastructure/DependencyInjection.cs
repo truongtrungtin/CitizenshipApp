@@ -1,10 +1,12 @@
 using Application.AppSettings;
 using Application.Auth;
+using Application.AdminImport;
 using Application.Decks;
 using Application.E2E;
 using Application.Me;
 using Application.Study;
 
+using Infrastructure.AdminImport;
 using Infrastructure.AppSettings;
 using Infrastructure.Auth;
 using Infrastructure.Decks;
@@ -77,6 +79,7 @@ public static class DependencyInjection
         // Deck/question queries (read-only)
         // ---------------------------
         services.AddScoped<IDeckQueryService, DeckQueryService>();
+        services.AddScoped<IQuestionImportService, QuestionImportService>();
         services.AddScoped<IStudyService, StudyService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IMeService, MeService>();

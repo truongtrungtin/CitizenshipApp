@@ -149,6 +149,8 @@ public sealed class E2ESeedService(
         var q1 = new Question
         {
             Deck = deck,
+            TestVersion = "2025.12",
+            QuestionNo = 1,
             Type = "MCQ",
             PromptEn = "What is 1 + 1?",
             PromptVi = "1 + 1 bằng mấy?",
@@ -165,6 +167,8 @@ public sealed class E2ESeedService(
         var q2 = new Question
         {
             Deck = deck,
+            TestVersion = "2025.12",
+            QuestionNo = 2,
             Type = "MCQ",
             PromptEn = "What is 2 + 2?",
             PromptVi = "2 + 2 bằng mấy?",

@@ -91,8 +91,13 @@ This section lists the expected technologies/packages by area. Final choices may
 Sequence: Admin import/edit → sessions/SRS → MCQ generation → silent lock.
 
 #### BL-037 — Admin import questions (CSV/JSON)
-- Endpoint: `POST /api/admin/import/questions`
+- Primary endpoint: `POST /api/admin/import/questions` (auto-detect JSON/CSV by Content-Type)
+- Convenience endpoints:
+	- `POST /api/admin/import/questions/json` (application/json)
+	- `POST /api/admin/import/questions/csv` (multipart/form-data)
 - Upsert rules: `(TestVersion, QuestionNo)` as natural key
+- Duplicate key in batch: add error + skip item
+- Options rule: replace options by import (remove options not present)
 - Actions: create/update question + answers + texts
 - Output: summary (created/updated/skipped/errors)
 
