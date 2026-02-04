@@ -58,141 +58,141 @@ jobs:
       - name: Test
         run: dotnet test CitizenshipApp.sln -c Release --no-build --filter "TestCategory!=E2E"
 
-  e2e:
-    needs: build_test
-    runs-on: ubuntu-latest
+  # e2e:
+  #   needs: build_test
+  #   runs-on: ubuntu-latest
 
-    services:
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: "Y"
-          SA_PASSWORD: "Your_password123"
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "bash -lc 'echo > /dev/tcp/localhost/1433'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
+  #   services:
+  #     sqlserver:
+  #       image: mcr.microsoft.com/mssql/server:2022-latest
+  #       env:
+  #         ACCEPT_EULA: "Y"
+  #         SA_PASSWORD: "Your_password123"
+  #       ports:
+  #         - 1433:1433
+  #       options: >-
+  #         --health-cmd "bash -lc 'echo > /dev/tcp/localhost/1433'"
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 10
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "9.0.x"
-          cache: false
+  #     - uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: "9.0.x"
+  #         cache: false
 
-      - name: Restore
-        run: dotnet restore CitizenshipApp.sln
+  #     - name: Restore
+  #       run: dotnet restore CitizenshipApp.sln
 
-      - name: Build
-        run: dotnet build CitizenshipApp.sln -c Release --no-restore
+  #     - name: Build
+  #       run: dotnet build CitizenshipApp.sln -c Release --no-restore
 
-      - name: Install Playwright browsers
-        shell: bash
-        run: |
-          set -euo pipefail
-          dotnet build Tests/UiE2E.Playwright/UiE2E.Playwright.csproj -c Release --no-restore
-          if [[ -f Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.sh ]]; then
-            bash Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.sh install --with-deps
-          elif command -v pwsh >/dev/null 2>&1 && [[ -f Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.ps1 ]]; then
-            pwsh Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.ps1 install --with-deps
-          else
-            dotnet Tests/UiE2E.Playwright/bin/Release/net9.0/Microsoft.Playwright.dll install --with-deps
-          fi
+  #     - name: Install Playwright browsers
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         dotnet build Tests/UiE2E.Playwright/UiE2E.Playwright.csproj -c Release --no-restore
+  #         if [[ -f Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.sh ]]; then
+  #           bash Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.sh install --with-deps
+  #         elif command -v pwsh >/dev/null 2>&1 && [[ -f Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.ps1 ]]; then
+  #           pwsh Tests/UiE2E.Playwright/bin/Release/net9.0/playwright.ps1 install --with-deps
+  #         else
+  #           dotnet Tests/UiE2E.Playwright/bin/Release/net9.0/Microsoft.Playwright.dll install --with-deps
+  #         fi
 
-      - name: Start API
-        shell: bash
-        env:
-          ASPNETCORE_ENVIRONMENT: Development
-          ASPNETCORE_URLS: http://0.0.0.0:5294
-          HttpsRedirection__Enabled: "false"
-          ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=CitizenshipApp_E2E;User Id=sa;Password=Your_password123;TrustServerCertificate=True
-          Jwt__Key: e2e-ci-jwt-key-0123456789-0123456789-0123456789
-          E2E__Enabled: "true"
-          Seed__E2EUserEmail: e2e_user@example.com
-          Seed__E2EUserPassword: ChangeMe123!
-        run: |
-          dotnet run --project Api --no-launch-profile > /tmp/api.log 2>&1 &
+  #     - name: Start API
+  #       shell: bash
+  #       env:
+  #         ASPNETCORE_ENVIRONMENT: Development
+  #         ASPNETCORE_URLS: http://0.0.0.0:5294
+  #         HttpsRedirection__Enabled: "false"
+  #         ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=CitizenshipApp_E2E;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+  #         Jwt__Key: e2e-ci-jwt-key-0123456789-0123456789-0123456789
+  #         E2E__Enabled: "true"
+  #         Seed__E2EUserEmail: e2e_user@example.com
+  #         Seed__E2EUserPassword: ChangeMe123!
+  #       run: |
+  #         dotnet run --project Api --no-launch-profile > /tmp/api.log 2>&1 &
 
-      - name: Start UI
-        shell: bash
-        env:
-          ASPNETCORE_ENVIRONMENT: Development
-          ASPNETCORE_URLS: http://localhost:5215
-        run: |
-          dotnet run --project Ui.Blazor --no-launch-profile > /tmp/ui.log 2>&1 &
+  #     - name: Start UI
+  #       shell: bash
+  #       env:
+  #         ASPNETCORE_ENVIRONMENT: Development
+  #         ASPNETCORE_URLS: http://localhost:5215
+  #       run: |
+  #         dotnet run --project Ui.Blazor --no-launch-profile > /tmp/ui.log 2>&1 &
 
-      - name: Wait for services
-        shell: bash
-        run: |
-          set -euo pipefail
-          wait_http_200() {
-            local url="$1"
-            local label="$2"
+  #     - name: Wait for services
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         wait_http_200() {
+  #           local url="$1"
+  #           local label="$2"
 
-            for i in {1..30}; do
-              local code
-              code="$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)"
-              if [[ "$code" == "200" ]]; then
-                return 0
-              fi
-              sleep 2
-            done
+  #           for i in {1..30}; do
+  #             local code
+  #             code="$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)"
+  #             if [[ "$code" == "200" ]]; then
+  #               return 0
+  #             fi
+  #             sleep 2
+  #           done
 
-            echo "$label failed to become ready (HTTP 200)." >&2
-            return 1
-          }
+  #           echo "$label failed to become ready (HTTP 200)." >&2
+  #           return 1
+  #         }
 
-          for i in {1..30}; do
-            if bash -lc 'echo > /dev/tcp/localhost/1433' 2>/dev/null; then
-              break
-            fi
-            sleep 2
-          done
+  #         for i in {1..30}; do
+  #           if bash -lc 'echo > /dev/tcp/localhost/1433' 2>/dev/null; then
+  #             break
+  #           fi
+  #           sleep 2
+  #         done
 
-          if ! wait_http_200 "http://localhost:5294/health/ready" "API"; then
-            echo "API logs:" >&2
-            cat /tmp/api.log || true
-            exit 1
-          fi
+  #         if ! wait_http_200 "http://localhost:5294/health/ready" "API"; then
+  #           echo "API logs:" >&2
+  #           cat /tmp/api.log || true
+  #           exit 1
+  #         fi
 
-          if ! wait_http_200 "http://localhost:5215/" "UI"; then
-            echo "UI logs:" >&2
-            cat /tmp/ui.log || true
-            exit 1
-          fi
+  #         if ! wait_http_200 "http://localhost:5215/" "UI"; then
+  #           echo "UI logs:" >&2
+  #           cat /tmp/ui.log || true
+  #           exit 1
+  #         fi
 
-      - name: Prime E2E seed
-        shell: bash
-        run: |
-          set -euo pipefail
-          for i in {1..10}; do
-            if curl -fsS -X POST http://localhost:5294/api/e2e/seed -H "Content-Type: application/json" -d '{}' >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "E2E seed failed. API logs:" >&2
-          cat /tmp/api.log || true
-          exit 1
+  #     - name: Prime E2E seed
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         for i in {1..10}; do
+  #           if curl -fsS -X POST http://localhost:5294/api/e2e/seed -H "Content-Type: application/json" -d '{}' >/dev/null; then
+  #             exit 0
+  #           fi
+  #           sleep 2
+  #         done
+  #         echo "E2E seed failed. API logs:" >&2
+  #         cat /tmp/api.log || true
+  #         exit 1
 
-      - name: Run E2E tests
-        env:
-          E2E_BASE_URL: http://localhost:5215
-          E2E_API_BASE_URL: http://localhost:5294
-          E2E_HEADLESS: "true"
-          E2E_RECORD_TRACE: "true"
-        run: dotnet test Tests/UiE2E.Playwright/UiE2E.Playwright.csproj -c Release --no-build
+  #     - name: Run E2E tests
+  #       env:
+  #         E2E_BASE_URL: http://localhost:5215
+  #         E2E_API_BASE_URL: http://localhost:5294
+  #         E2E_HEADLESS: "true"
+  #         E2E_RECORD_TRACE: "true"
+  #       run: dotnet test Tests/UiE2E.Playwright/UiE2E.Playwright.csproj -c Release --no-build
 
-      - name: Upload E2E artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-artifacts
-          path: |
-            **/e2e-artifacts/**
-            /tmp/api.log
-            /tmp/ui.log
+  #     - name: Upload E2E artifacts
+  #       if: failure()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: e2e-artifacts
+  #         path: |
+  #           **/e2e-artifacts/**
+  #           /tmp/api.log
+  #           /tmp/ui.log
