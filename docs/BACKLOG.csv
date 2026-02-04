@@ -55,4 +55,13 @@ BL-053,Mobile TTS offline support (platform APIs),Feature,P4,L,Todo,UI,"Use plat
 BL-054,Mobile push notifications (reminders),Feature,P4,M,Todo,UI/Api,"Schedule local notifications for study reminders; allow opt-in/out in settings.",BL-050
 BL-055,Mobile device settings sync (language/voice),Feature,P4,M,Todo,UI/Api,"Sync SystemLanguage and Voice settings with mobile device preferences.",BL-050
 BL-056,Mobile E2E tests (device/emulator),Test,P4,L,Todo,Tests,"Add E2E tests for mobile UI flows using device/emulator; integrate into CI.",BL-050
-
+BL-057,Accessibility improvements (ARIA + keyboard),Chore,P2,M,Todo,UI,"Audit and enhance accessibility: ARIA roles, keyboard navigation, screen reader support.",BL-027
+BL-058,Dark mode support,Feature,P2,M,Todo,UI,"Implement dark mode theme; allow user toggle; remember preference.",BL-027
+BL-059,UI performance optimizations,Perf,P2,M,Todo,UI,"Analyze and optimize UI load/render times; lazy load components; minimize re-renders.",BL-027
+BL-060,UI integration tests for settings/deck/study,Test,P2,L,Todo,Tests,"Add UI integration tests for settings changes, deck navigation, study flow using Playwright.",BL-027
+BL-061,Admin user management endpoints (list/ban/roles),Feature,P1,M,Todo,Api,"GET /admin/users (list with pagination), PUT /admin/users/{id}/ban, PUT /admin/users/{id}/roles.",BL-002
+BL-062,Admin deck management endpoints (CRUD),Feature,P1,L,Todo,Api,"Full CRUD for decks: GET /admin/decks, GET /admin/decks/{id}, POST /admin/decks, PUT /admin/decks/{id}, DELETE /admin/decks/{id}.",BL-002
+BL-063,Admin question management endpoints (CRUD),Feature,P1,L,Todo,Api,"Full CRUD for questions: GET /admin/questions, GET /admin/questions/{id}, POST /admin/questions, PUT /admin/questions/{id}, DELETE /admin/questions/{id}.",BL-002
+BL-064,Admin answer management endpoints (CRUD),Feature,P1,L,Todo,Api,"Full CRUD for answers: GET /admin/answers, GET /admin/answers/{id},
+    POST /admin/answers, PUT /admin/answers/{id}, DELETE /admin/answers/{id}.",BL-002
+    
